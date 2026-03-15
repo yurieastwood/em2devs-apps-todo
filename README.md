@@ -1,5 +1,9 @@
 # Waypoint
 
+[![CI Pipeline](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/ci.yml)
+![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
+
 A gamified productivity app that turns task management into an RPG-style progression system. Complete quests, earn XP, level up, unlock skill trees, and collaborate with others — all while getting things done.
 
 > **Status:** Architecture & design phase — ADRs and BDD feature specs are in place; implementation is next.

@@ -87,6 +87,103 @@ public sealed class TasksControllerTests : IDisposable
         // Then
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
+
+    [Fact]
+    public async Task Should_UpdateStatusToInProgress_When_TaskIsTodo()
+    {
+        // Given
+        var createResponse = await _client.PostAsJsonAsync("/api/tasks", new { title = "Start me" });
+        var created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        // When
+        var response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{created!.Id}/status",
+            new { status = "InProgress" });
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var task = await response.Content.ReadFromJsonAsync<TaskResponseDto>();
+        task!.Status.ShouldBe("InProgress");
+    }
+
+    [Fact]
+    public async Task Should_UpdateStatusToDone_When_TaskIsInProgress()
+    {
+        // Given
+        var createResponse = await _client.PostAsJsonAsync("/api/tasks", new { title = "Complete me" });
+        var created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+        await _client.PatchAsJsonAsync($"/api/tasks/{created!.Id}/status", new { status = "InProgress" });
+
+        // When
+        var response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{created.Id}/status",
+            new { status = "Done" });
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var task = await response.Content.ReadFromJsonAsync<TaskResponseDto>();
+        task!.Status.ShouldBe("Done");
+    }
+
+    [Fact]
+    public async Task Should_ReturnConflict_When_StatusTransitionIsInvalid()
+    {
+        // Given
+        var createResponse = await _client.PostAsJsonAsync("/api/tasks", new { title = "Skip ahead" });
+        var created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        // When — Todo directly to Done is not allowed
+        var response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{created!.Id}/status",
+            new { status = "Done" });
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task Should_ReturnConflict_When_TaskAlreadyInRequestedStatus()
+    {
+        // Given
+        var createResponse = await _client.PostAsJsonAsync("/api/tasks", new { title = "Same status" });
+        var created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        // When — Task is already Todo
+        var response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{created!.Id}/status",
+            new { status = "Todo" });
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotFound_When_UpdatingStatusOfNonexistentTask()
+    {
+        // When
+        var response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{Guid.NewGuid()}/status",
+            new { status = "InProgress" });
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Should_ReturnBadRequest_When_StatusValueIsInvalid()
+    {
+        // Given
+        var createResponse = await _client.PostAsJsonAsync("/api/tasks", new { title = "Bad status" });
+        var created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        // When
+        var response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{created!.Id}/status",
+            new { status = "InvalidStatus" });
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
 }
 
 internal sealed record TaskResponseDto(Guid Id, string Title, string Status);

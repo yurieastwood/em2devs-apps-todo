@@ -50,9 +50,62 @@ public sealed class TasksController : ControllerBase
         return task is null ? NotFound() : Ok(MapToResponse(task));
     }
 
+    [HttpPatch("{taskId:guid}/status")]
+    public async Task<IActionResult> UpdateTaskStatus(
+        Guid taskId,
+        [FromBody] UpdateTaskStatusRequest request,
+        CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (!Enum.TryParse<Domain.TaskStatus>(request.Status, out var targetStatus))
+        {
+            return BadRequest(new { error = $"Invalid status value '{request.Status}'." });
+        }
+
+        var task = await _repository.GetByIdAsync(new TaskId(taskId), ct).ConfigureAwait(false);
+        if (task is null)
+        {
+            return NotFound();
+        }
+
+        if (task.Status == targetStatus)
+        {
+            return Conflict(new { error = $"Task is already in status '{targetStatus}'." });
+        }
+
+        try
+        {
+            ApplyStatusTransition(task, targetStatus);
+        }
+        catch (DomainException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+
+        await _repository.SaveAsync(task, ct).ConfigureAwait(false);
+        return Ok(MapToResponse(task));
+    }
+
+    private static void ApplyStatusTransition(TodoTask task, Domain.TaskStatus targetStatus)
+    {
+        switch (targetStatus)
+        {
+            case Domain.TaskStatus.InProgress:
+                task.MoveToInProgress();
+                break;
+            case Domain.TaskStatus.Done:
+                task.MarkAsDone();
+                break;
+            default:
+                throw new DomainException($"Transition to '{targetStatus}' is not supported.");
+        }
+    }
+
     private static TaskResponse MapToResponse(TodoTask task) =>
         new(task.Id.Value, task.Title.Value, task.Status.ToString());
 }
 
 public sealed record CreateTaskRequest(string Title);
+public sealed record UpdateTaskStatusRequest(string Status);
 public sealed record TaskResponse(Guid Id, string Title, string Status);

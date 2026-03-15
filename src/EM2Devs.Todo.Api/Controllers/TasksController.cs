@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using EM2Devs.Todo.Application.Ports;
+using EM2Devs.Todo.Application.Commands;
+using EM2Devs.Todo.Application.Mediator;
+using EM2Devs.Todo.Application.Queries;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.Exceptions;
-using EM2Devs.Todo.Domain.ValueObjects;
 
 namespace EM2Devs.Todo.Api.Controllers;
 
@@ -10,9 +11,9 @@ namespace EM2Devs.Todo.Api.Controllers;
 [Route("api/tasks")]
 public sealed class TasksController : ControllerBase
 {
-    private readonly ITaskRepository _repository;
+    private readonly IMediator _mediator;
 
-    public TasksController(ITaskRepository repository) => _repository = repository;
+    public TasksController(IMediator mediator) => _mediator = mediator;
 
     private static readonly HashSet<string> _validStatusValues =
         new(Enum.GetNames<Domain.TaskStatus>(), StringComparer.Ordinal);
@@ -27,13 +28,13 @@ public sealed class TasksController : ControllerBase
             return BadRequest(new { error = $"Invalid status filter '{status}'. Valid values: Todo, InProgress, Done." });
         }
 
-        var tasks = await _repository.GetAllAsync(ct).ConfigureAwait(false);
-
+        Domain.TaskStatus? filter = null;
         if (statusParamPresent && Enum.TryParse<Domain.TaskStatus>(status, ignoreCase: false, out Domain.TaskStatus parsed))
         {
-            tasks = tasks.Where(t => t.Status == parsed).ToList().AsReadOnly();
+            filter = parsed;
         }
 
+        IReadOnlyList<TodoTask> tasks = await _mediator.Send(new ListTasksQuery(filter), ct).ConfigureAwait(false);
         return Ok(tasks.Select(MapToResponse));
     }
 
@@ -42,27 +43,23 @@ public sealed class TasksController : ControllerBase
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        TaskTitle title;
+        TodoTask task;
         try
         {
-            title = new TaskTitle(request.Title);
+            task = await _mediator.Send(new CreateTaskCommand(request.Title), ct).ConfigureAwait(false);
         }
         catch (DomainException ex)
         {
             return BadRequest(new { error = ex.Message });
         }
 
-        var task = TodoTask.Create(title);
-        await _repository.SaveAsync(task, ct).ConfigureAwait(false);
         return CreatedAtAction(nameof(GetTask), new { taskId = task.Id.Value }, MapToResponse(task));
     }
 
     [HttpGet("{taskId:guid}")]
     public async Task<IActionResult> GetTask(Guid taskId, CancellationToken ct)
     {
-        var guid = taskId;
-
-        var task = await _repository.GetByIdAsync(new TaskId(guid), ct).ConfigureAwait(false);
+        TodoTask? task = await _mediator.Send(new GetTaskQuery(taskId), ct).ConfigureAwait(false);
         return task is null ? NotFound() : Ok(MapToResponse(task));
     }
 
@@ -74,55 +71,33 @@ public sealed class TasksController : ControllerBase
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        if (!Enum.TryParse<Domain.TaskStatus>(request.Status, out var targetStatus))
-        {
-            return BadRequest(new { error = $"Invalid status value '{request.Status}'." });
-        }
-
-        var task = await _repository.GetByIdAsync(new TaskId(taskId), ct).ConfigureAwait(false);
-        if (task is null)
-        {
-            return NotFound();
-        }
-
-        if (task.Status == targetStatus)
-        {
-            return Conflict(new { error = $"Task is already in status '{targetStatus}'." });
-        }
-
         try
         {
-            ApplyStatusTransition(task, targetStatus);
+            TodoTask? task = await _mediator.Send(
+                new UpdateTaskStatusCommand(taskId, request.Status), ct).ConfigureAwait(false);
+
+            if (task is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(MapToResponse(task));
+        }
+        catch (DomainException ex) when (ex.Message.Contains("Invalid status"))
+        {
+            return BadRequest(new { error = ex.Message });
         }
         catch (DomainException ex)
         {
             return Conflict(new { error = ex.Message });
         }
-
-        await _repository.SaveAsync(task, ct).ConfigureAwait(false);
-        return Ok(MapToResponse(task));
     }
 
     [HttpDelete("{taskId:guid}")]
     public async Task<IActionResult> DeleteTask(Guid taskId, CancellationToken ct)
     {
-        bool deleted = await _repository.DeleteAsync(new TaskId(taskId), ct).ConfigureAwait(false);
+        bool deleted = await _mediator.Send(new DeleteTaskCommand(taskId), ct).ConfigureAwait(false);
         return deleted ? NoContent() : NotFound();
-    }
-
-    private static void ApplyStatusTransition(TodoTask task, Domain.TaskStatus targetStatus)
-    {
-        switch (targetStatus)
-        {
-            case Domain.TaskStatus.InProgress:
-                task.MoveToInProgress();
-                break;
-            case Domain.TaskStatus.Done:
-                task.MarkAsDone();
-                break;
-            default:
-                throw new DomainException($"Transition to '{targetStatus}' is not supported.");
-        }
     }
 
     private static TaskResponse MapToResponse(TodoTask task) =>

@@ -96,6 +96,11 @@ Closes #12
 - If mutants survive, add tests to kill them — do not lower the threshold.
 - Only the Domain layer is mutated. Run `dotnet stryker -f stryker-config.json` to check locally.
 
+### CI/CD Pipeline
+- Do NOT modify CI pipeline files (`.github/workflows/`), git hooks (`scripts/hooks/`), or gate scripts (`scripts/run-gates.sh`) without explicit human approval.
+- Do NOT change gate thresholds, disable gates, or alter the pipeline structure.
+- If a gate blocks your work, fix the production code — not the pipeline.
+
 ## Error Reference
 
 When a gate fails, the error will include context. Here's how to interpret them:

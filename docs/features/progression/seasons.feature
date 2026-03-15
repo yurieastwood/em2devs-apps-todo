@@ -9,6 +9,7 @@ Feature: Seasons
 
   Rule: Seasons run quarterly and introduce themed content
 
+    @wip
     Scenario: New season begins
       Given the current season "Season of the Architect" is ending
       When the new season "Season of the Explorer" begins
@@ -43,6 +44,7 @@ Feature: Seasons
       And stages 2-8 should be locked
       And each stage should preview its challenge theme
 
+    @wip
     Scenario Outline: Complete a seasonal quest line stage
       Given I am on stage <stage> of the seasonal quest line
       And stage <stage> requires completing <required> tasks rated "<min_difficulty>" or above

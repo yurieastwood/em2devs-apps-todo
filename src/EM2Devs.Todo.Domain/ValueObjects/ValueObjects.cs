@@ -50,6 +50,14 @@ public sealed record EstimationRecordId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed daily brief identifier (ADR-0002).
+/// </summary>
+public sealed record DailyBriefId(Guid Value)
+{
+    public static DailyBriefId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>

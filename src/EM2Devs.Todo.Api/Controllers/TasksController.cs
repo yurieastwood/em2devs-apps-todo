@@ -95,7 +95,7 @@ public sealed class TasksController : ControllerBase
                 task.MoveToInProgress();
                 break;
             case Domain.TaskStatus.Done:
-                task.Complete();
+                task.MarkAsDone();
                 break;
             default:
                 throw new DomainException($"Transition to '{targetStatus}' is not supported.");

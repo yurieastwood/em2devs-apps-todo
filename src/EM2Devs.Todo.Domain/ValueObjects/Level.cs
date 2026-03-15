@@ -8,6 +8,14 @@ public sealed record Level
 {
     public const int MaxLevel = 100;
 
+    /// <summary>
+    /// Pre-computed cumulative XP thresholds for levels 2–100.
+    /// Index 0 = level 2, index 98 = level 100.
+    /// Matches feature-specified anchors: L2=50, L5=300, L10=1000, L20=4000, L50=25000.
+    /// Intermediate values follow a logarithmic interpolation curve.
+    /// </summary>
+    private static readonly int[] _thresholds = Build_thresholds();
+
     public int Value { get; }
     public ExperiencePoints CurrentXp { get; }
 
@@ -34,11 +42,6 @@ public sealed record Level
     public Level AddXp(ExperiencePoints earned)
     {
         ArgumentNullException.ThrowIfNull(earned);
-
-        if (Value >= MaxLevel)
-        {
-            return new Level(MaxLevel, CurrentXp.Add(earned));
-        }
 
         int totalXp = CurrentXp.Value + earned.Value;
         int currentLevel = Value;
@@ -72,31 +75,16 @@ public sealed record Level
     /// Returns the cumulative XP required to reach the given level from level 1.
     /// Matches the logarithmic curve from levelling.feature:
     /// Level 2=50, 5=300, 10=1000, 20=4000, 50=25000.
-    /// Formula: round(12.5 * level^1.93) rounded to nearest clean boundary.
     /// </summary>
     public static int CumulativeXpRequired(int level)
     {
-        if (level < 2)
+        if (level < 2 || level - 2 >= _thresholds.Length)
         {
             throw new ArgumentOutOfRangeException(
-                nameof(level), level, "Cumulative XP is only defined for level 2 and above.");
+                nameof(level), level, "Cumulative XP is only defined for levels 2 through 100.");
         }
 
-        return level switch
-        {
-            2 => 50,
-            3 => 100,
-            4 => 200,
-            5 => 300,
-            6 => 450,
-            7 => 600,
-            8 => 800,
-            9 => 900,
-            10 => 1_000,
-            <= 20 => CalculateThreshold(level, 1_000, 4_000, 10, 20),
-            <= 50 => CalculateThreshold(level, 4_000, 25_000, 20, 50),
-            _ => CalculateThreshold(level, 25_000, 200_000, 50, MaxLevel)
-        };
+        return _thresholds[level - 2];
     }
 
     private static int XpForNextLevel(int currentLevel)
@@ -106,25 +94,38 @@ public sealed record Level
         return cumulativeNext - cumulativeCurrent;
     }
 
-    private static int CalculateThreshold(int level, int startXp, int endXp, int startLevel, int endLevel)
+    private static int[] Build_thresholds()
     {
-        double fraction = (double)(level - startLevel) / (endLevel - startLevel);
-        double logStart = Math.Log(startXp);
-        double logEnd = Math.Log(endXp);
-        double interpolated = Math.Exp(logStart + fraction * (logEnd - logStart));
+        // Anchor points from levelling.feature
+        int[] anchors = [50, 100, 200, 300, 450, 600, 800, 900, 1_000];
 
-        int rounded = (int)Math.Round(interpolated);
+        int[] result = new int[MaxLevel - 1]; // levels 2 through MaxLevel
+        anchors.CopyTo(result, 0);
 
-        // Ensure monotonicity: must exceed the previous level's threshold
-        if (level > startLevel + 1)
+        // Interpolate ranges: 11–20 (1000→4000), 21–50 (4000→25000), 51–100 (25000→200000)
+        int[][] ranges =
+        [
+            [10, 20, 1_000, 4_000],
+            [20, 50, 4_000, 25_000],
+            [50, MaxLevel, 25_000, 200_000]
+        ];
+
+        foreach (int[] range in ranges)
         {
-            int previous = CalculateThreshold(level - 1, startXp, endXp, startLevel, endLevel);
-            if (rounded <= previous)
+            int startLevel = range[0];
+            int endLevel = range[1];
+            int startXp = range[2];
+            int endXp = range[3];
+            double logStart = Math.Log(startXp);
+            double logEnd = Math.Log(endXp);
+
+            for (int level = startLevel + 1; level <= endLevel; level++)
             {
-                rounded = previous + 1;
+                double fraction = (double)(level - startLevel) / (endLevel - startLevel);
+                result[level - 2] = (int)Math.Round(Math.Exp(logStart + fraction * (logEnd - logStart)));
             }
         }
 
-        return rounded;
+        return result;
     }
 }

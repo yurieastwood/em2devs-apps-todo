@@ -88,6 +88,7 @@ Feature: Quest Hierarchy
 
   Rule: Epics are multi-week objectives spanning several quests, with equal quest weighting
 
+    @done
     Scenario: Create an epic
       When I create an epic with the following details:
         | Field       | Value                                  |
@@ -97,6 +98,7 @@ Feature: Quest Hierarchy
       Then the epic "Launch MVP" should be created
       And it should appear in my epic list
 
+    @done
     Scenario: Assign quests to an epic
       Given I have an epic "Launch MVP"
       And I have the following quests:
@@ -109,6 +111,7 @@ Feature: Quest Hierarchy
       Then the epic should contain 4 quests
       And the epic progress should reflect aggregate quest progress
 
+    @done
     Scenario: Epic progress reflects quest completion with equal weighting
       Given I have an epic "Launch MVP" with 4 quests
       And each quest contributes equally to epic progress regardless of task count

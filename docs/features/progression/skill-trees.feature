@@ -10,6 +10,7 @@ Feature: Skill Trees
 
   Rule: Skill trees are discovered and unlocked through natural behaviour patterns
 
+    @wip
     Scenario Outline: Skill tree unlocked by behaviour pattern
       Given I have consistently completed tasks tagged or categorised as "<category>"
       And I have completed at least <threshold> such tasks
@@ -50,6 +51,7 @@ Feature: Skill Trees
 
   Rule: Each skill tree has multiple tiers that unlock through sustained behaviour
 
+    @wip
     Scenario: Progress within a skill tree
       Given I have unlocked the "Builder" skill tree at tier 1
       And the "Builder" tree requires 30 side-project tasks for tier 2

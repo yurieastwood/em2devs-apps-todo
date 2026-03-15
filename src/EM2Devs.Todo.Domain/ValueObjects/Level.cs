@@ -113,13 +113,18 @@ public sealed record Level
         double logEnd = Math.Log(endXp);
         double interpolated = Math.Exp(logStart + fraction * (logEnd - logStart));
 
-        int rounding = interpolated switch
-        {
-            < 500 => 50,
-            < 5_000 => 100,
-            _ => 1_000
-        };
+        int rounded = (int)Math.Round(interpolated);
 
-        return (int)(Math.Round(interpolated / rounding) * rounding);
+        // Ensure monotonicity: must exceed the previous level's threshold
+        if (level > startLevel + 1)
+        {
+            int previous = CalculateThreshold(level - 1, startXp, endXp, startLevel, endLevel);
+            if (rounded <= previous)
+            {
+                rounded = previous + 1;
+            }
+        }
+
+        return rounded;
     }
 }

@@ -207,6 +207,159 @@ public sealed class LevelTests
     public void Should_ThrowArgumentOutOfRange_When_CumulativeXpLevelIsLessThanTwo()
     {
         // Given / When / Then
-        Should.Throw<ArgumentOutOfRangeException>(() => Level.CumulativeXpRequired(1));
+        var ex = Should.Throw<ArgumentOutOfRangeException>(() => Level.CumulativeXpRequired(1));
+        ex.Message.ShouldContain("Cumulative XP is only defined for level 2 and above");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_LevelUpWithZeroCarryOver_When_XpExactlyMatchesThreshold()
+    {
+        // Given — level 1 with 0 XP, threshold for level 2 is 50
+        var level = Level.StartingLevel();
+
+        // When — earn exactly 50 XP
+        var result = level.AddXp(new ExperiencePoints(50));
+
+        // Then — level 2 with 0 carry-over (kills totalXp < xpNeeded → <= mutation)
+        result.Value.ShouldBe(2);
+        result.CurrentXp.Value.ShouldBe(0);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_LevelUpToMaxLevel_When_XpReachesMaxThreshold()
+    {
+        // Given — one level below max
+        var level = new Level(Level.MaxLevel - 1, new ExperiencePoints(0));
+        int xpNeeded = Level.CumulativeXpRequired(Level.MaxLevel)
+                     - Level.CumulativeXpRequired(Level.MaxLevel - 1);
+
+        // When — earn exactly enough to reach max
+        var result = level.AddXp(new ExperiencePoints(xpNeeded));
+
+        // Then — at max level, 0 carry-over (kills while < MaxLevel boundary)
+        result.Value.ShouldBe(Level.MaxLevel);
+        result.CurrentXp.Value.ShouldBe(0);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotLevelPastMax_When_AtMaxLevelMinusOneWithExcessXp()
+    {
+        // Given — one below max level
+        var level = new Level(Level.MaxLevel - 1, new ExperiencePoints(0));
+        int xpNeeded = Level.CumulativeXpRequired(Level.MaxLevel)
+                     - Level.CumulativeXpRequired(Level.MaxLevel - 1);
+
+        // When — earn more than needed to reach max
+        var result = level.AddXp(new ExperiencePoints(xpNeeded + 100));
+
+        // Then — stays at max with carry-over
+        result.Value.ShouldBe(Level.MaxLevel);
+        result.CurrentXp.Value.ShouldBe(100);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_TrackXp_When_AtMaxLevelExactly()
+    {
+        // Given — exactly at max level (kills Value >= MaxLevel → > mutation)
+        var level = new Level(Level.MaxLevel, new ExperiencePoints(50));
+
+        // When
+        var result = level.AddXp(new ExperiencePoints(25));
+
+        // Then — still max, XP accumulated
+        result.Value.ShouldBe(Level.MaxLevel);
+        result.CurrentXp.Value.ShouldBe(75);
+    }
+
+    [Theory]
+    [Trait("Category", "Domain")]
+    [InlineData(11)]
+    [InlineData(15)]
+    [InlineData(19)]
+    public void Should_ReturnValidThreshold_When_LevelIsBetween11And20(int level)
+    {
+        // Given / When — tests levels in the <= 20 interpolation range
+        int threshold = Level.CumulativeXpRequired(level);
+
+        // Then — must be between level 10 (1000) and level 20 (4000) boundaries
+        threshold.ShouldBeGreaterThan(Level.CumulativeXpRequired(level - 1));
+        threshold.ShouldBeLessThanOrEqualTo(4000);
+    }
+
+    [Theory]
+    [Trait("Category", "Domain")]
+    [InlineData(21)]
+    [InlineData(35)]
+    [InlineData(49)]
+    public void Should_ReturnValidThreshold_When_LevelIsBetween21And50(int level)
+    {
+        // Given / When — tests levels in the <= 50 interpolation range
+        int threshold = Level.CumulativeXpRequired(level);
+
+        // Then — must be between level 20 (4000) and level 50 (25000) boundaries
+        threshold.ShouldBeGreaterThan(Level.CumulativeXpRequired(level - 1));
+        threshold.ShouldBeLessThanOrEqualTo(25000);
+    }
+
+    [Theory]
+    [Trait("Category", "Domain")]
+    [InlineData(51)]
+    [InlineData(75)]
+    [InlineData(99)]
+    public void Should_ReturnValidThreshold_When_LevelIsAbove50(int level)
+    {
+        // Given / When — tests levels in the > 50 interpolation range
+        int threshold = Level.CumulativeXpRequired(level);
+
+        // Then — must be monotonically increasing above 25000
+        threshold.ShouldBeGreaterThan(Level.CumulativeXpRequired(level - 1));
+        threshold.ShouldBeGreaterThan(25000);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnCorrectXpForLevel2_When_CalculatingXpForNextLevel()
+    {
+        // Given — level 1 (kills currentLevel >= 2 → > 2 boundary mutation)
+        var level = new Level(1, new ExperiencePoints(0));
+
+        // When
+        int xpToNext = level.XpToNextLevel();
+
+        // Then — XpForNextLevel(1) = CumulativeXpRequired(2) - 0 = 50
+        xpToNext.ShouldBe(50);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnCorrectXpForLevel3_When_AtLevel2()
+    {
+        // Given — level 2 (verifies cumulative subtraction path for level >= 2)
+        var level = new Level(2, new ExperiencePoints(0));
+
+        // When
+        int xpToNext = level.XpToNextLevel();
+
+        // Then — XpForNextLevel(2) = CumulativeXpRequired(3) - CumulativeXpRequired(2) = 100 - 50 = 50
+        xpToNext.ShouldBe(50);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_IncreaseMonotonically_When_CalculatingThresholdsAcrossAllRanges()
+    {
+        // Verify thresholds increase across all range boundaries (kills rounding mutations)
+        int previousThreshold = 0;
+        for (int lvl = 2; lvl <= Level.MaxLevel; lvl++)
+        {
+            int threshold = Level.CumulativeXpRequired(lvl);
+            threshold.ShouldBeGreaterThan(previousThreshold,
+                $"Threshold for level {lvl} ({threshold}) should be greater than level {lvl - 1} ({previousThreshold})");
+            previousThreshold = threshold;
+        }
     }
 }

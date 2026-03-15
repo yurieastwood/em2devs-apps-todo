@@ -199,15 +199,51 @@ public sealed class LeaderboardTests
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_ThrowArgumentOutOfRange_When_VisibilityIsInvalid()
+    public void Should_AcceptZeroScore_When_Creating()
     {
-        // Given
+        // Given / When
         var entry = new LeaderboardEntry(
-            _userId, 1, 100, 10, LeaderboardVisibility.Public);
+            _userId, 1, 0, 1, LeaderboardVisibility.Public);
 
-        // When / Then — this tests the DisplayName switch default
-        // We can't easily construct an invalid enum for DisplayName,
-        // so we test the valid paths are covered
-        entry.DisplayName("Test").ShouldBe("Test");
+        // Then
+        entry.Score.ShouldBe(0);
+        entry.UserLevel.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AcceptLevelOne_When_CreatingEntry()
+    {
+        // Given / When
+        var entry = new LeaderboardEntry(
+            _userId, 1, 100, 1, LeaderboardVisibility.Public);
+
+        // Then
+        entry.UserLevel.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AcceptCohort_When_MinEqualsMax()
+    {
+        // Given / When
+        var cohort = new LeaderboardCohort(5, 5);
+
+        // Then
+        cohort.MinLevel.ShouldBe(5);
+        cohort.MaxLevel.ShouldBe(5);
+        cohort.IncludesLevel(5).ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_CreateCohort_When_UserLevelIsOne()
+    {
+        // Given / When
+        var cohort = LeaderboardCohort.ForUserLevel(1);
+
+        // Then
+        cohort.MinLevel.ShouldBe(1);
+        cohort.MaxLevel.ShouldBe(11);
     }
 }

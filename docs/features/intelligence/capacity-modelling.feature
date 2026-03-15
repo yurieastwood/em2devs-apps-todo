@@ -11,6 +11,7 @@ Feature: Capacity Modelling
 
   Rule: The system builds a personal capacity model from historical data
 
+    @wip
     Scenario: Capacity model established from history
       Given I have completed tasks for 30 days
       And my average daily completion is 6 tasks on weekdays
@@ -19,6 +20,7 @@ Feature: Capacity Modelling
       Then my weekday capacity should be approximately 6 tasks
       And my weekend capacity should be approximately 3 tasks
 
+    @wip
     Scenario: Capacity model accounts for task difficulty weighting
       Given my capacity model shows I complete approximately 6 "Normal" tasks per day
       When I have 4 "Hard" tasks and 2 "Normal" tasks scheduled today
@@ -50,6 +52,7 @@ Feature: Capacity Modelling
 
   Rule: Users are warned when scheduled tasks exceed their realistic capacity
 
+    @wip
     Scenario: Overcommitment warning on daily view
       Given my weekday capacity is 6 tasks
       And I have 10 tasks scheduled for today

@@ -292,4 +292,33 @@ public sealed class SeasonTests
         var ex = Should.Throw<DomainException>(() => new SeasonalQuestLine(8, 1, -1));
         ex.Message.ShouldContain("cannot be negative");
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_CreateSingleStageQuestLine_When_TotalStagesIsOne()
+    {
+        // Given / When
+        var questLine = SeasonalQuestLine.Start(1);
+
+        // Then
+        questLine.TotalStages.ShouldBe(1);
+        questLine.CurrentStage.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_CompleteAndStayIdempotent_When_RecordingOnCompletedQuestLine()
+    {
+        // Given — completed single-stage quest line
+        var questLine = SeasonalQuestLine.Start(1).RecordTaskCompletion(1);
+        questLine.IsCompleted.ShouldBeTrue();
+
+        // When — record more completions
+        var result = questLine.RecordTaskCompletion(1);
+
+        // Then — still completed, no state change
+        result.IsCompleted.ShouldBeTrue();
+        result.CurrentStage.ShouldBe(questLine.CurrentStage);
+        result.TasksCompletedInStage.ShouldBe(questLine.TasksCompletedInStage);
+    }
 }

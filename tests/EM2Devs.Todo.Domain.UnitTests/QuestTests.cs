@@ -40,7 +40,7 @@ public sealed class QuestTests
         QuestTitle title = new("Open-ended quest");
 
         // When
-        Quest quest = Quest.Create(title, "No deadline", dueDate: null);
+        Quest quest = Quest.Create(title, "No deadline");
 
         // Then
         quest.DueDate.ShouldBeNull();
@@ -164,6 +164,17 @@ public sealed class QuestTests
         // When / Then — adding task1 again with multiple tasks already present
         DomainException ex = Should.Throw<DomainException>(() => quest.AddTask(task1));
         ex.Message.ShouldContain("already");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_AddingNullTask()
+    {
+        // Given
+        Quest quest = CreateQuest();
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => quest.AddTask(null!));
     }
 
     [Fact]

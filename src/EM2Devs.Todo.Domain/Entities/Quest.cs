@@ -35,13 +35,15 @@ public sealed class Quest
         DueDate = dueDate;
     }
 
-    public static Quest Create(QuestTitle title, string description, DateOnly? dueDate)
+    public static Quest Create(QuestTitle title, string description, DateOnly? dueDate = null)
     {
         return new Quest(QuestId.New(), title, description, dueDate);
     }
 
     public void AddTask(TodoTask task)
     {
+        ArgumentNullException.ThrowIfNull(task);
+
         if (_tasks.Any(t => t.Id == task.Id))
         {
             throw new DomainException("Task is already assigned to this quest.");

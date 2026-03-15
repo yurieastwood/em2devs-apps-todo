@@ -9,12 +9,14 @@ Feature: Levelling System
 
   Rule: Levels require logarithmically scaling XP to prevent inflation
 
+    @done
     Scenario: New user starts at level 1
       Given I have just created my account
       Then my level should be 1
       And my XP should be 0
       And the XP required for level 2 should be displayed
 
+    @done
     Scenario: Level up when XP threshold is reached
       Given I am level 3 with 280 XP
       And the XP threshold for level 4 is 300
@@ -24,6 +26,7 @@ Feature: Levelling System
       And a level-up event should appear on my journey timeline
       And the excess 5 XP should carry over toward level 5
 
+    @done
     Scenario: XP requirements scale logarithmically
       Then the XP thresholds for levels should follow a logarithmic curve:
         | Level | Cumulative XP Required |
@@ -81,6 +84,7 @@ Feature: Levelling System
 
   Rule: There is a maximum level that gracefully handles continued progression
 
+    @done
     Scenario: User reaches maximum level
       Given I am at the maximum level
       When I earn additional XP

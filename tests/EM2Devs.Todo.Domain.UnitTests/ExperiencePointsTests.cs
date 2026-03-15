@@ -89,7 +89,7 @@ public sealed class ExperiencePointsTests
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_ThrowArgumentException_When_DifficultyIsInvalid()
+    public void Should_ThrowArgumentOutOfRangeException_When_DifficultyIsInvalid()
     {
         // Given
         var invalidDifficulty = (TaskDifficulty)999;

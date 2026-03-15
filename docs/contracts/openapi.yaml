@@ -27,6 +27,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TaskResponse"
+        "400":
+          description: Invalid status filter value
     post:
       operationId: createTask
       summary: Create a new task

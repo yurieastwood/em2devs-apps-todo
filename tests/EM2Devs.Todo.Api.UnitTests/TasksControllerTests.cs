@@ -184,6 +184,45 @@ public sealed class TasksControllerTests : IDisposable
         // Then
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task Should_ReturnNoContent_When_DeletingExistingTask()
+    {
+        // Given
+        var createResponse = await _client.PostAsJsonAsync("/api/tasks", new { title = "Delete me" });
+        var created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        // When
+        var response = await _client.DeleteAsync($"/api/tasks/{created!.Id}");
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotFound_When_DeletingNonExistentTask()
+    {
+        // When
+        var response = await _client.DeleteAsync($"/api/tasks/{Guid.NewGuid()}");
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Should_RemoveTask_When_Deleted()
+    {
+        // Given
+        var createResponse = await _client.PostAsJsonAsync("/api/tasks", new { title = "Gone forever" });
+        var created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+        await _client.DeleteAsync($"/api/tasks/{created!.Id}");
+
+        // When
+        var getResponse = await _client.GetAsync($"/api/tasks/{created.Id}");
+
+        // Then
+        getResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
 }
 
 internal sealed record TaskResponseDto(Guid Id, string Title, string Status);

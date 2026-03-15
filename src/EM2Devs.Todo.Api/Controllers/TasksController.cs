@@ -17,6 +17,11 @@ public sealed class TasksController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ListTasks([FromQuery] string? status, CancellationToken ct)
     {
+        if (status is not null && !Enum.TryParse<Domain.TaskStatus>(status, ignoreCase: false, out _))
+        {
+            return BadRequest(new { error = $"Invalid status filter '{status}'. Valid values: Todo, InProgress, Done." });
+        }
+
         var tasks = await _repository.GetAllAsync(ct).ConfigureAwait(false);
 
         if (Enum.TryParse<Domain.TaskStatus>(status, ignoreCase: false, out Domain.TaskStatus parsed))

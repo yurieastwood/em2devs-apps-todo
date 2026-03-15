@@ -271,6 +271,16 @@ public sealed class TasksControllerTests : IDisposable
         var tasks = await response.Content.ReadFromJsonAsync<List<TaskResponseDto>>();
         tasks!.Count.ShouldBe(2);
     }
+
+    [Fact]
+    public async Task Should_ReturnBadRequest_When_StatusFilterIsInvalid()
+    {
+        // When
+        var response = await _client.GetAsync("/api/tasks?status=InvalidStatus");
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
 }
 
 internal sealed record TaskResponseDto(Guid Id, string Title, string Status);

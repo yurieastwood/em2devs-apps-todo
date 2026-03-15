@@ -55,7 +55,7 @@ Domain  <──  Application  <──  Infrastructure
 ```
 waypoint/
 ├── docs/
-│   ├── decisions/          # 21 Architecture Decision Records (MADR 3.0)
+│   ├── decisions/          # Architecture Decision Records (MADR 3.0)
 │   └── features/           # 29 BDD feature specs (Gherkin)
 ├── src/
 │   ├── EM2Devs.Todo.AppHost/          # .NET Aspire orchestrator
@@ -96,9 +96,33 @@ dotnet run --project src/EM2Devs.Todo.AppHost
 
 The Aspire dashboard will open automatically, providing access to all services, logs, and traces.
 
+## Quality Gates
+
+Seven automated gates enforce code quality at every stage:
+
+| Gate | What it checks | Pre-commit | Pre-push | CI |
+|------|---------------|:---:|:---:|:---:|
+| G1 — Compiler / Type System | Strongly-typed value objects + Roslyn analyzers (`TreatWarningsAsErrors`) | x | | x |
+| G2 — Lint & Format | `.editorconfig` + `dotnet format` | x | | x |
+| G3 — Architecture Fitness | NetArchTest rules enforcing Clean Architecture layer boundaries | x | | x |
+| G4 — Scenario-Driven Tests | Behaviour tests via xUnit + Shouldly | x | | x |
+| G5 — Supply Chain Security | `dotnet list package --vulnerable --include-transitive` | x | | x |
+| G6 — API Contract Validation | Spectral (static) + Schemathesis (dynamic) | | x | x |
+| G7 — Mutation Testing | Stryker.NET on Domain layer — zero surviving mutants | | x | x |
+
+Run all gates locally:
+
+```bash
+./scripts/run-gates.sh
+```
+
 ## Architecture Decision Records
 
 All architectural decisions are documented as ADRs using [MADR 3.0](https://adr.github.io/madr/) format in [`docs/decisions/`](docs/decisions/).
+
+## For AI Agents
+
+Read [AGENTS.md](AGENTS.md) before writing any code. It defines the workflow, tool sequencing, and constraints.
 
 ## Code Quality
 

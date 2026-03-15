@@ -10,6 +10,7 @@ Feature: Smart Daily Brief
 
   Rule: The daily brief generates a recommended day based on priorities and patterns
 
+    @wip
     Scenario: Daily brief generated on first session
       Given it is a new day and I have not opened Waypoint yet
       And I have 8 tasks due today or overdue
@@ -54,6 +55,7 @@ Feature: Smart Daily Brief
 
   Rule: Users can accept, modify, or dismiss the daily brief
 
+    @wip
     Scenario: Accept the daily brief as-is
       Given the daily brief recommends 6 tasks in a specific order
       When I accept the daily brief
@@ -74,6 +76,7 @@ Feature: Smart Daily Brief
       Then the system should show a gentle warning "This plan exceeds your typical daily capacity of 6 tasks — you may want to mark some as 'if time allows'"
       And I should still be able to confirm the modified brief
 
+    @wip
     Scenario: Dismiss the daily brief
       Given the daily brief is displayed
       When I dismiss the daily brief

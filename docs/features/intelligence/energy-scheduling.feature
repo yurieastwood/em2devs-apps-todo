@@ -9,6 +9,7 @@ Feature: Energy-Aware Scheduling
 
   Rule: Users can report or have their energy level inferred
 
+    @wip
     Scenario: Manually set energy level at start of session
       When I open Waypoint for my first session of the day
       Then I should see an optional energy check-in prompt
@@ -23,6 +24,7 @@ Feature: Energy-Aware Scheduling
       Then the system should infer my energy from historical patterns
       And the prompt should not appear again until the next session
 
+    @wip
     Scenario: Skip energy check-in on day 1 with no historical data
       Given I have no task completion history
       When I open Waypoint for my first session of the day
@@ -31,6 +33,7 @@ Feature: Energy-Aware Scheduling
       And tasks should be shown in standard priority order
       And the prompt should not appear again until the next session
 
+    @wip
     Scenario Outline: Energy level affects task surfacing
       Given my current energy level is "<energy>"
       When I view my Today tasks

@@ -42,6 +42,14 @@ public sealed record CapacitySnapshotId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed estimation record identifier (ADR-0002).
+/// </summary>
+public sealed record EstimationRecordId(Guid Value)
+{
+    public static EstimationRecordId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>

@@ -1,0 +1,116 @@
+name: CI Pipeline|Seven Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  gate-1-compile:
+    name: "G1|Compiler / Type System"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true
+
+  gate-2-format:
+    name: "G2|Lint & Format"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet format --verify-no-changes --verbosity diagnostic
+
+  gate-3-architecture:
+    name: "G3|Architecture Fitness Tests"
+    needs: gate-1-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet test tests/EM2Devs.Todo.ArchitectureTests --configuration Release --logger "console;verbosity=detailed"
+
+  gate-4-tests:
+    name: "G4|Scenario-Driven Tests"
+    needs: gate-1-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet test --configuration Release --filter "Category!=Architecture" --logger "console;verbosity=detailed"
+
+  gate-5-security:
+    name: "G5|Supply Chain Security"
+    needs: gate-1-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet restore
+      - name: Check for vulnerable packages
+        run: |
+          OUTPUT=$(dotnet list package --vulnerable --include-transitive 2>&1)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -q "has the following vulnerable packages"; then
+            echo "::error::Vulnerable NuGet packages found|update or replace them"
+            exit 1
+          fi
+
+  gate-6-contracts:
+    name: "G6|API Contract Validation"
+    needs: gate-1-compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Static validation (Spectral)
+        run: npx --yes @stoplight/spectral-cli lint docs/contracts/openapi.yaml --ruleset .spectral.yaml
+      - name: Install Schemathesis
+        run: pip install "schemathesis==4.11.2"
+      - name: Build API
+        run: dotnet build src/EM2Devs.Todo.Api --configuration Release
+      - name: Start API
+        run: |
+          nohup dotnet run --project src/EM2Devs.Todo.Api --configuration Release --no-build \
+            --urls "http://localhost:5001" > /tmp/api.log 2>&1 &
+          echo $! > /tmp/api.pid
+          for i in $(seq 1 30); do
+            curl -s http://localhost:5001/api/tasks > /dev/null 2>&1 && break || sleep 1
+          done
+      - name: Dynamic validation (Schemathesis)
+        run: schemathesis run docs/contracts/openapi.yaml --url http://localhost:5001 --checks all --phases examples,coverage,stateful
+      - name: Stop API
+        if: always()
+        run: kill $(cat /tmp/api.pid) 2>/dev/null || true
+
+  gate-7-mutation:
+    name: "G7|Mutation Testing"
+    needs: gate-4-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet tool restore
+      - run: dotnet stryker -f stryker-config.json

@@ -2,9 +2,12 @@
   <ItemGroup>
     <ProjectReference Include="..\EM2Devs.Todo.Application\EM2Devs.Todo.Application.csproj" />
     <ProjectReference Include="..\EM2Devs.Todo.Infrastructure\EM2Devs.Todo.Infrastructure.csproj" />
+    <ProjectReference Include="..\EM2Devs.Todo.ServiceDefaults\EM2Devs.Todo.ServiceDefaults.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.*" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.14" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.13.1" />
   </ItemGroup>
 </Project>

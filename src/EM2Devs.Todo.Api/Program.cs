@@ -6,10 +6,23 @@ using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.Queries;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Infrastructure.Persistence;
+using EM2Devs.Todo.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
+builder.AddServiceDefaults();
+
+string? connectionString = builder.Configuration.GetConnectionString("tododb");
+if (!string.IsNullOrEmpty(connectionString))
+{
+    builder.AddNpgsqlDbContext<TodoDbContext>("tododb");
+    builder.Services.AddScoped<ITaskRepository, PostgresTaskRepository>();
+}
+else
+{
+    builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
+}
+
 builder.Services.AddSingleton<IMediator, Mediator>();
 
 builder.Services.AddTransient<IRequestHandler<CreateTaskCommand, TodoTask>, CreateTaskCommandHandler>();
@@ -27,6 +40,7 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+app.MapDefaultEndpoints();
 app.MapOpenApi();
 app.MapScalarApiReference();
 app.MapControllers();

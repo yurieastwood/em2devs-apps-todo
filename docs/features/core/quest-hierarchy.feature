@@ -9,6 +9,7 @@ Feature: Quest Hierarchy
 
   Rule: Quests are meaningful clusters of related tasks with a clear outcome
 
+    @done
     Scenario: Create a quest
       When I create a quest with the following details:
         | Field       | Value                               |
@@ -19,6 +20,7 @@ Feature: Quest Hierarchy
       And it should appear in my quest list
       And it should have a progress of 0%
 
+    @done
     Scenario: Add tasks to a quest
       Given I have a quest "Prepare conference talk"
       When I add the following tasks to the quest:
@@ -31,6 +33,7 @@ Feature: Quest Hierarchy
       Then the quest should contain 5 tasks
       And the quest progress should be 0%
 
+    @done
     Scenario: Quest progress updates as tasks complete
       Given I have a quest "Prepare conference talk" with 5 tasks
       And 0 tasks are completed

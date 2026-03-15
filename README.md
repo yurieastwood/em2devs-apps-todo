@@ -1,0 +1,112 @@
+# Waypoint
+
+A gamified productivity app that turns task management into an RPG-style progression system. Complete quests, earn XP, level up, unlock skill trees, and collaborate with others — all while getting things done.
+
+> **Status:** Architecture & design phase — ADRs and BDD feature specs are in place; implementation is next.
+
+## Features
+
+| Category | Highlights |
+|---|---|
+| **Core** | Tasks, quests (epics & sagas), recurring tasks, boss tasks, notifications |
+| **Progression** | XP, levelling, skill trees, titles & ranks, streaks, seasonal content |
+| **Intelligence** | Energy-aware scheduling, capacity modelling, time estimation, daily brief, procrastination detection |
+| **Social** | Guilds, accountability partners, leaderboards, shared quests, challenge mode |
+| **Reflection** | Weekly review, journey timeline, insight cards, annual wrapped |
+| **Onboarding** | Progressive disclosure — clean interface that reveals depth as engagement increases |
+| **Data** | Local-first with sync, full data export and deletion |
+| **Monetisation** | Free and Premium tiers — no pay-to-win; cosmetics and advanced features only |
+
+Full BDD specifications in Gherkin format are available under [`docs/features/`](docs/features/).
+
+## Tech Stack
+
+| Concern | Choice |
+|---|---|
+| Backend | .NET 9, REST Minimal APIs + SignalR |
+| Frontend | SvelteKit / Svelte 5 (runes) |
+| Database | PostgreSQL with JSONB |
+| Data Access | EF Core (writes) + Dapper (reads) |
+| Orchestration | .NET Aspire |
+| Authentication | Auth0 (social logins) |
+| Caching | Redis (via Aspire) |
+| Background Jobs | Quartz.NET |
+| Observability | Grafana stack (Prometheus + Loki + Tempo), Serilog, Aspire Dashboard (dev) |
+| CI/CD | GitHub Actions |
+| Testing | xUnit + Shouldly + NSubstitute + Testcontainers / Vitest + Playwright |
+
+## Architecture
+
+Waypoint follows **Clean Architecture** with **CQRS** via a custom lightweight mediator. Domain events drive side effects. The dependency rule is enforced at CI time by architecture tests.
+
+```
+Domain  <──  Application  <──  Infrastructure
+                  ^                ^
+                  └──── Api ───────┘
+```
+
+- **Domain** — models, value objects, domain events, interfaces
+- **Application** — commands, queries, handlers, validators
+- **Infrastructure** — EF Core, Dapper, Auth0, Redis integrations
+- **Api** — Minimal API endpoints, filters, middleware
+
+## Project Structure
+
+```
+waypoint/
+├── docs/
+│   ├── decisions/          # 21 Architecture Decision Records (MADR 3.0)
+│   └── features/           # 29 BDD feature specs (Gherkin)
+├── src/
+│   ├── EM2Devs.Todo.AppHost/          # .NET Aspire orchestrator
+│   ├── EM2Devs.Todo.ServiceDefaults/  # Shared Aspire config (OTel, health checks)
+│   ├── EM2Devs.Todo.Api/             # Minimal API endpoints
+│   ├── EM2Devs.Todo.Domain/          # Domain layer
+│   ├── EM2Devs.Todo.Application/     # CQRS handlers
+│   ├── EM2Devs.Todo.Infrastructure/  # Data access & integrations
+│   └── EM2Devs.Todo.Web/            # SvelteKit frontend
+├── tests/
+│   ├── EM2Devs.Todo.Domain.UnitTests/
+│   ├── EM2Devs.Todo.Application.UnitTests/
+│   ├── EM2Devs.Todo.Api.UnitTests/
+│   ├── EM2Devs.Todo.Infrastructure.IntegrationTests/
+│   ├── EM2Devs.Todo.ArchitectureTests/
+│   └── EM2Devs.Todo.E2E/            # Playwright
+├── .editorconfig
+├── Directory.Build.props             # Centralised build config
+└── EM2Devs.Todo.sln
+```
+
+## Prerequisites
+
+- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+- [Node.js 20+](https://nodejs.org/) (for the SvelteKit frontend)
+- [Docker](https://www.docker.com/) (required by Aspire for PostgreSQL, Redis, and observability containers)
+
+## Getting Started
+
+```bash
+# Clone the repository
+git clone https://github.com/em2devs/em2devs-apps-todo.git
+cd em2devs-apps-todo
+
+# Start the full stack via Aspire
+dotnet run --project src/EM2Devs.Todo.AppHost
+```
+
+The Aspire dashboard will open automatically, providing access to all services, logs, and traces.
+
+## Architecture Decision Records
+
+All architectural decisions are documented as ADRs using [MADR 3.0](https://adr.github.io/madr/) format in [`docs/decisions/`](docs/decisions/).
+
+## Code Quality
+
+- **Conventional commits** and **conventional branches** enforced via Husky pre-commit hooks
+- **SonarAnalyzer** + **StyleCop** for .NET static analysis
+- **ESLint** + **Prettier** for the frontend
+- **Architecture tests** (NetArchTest) enforce Clean Architecture layer boundaries at CI time
+
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).

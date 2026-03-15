@@ -9,7 +9,7 @@ Feature: Streaks and Grace Days
 
   Rule: Streaks track consecutive days of completing at least one task
 
-    @wip
+    @done
     Scenario: Streak increments on daily completion
       Given my current streak is 5 days
       And I have not completed any tasks today
@@ -17,7 +17,7 @@ Feature: Streaks and Grace Days
       Then my streak should increment to 6 days
       And only the first completion should trigger the increment
 
-    @wip
+    @done
     Scenario: Streak persists through multiple completions
       Given my current streak is 10 days
       And I have already completed 3 tasks today
@@ -46,7 +46,7 @@ Feature: Streaks and Grace Days
 
   Rule: Grace days protect streaks from occasional missed days
 
-    @wip
+    @done
     Scenario: Grace day preserves streak on a missed day
       Given my current streak is 15 days
       And I have 1 grace day available
@@ -56,7 +56,7 @@ Feature: Streaks and Grace Days
       And 1 grace day should be consumed
       And I should be notified that a grace day was used
 
-    @wip
+    @done
     Scenario: Grace day not consumed on an active day
       Given my current streak is 15 days
       And I have 2 grace days available
@@ -71,7 +71,7 @@ Feature: Streaks and Grace Days
       Then I should earn 1 grace day
       And I can hold a maximum of 3 grace days at once
 
-    @wip
+    @done
     Scenario: Streak broken when no grace days available
       Given my current streak is 20 days
       And I have 0 grace days available

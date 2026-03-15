@@ -126,7 +126,13 @@ public sealed class LevelTests
     [Theory]
     [Trait("Category", "Domain")]
     [InlineData(2, 50)]
+    [InlineData(3, 100)]
+    [InlineData(4, 200)]
     [InlineData(5, 300)]
+    [InlineData(6, 450)]
+    [InlineData(7, 600)]
+    [InlineData(8, 800)]
+    [InlineData(9, 900)]
     [InlineData(10, 1000)]
     [InlineData(20, 4000)]
     [InlineData(50, 25000)]
@@ -208,7 +214,17 @@ public sealed class LevelTests
     {
         // Given / When / Then
         var ex = Should.Throw<ArgumentOutOfRangeException>(() => Level.CumulativeXpRequired(1));
-        ex.Message.ShouldContain("Cumulative XP is only defined for level 2 and above");
+        ex.Message.ShouldContain("Cumulative XP is only defined for levels 2 through 100");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentOutOfRange_When_CumulativeXpLevelExceedsMax()
+    {
+        // Given / When / Then
+        var ex = Should.Throw<ArgumentOutOfRangeException>(
+            () => Level.CumulativeXpRequired(Level.MaxLevel + 1));
+        ex.Message.ShouldContain("Cumulative XP is only defined for levels 2 through 100");
     }
 
     [Fact]

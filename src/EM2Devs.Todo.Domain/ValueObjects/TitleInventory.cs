@@ -13,8 +13,8 @@ public sealed record TitleInventory
 
     public TitleInventory(IEnumerable<Title> earnedTitles, TitleType? activeTitle)
     {
-        ArgumentNullException.ThrowIfNull(earnedTitles);
-        _earnedTitles = [.. earnedTitles];
+        _earnedTitles = earnedTitles?.ToList()
+            ?? throw new ArgumentNullException(nameof(earnedTitles));
 
         if (activeTitle is not null && !_earnedTitles.Exists(t => t.Type == activeTitle))
         {

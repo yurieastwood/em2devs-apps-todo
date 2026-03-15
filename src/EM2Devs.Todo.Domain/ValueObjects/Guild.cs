@@ -121,8 +121,7 @@ public sealed record Guild
     }
 
     public Guid LeaderId =>
-        _members.Find(m => m.Role == GuildRole.Leader)?.UserId
-        ?? throw new InvalidOperationException("Guild has no leader.");
+        _members.Find(m => m.Role == GuildRole.Leader)!.UserId;
 
     public bool IsMember(Guid userId) =>
         _members.Exists(m => m.UserId == userId);

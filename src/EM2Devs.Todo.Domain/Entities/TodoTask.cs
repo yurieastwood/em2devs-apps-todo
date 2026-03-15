@@ -1,3 +1,4 @@
+using EM2Devs.Todo.Domain.Exceptions;
 using EM2Devs.Todo.Domain.ValueObjects;
 
 namespace EM2Devs.Todo.Domain.Entities;
@@ -20,5 +21,23 @@ public sealed class TodoTask
         return new TodoTask(TaskId.New(), title);
     }
 
-    // TODO: Agent implements status transitions here (see ADR-0003 test scenarios)
+    public void MoveToInProgress()
+    {
+        if (Status != TaskStatus.Todo)
+        {
+            throw new DomainException($"Cannot transition from {Status} to {TaskStatus.InProgress}.");
+        }
+
+        Status = TaskStatus.InProgress;
+    }
+
+    public void MarkAsDone()
+    {
+        if (Status != TaskStatus.InProgress)
+        {
+            throw new DomainException($"Cannot transition from {Status} to {TaskStatus.Done}.");
+        }
+
+        Status = TaskStatus.Done;
+    }
 }

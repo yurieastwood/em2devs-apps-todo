@@ -28,4 +28,10 @@ public sealed class InMemoryTaskRepository : ITaskRepository
         _store[task.Id.Value] = task;
         return Task.CompletedTask;
     }
+
+    public Task<bool> DeleteAsync(TaskId id, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        return Task.FromResult(_store.TryRemove(id.Value, out _));
+    }
 }

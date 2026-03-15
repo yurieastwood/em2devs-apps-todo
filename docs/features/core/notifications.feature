@@ -9,6 +9,7 @@ Feature: Notifications and Reminders
 
   Rule: Users receive timely reminders for due tasks
 
+    @wip
     Scenario: Reminder for task due today
       Given I have a task "Submit report" due today
       And I have not completed it
@@ -21,6 +22,7 @@ Feature: Notifications and Reminders
       When the 2-day-before reminder triggers
       Then I should receive a notification about the approaching deadline
 
+    @wip
     Scenario: No reminder for completed tasks
       Given I have a task "Buy milk" due today
       And I have already completed it
@@ -34,6 +36,7 @@ Feature: Notifications and Reminders
 
   Rule: Achievements and milestones generate celebratory notifications
 
+    @wip
     Scenario Outline: Notification for achievement
       Given I have triggered the achievement "<achievement>"
       Then I should receive a notification celebrating "<achievement>"

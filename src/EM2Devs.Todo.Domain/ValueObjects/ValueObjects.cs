@@ -18,6 +18,30 @@ public sealed record RecurringTaskId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed notification identifier (ADR-0002).
+/// </summary>
+public sealed record NotificationId(Guid Value)
+{
+    public static NotificationId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
+/// Strongly-typed energy check-in identifier (ADR-0002).
+/// </summary>
+public sealed record EnergyCheckInId(Guid Value)
+{
+    public static EnergyCheckInId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
+/// Strongly-typed capacity snapshot identifier (ADR-0002).
+/// </summary>
+public sealed record CapacitySnapshotId(Guid Value)
+{
+    public static CapacitySnapshotId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>

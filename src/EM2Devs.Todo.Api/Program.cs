@@ -33,6 +33,9 @@ builder.Services.AddTransient<IRequestHandler<DeleteTaskCommand, bool>, DeleteTa
 builder.Services.AddTransient<IRequestHandler<GetTaskQuery, TodoTask?>, GetTaskQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<ListTasksQuery, IReadOnlyList<TodoTask>>, ListTasksQueryHandler>();
 
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
+    EM2Devs.Todo.Application.Events.XpAwardHandler>();
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {

@@ -1,0 +1,31 @@
+using System.Collections.Concurrent;
+using EM2Devs.Todo.Application.Ports;
+using EM2Devs.Todo.Domain.Entities;
+using EM2Devs.Todo.Domain.ValueObjects;
+
+namespace EM2Devs.Todo.Infrastructure.Persistence;
+
+public sealed class InMemoryTaskRepository : ITaskRepository
+{
+    private readonly ConcurrentDictionary<Guid, TodoTask> _store = new();
+
+    public Task<TodoTask?> GetByIdAsync(TaskId id, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        _store.TryGetValue(id.Value, out var task);
+        return Task.FromResult(task);
+    }
+
+    public Task<IReadOnlyList<TodoTask>> GetAllAsync(CancellationToken ct = default)
+    {
+        IReadOnlyList<TodoTask> tasks = _store.Values.ToList().AsReadOnly();
+        return Task.FromResult(tasks);
+    }
+
+    public Task SaveAsync(TodoTask task, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+        _store[task.Id.Value] = task;
+        return Task.CompletedTask;
+    }
+}

@@ -1,0 +1,5 @@
+[*.cs]
+# Test methods use underscores by convention (ADR-0003)
+dotnet_diagnostic.CA1707.severity = none
+# xUnit1030 prohibits ConfigureAwait(false) in test methods; CA2007 conflicts with it
+dotnet_diagnostic.CA2007.severity = none

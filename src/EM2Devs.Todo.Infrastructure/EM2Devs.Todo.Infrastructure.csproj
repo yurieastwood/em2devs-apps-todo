@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\EM2Devs.Todo.Application\EM2Devs.Todo.Application.csproj" />
+  </ItemGroup>
+</Project>

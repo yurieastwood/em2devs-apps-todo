@@ -99,18 +99,30 @@ public sealed record Guild
                 "New leader must be an existing guild member.");
         }
 
-        List<GuildMember> updated = _members.Select(m =>
-            m.UserId == newLeaderId
-                ? new GuildMember(m.UserId, GuildRole.Leader, m.JoinedOn)
-                : m.Role == GuildRole.Leader
-                    ? new GuildMember(m.UserId, GuildRole.Member, m.JoinedOn)
-                    : m).ToList();
+        Guid oldLeaderId = LeaderId;
+        List<GuildMember> updated = [];
+        foreach (GuildMember m in _members)
+        {
+            if (m.UserId == newLeaderId)
+            {
+                updated.Add(new GuildMember(m.UserId, GuildRole.Leader, m.JoinedOn));
+            }
+            else if (m.UserId == oldLeaderId)
+            {
+                updated.Add(new GuildMember(m.UserId, GuildRole.Member, m.JoinedOn));
+            }
+            else
+            {
+                updated.Add(m);
+            }
+        }
 
         return new Guild(Name, Description, updated);
     }
 
     public Guid LeaderId =>
-        _members.First(m => m.Role == GuildRole.Leader).UserId;
+        _members.Find(m => m.Role == GuildRole.Leader)?.UserId
+        ?? throw new InvalidOperationException("Guild has no leader.");
 
     public bool IsMember(Guid userId) =>
         _members.Exists(m => m.UserId == userId);

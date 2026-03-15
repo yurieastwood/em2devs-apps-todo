@@ -34,6 +34,14 @@ public sealed record EnergyCheckInId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed capacity snapshot identifier (ADR-0002).
+/// </summary>
+public sealed record CapacitySnapshotId(Guid Value)
+{
+    public static CapacitySnapshotId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>

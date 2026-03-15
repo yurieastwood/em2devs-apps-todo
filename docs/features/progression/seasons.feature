@@ -7,10 +7,6 @@ Feature: Seasons
   Background:
     Given I am an authenticated user
 
-  # ───────────────────────────────────────────
-  # Season Structure
-  # ───────────────────────────────────────────
-
   Rule: Seasons run quarterly and introduce themed content
 
     Scenario: New season begins
@@ -38,10 +34,6 @@ Feature: Seasons
       And each summary should show the cosmetics I earned
       And each summary should show the seasonal XP I accumulated
 
-  # ───────────────────────────────────────────
-  # Seasonal Quest Line
-  # ───────────────────────────────────────────
-
   Rule: Each season has a themed quest line that provides guided challenges
 
     Scenario: Start the seasonal quest line
@@ -51,15 +43,21 @@ Feature: Seasons
       And stages 2-8 should be locked
       And each stage should preview its challenge theme
 
-    Scenario: Complete a seasonal quest line stage
-      Given I am on stage 3 of the seasonal quest line
-      And stage 3 requires completing 5 tasks rated "Hard" or above
-      And I have completed 4 qualifying tasks
-      When I complete a 5th qualifying hard task
-      Then stage 3 should be marked as complete
+    Scenario Outline: Complete a seasonal quest line stage
+      Given I am on stage <stage> of the seasonal quest line
+      And stage <stage> requires completing <required> tasks rated "<min_difficulty>" or above
+      And I have completed <completed> qualifying tasks
+      When I complete another qualifying task
+      Then stage <stage> should be marked as complete
       And I should receive seasonal XP
-      And stage 4 should become available
-      And I should earn the stage 3 cosmetic reward
+      And stage <next_stage> should become available
+      And I should earn the stage <stage> cosmetic reward
+
+      Examples:
+        | stage | required | min_difficulty | completed | next_stage |
+        | 1     | 3        | Easy           | 2         | 2          |
+        | 3     | 5        | Hard           | 4         | 4          |
+        | 5     | 7        | Normal         | 6         | 6          |
 
     Scenario: Complete the full seasonal quest line
       Given I have completed stages 1 through 7 of the seasonal quest line
@@ -67,10 +65,6 @@ Feature: Seasons
       Then I should receive a seasonal completion bonus
       And I should earn the exclusive season-completion cosmetic
       And a seasonal completion badge should appear on my profile
-
-  # ───────────────────────────────────────────
-  # Seasonal Leaderboard
-  # ───────────────────────────────────────────
 
   @premium
   Rule: Seasonal leaderboards reset each quarter and rank users by seasonal XP
@@ -81,7 +75,7 @@ Feature: Seasons
       Then I should see my rank among my cohort
       And I should see my seasonal XP total
       And I should see the top 10 users in my cohort
-      And users should be compared within similar level ranges
+      And my cohort should consist of users within 5 levels of my current level
 
     Scenario: Season ends and final ranks are recorded
       Given the current season is ending
@@ -90,10 +84,6 @@ Feature: Seasons
       Then my final rank should be permanently recorded
       And I should receive a rank-based seasonal reward
       And the leaderboard should become read-only for the past season
-
-  # ───────────────────────────────────────────
-  # Seasonal Cosmetics
-  # ───────────────────────────────────────────
 
   Rule: Seasonal cosmetics are limited to the season and cannot be earned later
 
@@ -116,3 +106,27 @@ Feature: Seasons
       When I select it as my active profile badge
       Then it should be displayed on my profile
       And other users should see it marked with its season of origin
+
+  Rule: Users who join mid-season or are inactive can still participate meaningfully
+
+    Scenario: User joins mid-season
+      Given the current season is 6 weeks in with 7 weeks remaining
+      And I have just created my account
+      When I view the seasonal quest line
+      Then I should see all stages available from stage 1
+      And I should be able to progress through the quest line normally
+      And the seasonal leaderboard should include me with 0 seasonal XP
+
+    Scenario: User inactive for an entire season
+      Given I did not log in during the "Season of the Architect"
+      When the next season begins
+      Then my permanent level and XP should be unchanged
+      And I should have no record for the missed season in my season history
+      And I should be able to participate fully in the new season
+
+    Scenario: Seamless transition between seasons
+      Given the current season ends today
+      When the next season begins
+      Then the new season should be immediately available with no downtime
+      And any incomplete seasonal quest line stages should be locked
+      And the previous season's final leaderboard should be viewable in past seasons

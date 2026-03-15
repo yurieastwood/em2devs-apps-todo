@@ -7,10 +7,6 @@ Feature: Local-First Data and Export
   Background:
     Given I am an authenticated user
 
-  # ───────────────────────────────────────────
-  # Local Storage
-  # ───────────────────────────────────────────
-
   Rule: All data is stored locally by default and the app works offline
 
     Scenario: App works without internet connection
@@ -36,10 +32,6 @@ Feature: Local-First Data and Export
       And all analytics should be computed on-device
       And the only network calls should be for authentication and subscription validation
 
-  # ───────────────────────────────────────────
-  # Cross-Device Sync
-  # ───────────────────────────────────────────
-
   @premium
   Rule: Premium users can opt into cross-device sync
 
@@ -58,8 +50,8 @@ Feature: Local-First Data and Export
       And I edit the same task on device B while offline
       When both devices come online
       Then the system should detect the conflict
-      And the most recent change should take priority
-      And both versions should be available in a conflict log
+      And the change with the most recent server-side timestamp should take priority
+      And both versions should be available in a conflict log for manual review
 
     Scenario: Disable sync and delete cloud data
       Given I have sync enabled
@@ -70,9 +62,13 @@ Feature: Local-First Data and Export
       And my local data should remain intact
       And the app should continue working offline
 
-  # ───────────────────────────────────────────
-  # Data Export
-  # ───────────────────────────────────────────
+    Scenario: Social features require server-side state
+      Given I am a member of a guild with shared quests
+      And I have no internet connection
+      When I view guild and shared quest data
+      Then I should see the last-synced state of guild and shared quest data
+      And I should see a notice that social data may be outdated
+      And I should not be able to modify guild or shared quest data while offline
 
   Rule: Users can export all their data at any time in open formats
 
@@ -107,6 +103,15 @@ Feature: Local-First Data and Export
       Then the full JSON and CSV export options should be available
       And no export functionality should be restricted by tier
 
+    Scenario: Import data from a previous export
+      When I navigate to data import settings
+      And I select a previously exported JSON file
+      Then I should see a preview of the data to be imported
+      And I should be warned that importing will overwrite existing data
+      When I confirm the import
+      Then all data from the export file should be restored
+      And my XP, level, and progression should reflect the imported state
+
     Scenario: Scheduled automatic export
       Given I have a premium subscription
       When I configure a weekly automatic export
@@ -114,9 +119,13 @@ Feature: Local-First Data and Export
       And it should be stored in my designated local directory
       And the 4 most recent backups should be retained
 
-  # ───────────────────────────────────────────
-  # Data Deletion
-  # ───────────────────────────────────────────
+    Scenario: Scheduled export when local directory is unavailable
+      Given I have configured a weekly automatic export
+      And the designated local directory is unavailable
+      When the scheduled export runs
+      Then I should receive a notification that the export failed
+      And the reason for the failure should be explained
+      And the system should retry at the next scheduled interval
 
   Rule: Users can delete their data and account permanently
 
@@ -137,3 +146,12 @@ Feature: Local-First Data and Export
       Then all data should be permanently deleted
       And my account should be deactivated
       And my username should be released after a 30-day holding period
+
+    Scenario: Recover account during the 30-day holding period
+      Given I have deleted my account within the last 30 days
+      When I sign in using my original social login provider
+      Then I should be prompted to recover my account
+      When I confirm recovery
+      Then my account should be reactivated
+      And all data should be restored to its pre-deletion state
+      And the 30-day holding period should be cancelled

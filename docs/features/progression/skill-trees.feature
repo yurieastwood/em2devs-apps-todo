@@ -8,10 +8,6 @@ Feature: Skill Trees
     Given I am an authenticated user
     And I have reached at least level 3
 
-  # ───────────────────────────────────────────
-  # Skill Tree Discovery
-  # ───────────────────────────────────────────
-
   Rule: Skill trees are discovered and unlocked through natural behaviour patterns
 
     Scenario Outline: Skill tree unlocked by behaviour pattern
@@ -25,11 +21,16 @@ Feature: Skill Trees
       Examples:
         | category         | threshold | tree_name       |
         | creative         | 15        | Creator         |
-        | health, fitness  | 15        | Guardian        |
-        | learning, study  | 15        | Scholar         |
-        | work, career     | 20        | Architect       |
-        | social, people   | 15        | Connector       |
-        | home, organising | 15        | Steward         |
+        | health           | 15        | Guardian        |
+        | fitness          | 15        | Guardian        |
+        | learning         | 15        | Scholar         |
+        | study            | 15        | Scholar         |
+        | work             | 20        | Architect       |
+        | career           | 20        | Architect       |
+        | social           | 15        | Connector       |
+        | people           | 15        | Connector       |
+        | home             | 15        | Steward         |
+        | organising       | 15        | Steward         |
         | side-project     | 10        | Builder         |
 
     Scenario: View available and locked skill trees
@@ -38,15 +39,14 @@ Feature: Skill Trees
       And I should see locked skill trees as silhouettes
       And each locked tree should show a hint about how to unlock it
 
+  Rule: Skill trees are hidden until the user reaches the required level
+
     Scenario: User does not see skill trees before level 3
-      Given I am at level 2
+      Given I am an authenticated user
+      And I am at level 2
       When I navigate to the progression view
       Then I should not see the skill trees section
       And I should see a teaser message about unlocking skill trees at level 3
-
-  # ───────────────────────────────────────────
-  # Skill Tree Progression
-  # ───────────────────────────────────────────
 
   Rule: Each skill tree has multiple tiers that unlock through sustained behaviour
 
@@ -73,10 +73,6 @@ Feature: Skill Trees
       Then progress should be applied to both the "Creator" and "Builder" trees
       And the XP earned should only count once for my total
 
-  # ───────────────────────────────────────────
-  # Skill Tree Perks
-  # ───────────────────────────────────────────
-
   Rule: Skill tree tiers unlock personalised tips, workflows, and cosmetics
 
     Scenario: Tier 1 perk unlocks personalised tips
@@ -94,3 +90,13 @@ Feature: Skill Trees
       Then I should unlock a unique profile badge for the "Creator" tree
       And I should unlock a themed colour palette for my interface
       And these cosmetics should be selectable in my profile settings
+
+  Rule: Skill tree progress is permanent and does not decay on inactivity
+
+    Scenario: Skill tree progress retained after inactivity
+      Given I have the "Builder" skill tree at tier 2
+      And I have not completed any side-project tasks in 60 days
+      When I view the "Builder" skill tree details
+      Then my tier should still be 2
+      And my progress toward tier 3 should be unchanged
+      And I should see a gentle prompt encouraging me to pick up side-project tasks again

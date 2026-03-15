@@ -8,15 +8,11 @@ Feature: Titles and Ranks
     Given I am an authenticated user
     And I have reached at least level 5
 
-  # ───────────────────────────────────────────
-  # Title Earning
-  # ───────────────────────────────────────────
-
   Rule: Titles are earned through sustained behaviour, not one-off achievements
 
     Scenario Outline: Earn a title through sustained behaviour
       Given I have met the sustained requirement for the title "<title>"
-      When the system evaluates my title eligibility
+      When I check my title progress
       Then I should be awarded the title "<title>"
       And a title-earned event should appear on my journey timeline
       And the title should be visible on my profile
@@ -36,7 +32,7 @@ Feature: Titles and Ranks
     Scenario: Title requires sustained behaviour, not bursts
       Given I completed 50 tasks before 9 AM
       But they were all completed within a single week
-      When the system evaluates my title eligibility for "Early Bird"
+      When I check my title progress for "Early Bird"
       Then I should not be awarded the title "Early Bird"
       And the system should show progress toward the sustained requirement
 
@@ -46,10 +42,6 @@ Feature: Titles and Ranks
       When I view my title progress
       Then I should see "Streak Master" with a progress indicator of 60%
       And I should see "12 more days of consistent completions needed"
-
-  # ───────────────────────────────────────────
-  # Title Display and Selection
-  # ───────────────────────────────────────────
 
   Rule: Users choose which title to display and titles are publicly visible
 
@@ -66,16 +58,15 @@ Feature: Titles and Ranks
       And I should see locked titles with their requirements
       And I should be able to select any earned title as active
 
-    Scenario: Title visible to other users
+    Scenario: Title visible on profile to other users
       Given I have "Morning Architect" as my active title
       When another user views my profile
       Then they should see "Morning Architect" displayed under my name
+
+    Scenario: Title visible in guild member list
+      Given I have "Morning Architect" as my active title
       When another user views a guild member list that includes me
       Then they should see my title next to my name
-
-  # ───────────────────────────────────────────
-  # Title Retention
-  # ───────────────────────────────────────────
 
   Rule: Titles are permanently earned and never revoked
 
@@ -85,3 +76,10 @@ Feature: Titles and Ranks
       When I view my titles
       Then "Early Bird" should still be in my earned titles
       And it should remain selectable as my active title
+
+    Scenario: Active title displayed when user holds many titles
+      Given I have earned 8 titles
+      And I have selected "Boss Slayer" as my active title
+      When another user views my profile
+      Then they should see "Boss Slayer" as my displayed title
+      And they should see a count indicating I have earned 8 titles total

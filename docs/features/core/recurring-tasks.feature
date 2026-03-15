@@ -7,10 +7,6 @@ Feature: Recurring Tasks and Quest Chains
   Background:
     Given I am an authenticated user
 
-  # ───────────────────────────────────────────
-  # Recurring Tasks
-  # ───────────────────────────────────────────
-
   Rule: Recurring tasks regenerate on a defined schedule
 
     Scenario: Create a daily recurring task
@@ -37,6 +33,15 @@ Feature: Recurring Tasks and Quest Chains
         | Recurrence | Monthly on the last Friday |
       Then the task should appear on the last Friday of each month
 
+    Scenario: Create a recurring task with an end date
+      When I create a recurring task with the following details:
+        | Field      | Value                |
+        | Title      | Sprint retrospective |
+        | Recurrence | Weekly on Friday     |
+        | End Date   | 2026-06-30           |
+      Then the task should appear every Friday until 2026-06-30
+      And no instances should be generated after the end date
+
     Scenario: Complete a recurring task instance
       Given I have a daily recurring task "Morning standup prep"
       And today's instance is open
@@ -46,14 +51,22 @@ Feature: Recurring Tasks and Quest Chains
       And tomorrow's instance should be generated
       And the recurring task streak should increment by 1
 
+    Scenario: Complete a recurring task instance late
+      Given I have a daily recurring task "Morning standup prep"
+      And yesterday's instance is still open
+      When I complete yesterday's instance
+      Then the instance should be marked as completed
+      And I should receive XP with an overdue penalty applied
+      And my streak should be broken
+
     Scenario: Skip a recurring task instance
       Given I have a daily recurring task "Morning standup prep"
       And today's instance is open
       When I skip today's instance
       Then today's instance should be marked as "Skipped"
       And no XP should be awarded or deducted
-      And the streak should be paused but not broken
-      And the skip should be recorded for pattern analysis
+      And the streak counter should freeze at its current value
+      And the skip should appear in my recurring task history
 
     Scenario: Pause a recurring task
       Given I have a weekly recurring task "Team retrospective"
@@ -61,8 +74,12 @@ Feature: Recurring Tasks and Quest Chains
       Then no new instances should be generated
       And existing uncompleted instances should remain
       And the task should show a "Paused" status
+
+    Scenario: Resume a paused recurring task
+      Given I have a paused recurring task "Team retrospective"
       When I resume the recurring task
       Then new instances should begin generating again
+      And the streak counter should resume from where it was paused
 
     Scenario: Edit all future instances of a recurring task
       Given I have a daily recurring task "Check email" at 09:00
@@ -79,20 +96,23 @@ Feature: Recurring Tasks and Quest Chains
       And completed past instances should remain in my history
       And the XP earned from past instances should be retained
 
-  # ───────────────────────────────────────────
-  # Quest Chains
-  # ───────────────────────────────────────────
+    Scenario: Handle overlapping recurring task instances
+      Given I have a daily recurring task "Morning standup prep"
+      And yesterday's instance is still open
+      When today's instance is generated
+      Then both yesterday's and today's instances should be visible
+      And yesterday's instance should be marked as overdue
 
   Rule: Quest chains auto-generate recurring quest structures from patterns
 
-    Scenario: System detects a recurring quest pattern
+    Scenario: User receives a suggestion for a recurring quest pattern
       Given I have completed the following quests in the last 3 weeks:
         | Quest Title       | Completed On |
         | Weekly meal prep  | 2026-03-01   |
         | Weekly meal prep  | 2026-03-08   |
         | Weekly meal prep  | 2026-03-15   |
-      When the system analyses my quest patterns
-      Then I should receive a suggestion to create a quest chain for "Weekly meal prep"
+      When I view my quest insights
+      Then I should see a suggestion to create a quest chain for "Weekly meal prep"
       And the suggestion should include the detected cadence of "Weekly"
 
     Scenario: Create a quest chain from a template

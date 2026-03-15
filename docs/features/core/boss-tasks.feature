@@ -7,10 +7,6 @@ Feature: Boss Tasks
   Background:
     Given I am an authenticated user
 
-  # ───────────────────────────────────────────
-  # Boss Task Detection
-  # ───────────────────────────────────────────
-
   Rule: Tasks are promoted to Boss Task status based on procrastination signals
 
     Scenario: Task promoted after repeated rescheduling
@@ -24,13 +20,13 @@ Feature: Boss Tasks
     Scenario: Task promoted based on age and priority
       Given I have a task "Refactor authentication module" with priority "High"
       And the task has been open for more than 14 days
-      And the task has not been started
+      And the task has no completed subtasks or time logged
       When the system evaluates my task list
       Then the task should be flagged as a Boss Task
 
     Scenario: Task promoted based on high difficulty and avoidance
       Given I have a task "Prepare annual tax filing" with difficulty "Hard"
-      And I have viewed the task 5 or more times without starting it
+      And I have viewed the task 5 or more times without completing any part of it
       When the system evaluates my task list
       Then the task should be flagged as a Boss Task
 
@@ -45,11 +41,14 @@ Feature: Boss Tasks
       And the task has been open for 30 days
       When the system evaluates my task list
       Then the task should not be flagged as a Boss Task
-      And it may be suggested for deletion or archival instead
+      And it should be suggested for deletion or archival instead
 
-  # ───────────────────────────────────────────
-  # Boss Task Intervention
-  # ───────────────────────────────────────────
+    Scenario: Boss Task is demoted when conditions no longer apply
+      Given I have a Boss Task "Refactor authentication module" promoted due to age and priority
+      When I change the priority to "Low"
+      And the system re-evaluates my task list
+      Then the task should be demoted from Boss Task status
+      And the Boss Task visual indicator should be removed
 
   Rule: Boss Tasks trigger a structured intervention flow to support completion
 
@@ -95,10 +94,6 @@ Feature: Boss Tasks
       And a timer should begin tracking my focused time
       And I should earn a Focus Mode XP bonus upon completion
 
-  # ───────────────────────────────────────────
-  # Boss Task Completion
-  # ───────────────────────────────────────────
-
   Rule: Completing a Boss Task awards significantly more XP and recognition
 
     Scenario: Complete a Boss Task
@@ -123,3 +118,17 @@ Feature: Boss Tasks
       When I complete my 10th Boss Task
       Then I should earn the title "Boss Slayer"
       And the title should be visible on my profile
+
+    Scenario: Delete a Boss Task
+      Given I have a Boss Task "Obsolete research"
+      When I delete the Boss Task
+      And I confirm the deletion
+      Then the task should be removed from my task list
+      And no XP should be awarded or deducted
+      And my "Boss Slayer" achievement counter should not change
+
+    Scenario: Boss Task that is also a recurring task instance
+      Given I have a recurring task "Weekly report" flagged as a Boss Task
+      When I complete the Boss Task
+      Then I should receive both recurring completion XP and Boss Task bonus XP
+      And the next recurring instance should be generated as a normal task

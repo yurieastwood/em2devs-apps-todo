@@ -10,17 +10,13 @@ Feature: Insight Cards
     And I have reached at least level 15
     And I have at least 30 days of task completion history
 
-  # ───────────────────────────────────────────
-  # Insight Generation
-  # ───────────────────────────────────────────
-
   Rule: Insights are generated from behavioural data and delivered as discoverable cards
 
     Scenario Outline: System generates an insight card
       Given the system has detected the pattern "<pattern>"
       When an insight card is generated
       Then I should see a card with the message "<message>"
-      And the card should include supporting data or a mini-chart
+      And the card should include supporting data or a visual trend (e.g., a visual trend of my Tuesday completion rates)
 
       Examples:
         | pattern                                          | message                                                                          |
@@ -34,8 +30,7 @@ Feature: Insight Cards
     Scenario: Insight cards are delivered periodically
       Given I meet the criteria for multiple insights
       When insights are generated
-      Then I should receive no more than 2-3 insight cards per week
-      And the cards should be spaced out across different days
+      Then I should receive a maximum of 1 insight card per day and 2-3 per week
       And the most impactful insights should be prioritised
 
     Scenario: No insight card when insufficient data
@@ -43,10 +38,6 @@ Feature: Insight Cards
       When the system evaluates potential insights
       Then no insight cards should be generated
       And I should not see the insights section until enough data is available
-
-  # ───────────────────────────────────────────
-  # Insight Interaction
-  # ───────────────────────────────────────────
 
   Rule: Users can view, dismiss, and save insight cards
 
@@ -66,7 +57,26 @@ Feature: Insight Cards
       Given I have an insight card I find irrelevant
       When I dismiss the card
       Then the card should be removed from my active insights
-      And the system should factor my dismissal into future insight relevance
+      And the system should learn from my dismissal to adjust future insight relevance
+
+    Scenario: Dismissed insight type reduces future frequency
+      Given I have dismissed 3 insight cards related to "morning productivity"
+      When the system evaluates future insights
+      Then the frequency of morning-related insights should be reduced
+      And the system should prioritise other insight categories instead
+
+    Scenario: Insight must be validated against user data before delivery
+      Given the system has detected the pattern "Morning productivity peak"
+      But my task history shows I complete fewer than 10% of tasks before noon
+      When the system evaluates the insight for delivery
+      Then the insight should not be generated
+      And the system should only surface patterns consistent with my actual data
+
+    Scenario: Same insight type does not repeat within a quarter
+      Given I received an insight about "quest completion time improving" on January 15
+      When the system evaluates insights on February 20
+      Then the system should not generate another "quest completion time improving" insight
+      And the same insight type should not appear more than once per quarter
 
     Scenario: Insight cards appear in weekly review
       Given I have received 2 insight cards this week

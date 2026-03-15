@@ -7,10 +7,6 @@ Feature: Quest Hierarchy
   Background:
     Given I am an authenticated user
 
-  # ───────────────────────────────────────────
-  # Quest Management
-  # ───────────────────────────────────────────
-
   Rule: Quests are meaningful clusters of related tasks with a clear outcome
 
     Scenario: Create a quest
@@ -44,7 +40,7 @@ Feature: Quest Hierarchy
     Scenario: Complete a quest
       Given I have a quest "Prepare conference talk" with 5 tasks
       And 4 tasks are completed
-      When I complete the remaining task
+      When I complete the remaining task "Final rehearsal"
       Then the quest progress should be 100%
       And the quest status should change to "Completed"
       And I should receive quest completion bonus XP
@@ -73,11 +69,21 @@ Feature: Quest Hierarchy
       Then the task should appear in my inbox
       And the quest progress should be recalculated
 
-  # ───────────────────────────────────────────
-  # Epic Management
-  # ───────────────────────────────────────────
+    Scenario: Delete a quest
+      Given I have a quest "Abandoned project" containing 3 tasks
+      When I delete the quest "Abandoned project"
+      And I confirm the deletion
+      Then the quest should be removed from my quest list
+      And the 3 tasks should be moved to my inbox
+      And the quest XP bonus should not be affected for completed tasks
 
-  Rule: Epics are multi-week objectives spanning several quests
+    Scenario: A quest cannot belong to more than one epic
+      Given I have a quest "Build authentication" assigned to the epic "Launch MVP"
+      When I attempt to assign the quest to the epic "Side Project"
+      Then I should see a message indicating the quest already belongs to an epic
+      And I should be offered the option to move it instead
+
+  Rule: Epics are multi-week objectives spanning several quests, with equal quest weighting
 
     Scenario: Create an epic
       When I create an epic with the following details:
@@ -100,8 +106,9 @@ Feature: Quest Hierarchy
       Then the epic should contain 4 quests
       And the epic progress should reflect aggregate quest progress
 
-    Scenario: Epic progress reflects quest completion
+    Scenario: Epic progress reflects quest completion with equal weighting
       Given I have an epic "Launch MVP" with 4 quests
+      And each quest contributes equally to epic progress regardless of task count
       And the quest "Build authentication" is 100% complete
       And the quest "Implement task engine" is 50% complete
       And the other quests are 0% complete
@@ -116,9 +123,18 @@ Feature: Quest Hierarchy
       And I should receive epic completion bonus XP
       And a milestone event should appear on my journey timeline
 
-  # ───────────────────────────────────────────
-  # Saga Management
-  # ───────────────────────────────────────────
+    Scenario: Delete an epic
+      Given I have an epic "Abandoned initiative" containing 3 quests
+      When I delete the epic "Abandoned initiative"
+      And I confirm the deletion
+      Then the epic should be removed from my epic list
+      And the 3 quests should remain intact but no longer belong to any epic
+
+    Scenario: Remove a quest from an epic
+      Given I have an epic "Launch MVP" with 4 quests
+      When I remove the quest "Beta testing" from the epic
+      Then the epic should contain 3 quests
+      And the epic progress should be recalculated
 
   Rule: Sagas are life-chapter goals representing major personal ambitions
     
@@ -158,9 +174,12 @@ Feature: Quest Hierarchy
       And I should be offered the option to upgrade
       And I should still be able to create tasks, quests, and epics
 
-  # ───────────────────────────────────────────
-  # Hierarchy Navigation
-  # ───────────────────────────────────────────
+    @premium
+    Scenario: An epic cannot belong to more than one saga
+      Given I have an epic "Launch MVP" assigned to the saga "Launch my SaaS business"
+      When I attempt to assign the epic to the saga "Career growth"
+      Then I should see a message indicating the epic already belongs to a saga
+      And I should be offered the option to move it instead
 
   Rule: Users can navigate the full hierarchy and see how tasks connect to goals
 

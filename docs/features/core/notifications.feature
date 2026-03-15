@@ -7,10 +7,6 @@ Feature: Notifications and Reminders
   Background:
     Given I am an authenticated user
 
-  # ───────────────────────────────────────────
-  # Task Reminders
-  # ───────────────────────────────────────────
-
   Rule: Users receive timely reminders for due tasks
 
     Scenario: Reminder for task due today
@@ -31,16 +27,18 @@ Feature: Notifications and Reminders
       When the reminder time arrives
       Then I should not receive a notification for "Buy milk"
 
-  # ───────────────────────────────────────────
-  # Achievement Notifications
-  # ───────────────────────────────────────────
+    Scenario: Repeated reminders for overdue tasks
+      Given I have a task "Submit report" that is 2 days overdue
+      And I have not completed or skipped it
+      Then I should receive a daily reminder until the task is completed, skipped, or deleted
 
   Rule: Achievements and milestones generate celebratory notifications
 
     Scenario Outline: Notification for achievement
       Given I have triggered the achievement "<achievement>"
       Then I should receive a notification celebrating "<achievement>"
-      And the notification should feel rewarding, not intrusive
+      And the notification should include a positive message and achievement icon
+      And the notification should auto-dismiss after 5 seconds
 
       Examples:
         | achievement                 |
@@ -52,9 +50,30 @@ Feature: Notifications and Reminders
         | Boss Task defeated          |
         | Season rank achieved        |
 
-  # ───────────────────────────────────────────
-  # Notification Preferences
-  # ───────────────────────────────────────────
+  Rule: Notifications are delivered through multiple channels
+
+    Scenario: Receive an in-app notification
+      Given I have a task reminder triggered
+      When the notification is delivered
+      Then I should see an in-app notification badge
+      And I should see the notification in my notification centre
+
+    Scenario: Receive a push notification
+      Given I have push notifications enabled
+      And a task reminder is triggered while I am not in the app
+      When the notification is delivered
+      Then I should receive a push notification on my device
+
+    Scenario: Tap a notification to navigate to the relevant item
+      Given I have received a notification about the task "Submit report"
+      When I tap the notification
+      Then I should be navigated to the task detail view for "Submit report"
+
+    Scenario: Batch notifications when many arrive simultaneously
+      Given 5 achievement notifications are triggered within 10 seconds
+      Then the notifications should be grouped into a single summary notification
+      And the summary should indicate the number of achievements earned
+      And I should be able to expand the summary to see individual achievements
 
   Rule: Users have granular control over notification settings
 
@@ -76,6 +95,12 @@ Feature: Notifications and Reminders
       When I set quiet hours from 10 PM to 7 AM
       Then no notifications should be delivered during that window
       And queued notifications should be delivered after 7 AM
+
+    Scenario: Quiet hours respect user timezone
+      Given I have set quiet hours from 10 PM to 7 AM
+      And my timezone is set to "Europe/London"
+      When a notification is triggered at 11 PM London time
+      Then the notification should be queued until 7 AM London time
 
     Scenario: Disable all notifications
       When I disable all notifications

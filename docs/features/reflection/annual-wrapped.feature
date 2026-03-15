@@ -9,14 +9,10 @@ Feature: Annual Wrapped
     And I have a premium subscription
     And I have used Waypoint for at least 3 months in the current year
 
-  # ───────────────────────────────────────────
-  # Wrapped Generation
-  # ───────────────────────────────────────────
-
   Rule: An annual summary is generated at year-end with personalised highlights
 
     Scenario: Annual wrapped is generated
-      Given it is December and the year is ending
+      Given it is December 15th or later in the current year
       When my annual wrapped is generated
       Then I should see a multi-slide summary including:
         | Slide                    | Content                                      |
@@ -38,16 +34,26 @@ Feature: Annual Wrapped
       Then I should see a message that my wrapped will be available next year
       And I should see a teaser of what wrapped will include
 
-  # ───────────────────────────────────────────
-  # Wrapped Interaction
-  # ───────────────────────────────────────────
+    Scenario: Slides with zero data show encouraging messaging
+      Given it is December 15th or later in the current year
+      And I have not completed any quests this year
+      When my annual wrapped is generated
+      Then the "Quests completed" slide should not be hidden
+      And it should display an encouraging message such as "No quests yet — your first quest awaits next year!"
+
+    Scenario: Mid-year signup users receive a partial wrapped
+      Given I signed up in June and have at least 3 months of data
+      When the wrapped period arrives
+      Then I should receive a "Year So Far" wrapped summary
+      And it should cover only the months since my signup
+      And it should clearly indicate the partial time period
 
   Rule: The wrapped experience is engaging and shareable
 
     Scenario: View wrapped as an interactive slideshow
       When I open my annual wrapped
       Then I should see a slide-by-slide interactive presentation
-      And each slide should have an engaging visual and animation
+      And each slide should display the data point prominently with a celebratory visual treatment
       And I should be able to navigate forward and backward through slides
 
     Scenario: Share wrapped highlights
@@ -55,10 +61,17 @@ Feature: Annual Wrapped
       When I choose to share a slide
       Then I should be able to generate a shareable image of that slide
       And the image should include Waypoint branding
-      And I should be able to share it to external platforms
+      And I should be able to share it as an image to any platform via the system share sheet
 
     Scenario: View past year's wrapped
       Given I have a wrapped summary from last year
       When I navigate to my wrapped history
       Then I should see last year's wrapped available for replay
       And I should be able to compare year-over-year statistics
+
+    Scenario: User can exclude specific data from shareable wrapped
+      Given I am viewing my annual wrapped
+      When I choose to share a slide
+      Then I should see privacy options to exclude specific data points from the shareable image
+      And the generated image should omit any data I chose to exclude
+      And the excluded data should still be visible in my private wrapped view

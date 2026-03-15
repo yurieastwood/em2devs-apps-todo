@@ -8,10 +8,6 @@ Feature: Guilds
     Given I am an authenticated user
     And I have a premium subscription
 
-  # ───────────────────────────────────────────
-  # Guild Creation and Management
-  # ───────────────────────────────────────────
-
   Rule: Users can create and manage guilds of 2-12 members
 
     Scenario: Create a guild
@@ -24,15 +20,17 @@ Feature: Guilds
       And I should be the guild leader
       And the guild should have 1 member (me)
 
-    Scenario: Invite members to a guild
+    Scenario: Generate an invite link for a guild
       Given I am the leader of "Side Project Squad"
       When I generate an invite link for the guild
       Then a shareable invite link should be created
       And the link should expire after 7 days by default
-      When another user clicks the invite link
-      Then they should see a prompt to join "Side Project Squad"
-      When they accept
-      Then the guild should have 2 members
+
+    Scenario: Accept a guild invite via link
+      Given a valid invite link exists for "Side Project Squad"
+      When another user clicks the invite link and accepts
+      Then they should be added to "Side Project Squad"
+      And the guild should have 2 members
 
     Scenario: Guild reaches maximum capacity
       Given my guild "Side Project Squad" has 12 members
@@ -70,9 +68,44 @@ Feature: Guilds
       And the guild should be archived
       And individual contributions should remain in each member's history
 
-  # ───────────────────────────────────────────
-  # Guild Quest Board
-  # ───────────────────────────────────────────
+    Scenario: User can only lead a limited number of guilds
+      Given I am the leader of 3 guilds
+      When I attempt to create a new guild
+      Then I should see a message that I have reached the maximum number of guilds I can lead
+      And I should be offered the option to disband or transfer leadership of an existing guild
+
+    Scenario: Edit guild details
+      Given I am the leader of "Side Project Squad"
+      When I update the guild details:
+        | Field       | Value                        |
+        | Name        | Side Project Champions       |
+        | Description | Shipping greatness together  |
+      Then the guild details should be updated
+      And all members should be notified of the changes
+
+    Scenario: Remove a member with in-progress guild quest tasks
+      Given I am the leader of "Side Project Squad"
+      And "Alex" has 3 in-progress tasks on the guild quest "Ship landing page"
+      When I remove "Alex" from the guild
+      Then "Alex" should no longer be a guild member
+      And their in-progress tasks should become unassigned on the guild quest board
+      And the remaining members should be notified of the unassigned tasks
+
+    Scenario: Leader transfer is declined
+      Given I am the leader of "Side Project Squad" with 3 members
+      When I choose to leave the guild
+      And I attempt to transfer leadership to "Jordan"
+      And "Jordan" declines the transfer
+      Then I should be prompted to select another member for leadership
+      And I should remain the guild leader until the transfer is accepted
+
+    Scenario: Last non-leader member leaves the guild
+      Given I am the leader of "Side Project Squad" with 2 members
+      And the only other member is "Jordan"
+      When "Jordan" leaves the guild
+      Then I should be the sole remaining member
+      And the guild should remain active
+      And I should be prompted to invite new members or disband
 
   Rule: Guilds have shared quest boards where members collaborate
 
@@ -112,10 +145,6 @@ Feature: Guilds
       Then the guild quest should be marked as complete
       And all contributing members should receive a guild quest bonus
       And the completion should appear in the guild feed with a celebration
-
-  # ───────────────────────────────────────────
-  # Guild Progression
-  # ───────────────────────────────────────────
 
   Rule: Guilds have collective XP and shared milestones
 

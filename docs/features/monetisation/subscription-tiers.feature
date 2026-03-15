@@ -7,10 +7,6 @@ Feature: Subscription Tiers
   Background:
     Given I am an authenticated user
 
-  # ───────────────────────────────────────────
-  # Free Tier (Waypoint Core)
-  # ───────────────────────────────────────────
-
   Rule: Free-tier users have full access to core task management and gamification
 
     Scenario: Free-tier user has access to core features
@@ -38,10 +34,6 @@ Feature: Subscription Tiers
       And I should be able to dismiss the prompt
       And the prompt should not interfere with my current workflow
       And the same feature prompt should not appear more than once per week
-
-  # ───────────────────────────────────────────
-  # Premium Tier (Waypoint Pro)
-  # ───────────────────────────────────────────
 
   Rule: Premium unlocks advanced intelligence, social, and customisation features
 
@@ -79,14 +71,28 @@ Feature: Subscription Tiers
       And guild memberships should be preserved but limited to view-only
       And I should be prompted to renew with a clear explanation of what was lost
 
-  # ───────────────────────────────────────────
-  # Team Tier (Waypoint Guild)
-  # ───────────────────────────────────────────
+    Scenario: In-progress guild activities on premium expiry
+      Given I have a premium subscription
+      And I am participating in a guild challenge
+      And I have in-progress shared quests
+      When my premium subscription expires
+      Then my challenge participation should end gracefully
+      And my contributions to shared quests should remain
+      But I should not be able to create new guild activities
+      And I should be able to view but not interact with guild boards
+
+    Scenario: Cosmetics retained after downgrade
+      Given I have a premium subscription
+      And I have purchased the "Midnight Theme" colour palette
+      When my premium subscription expires
+      Then I should retain the "Midnight Theme" in my collection
+      And I should still be able to use purchased cosmetics
+      And no purchased cosmetic should be removed or locked
 
   Rule: Team tier provides everything in Pro plus team management features
 
     Scenario: Subscribe to team tier
-      Given I am a team lead looking for a shared productivity tool
+      Given I am the administrator of a team workspace
       When I subscribe to the "Waypoint Guild" plan for up to 25 members
       Then I should be able to invite team members to the team workspace
       And all team members should receive premium features
@@ -102,9 +108,29 @@ Feature: Subscription Tiers
         | Admin controls and onboarding flows  |
         | Dedicated team leaderboards          |
 
-  # ───────────────────────────────────────────
-  # Cosmetic Purchases
-  # ───────────────────────────────────────────
+    Scenario: Team lead cancels the subscription
+      Given my team has the "Waypoint Guild" subscription with 10 members
+      When the team subscription is cancelled
+      Then all team members should revert to free-tier access
+      And team members should retain all data created during the team subscription
+      And team-specific features should become read-only
+      And each member should be notified of the change
+
+    Scenario: Team member is removed from the team
+      Given my team has the "Waypoint Guild" subscription
+      And "Jordan" is a team member
+      When I remove "Jordan" from the team
+      Then "Jordan" should revert to free-tier access
+      And "Jordan" should retain a copy of their personal data
+      And "Jordan" should lose access to shared team quest boards
+
+    Scenario: Downgrade from Team to Pro
+      Given my team has the "Waypoint Guild" subscription
+      When I downgrade to the "Waypoint Pro" plan
+      Then my personal account should become a Pro account
+      And all team members should revert to free-tier access
+      And team-specific features should become read-only
+      And all members should be notified of the downgrade
 
   Rule: Cosmetics are purchasable and provide no productivity advantage
 

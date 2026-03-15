@@ -7,10 +7,6 @@ Feature: Weekly Review Ritual
   Background:
     Given I am an authenticated user
 
-  # ───────────────────────────────────────────
-  # Review Trigger
-  # ───────────────────────────────────────────
-
   Rule: The weekly review is prompted at a consistent user-chosen time
 
     Scenario: Weekly review prompt at scheduled time
@@ -29,16 +25,17 @@ Feature: Weekly Review Ritual
       And I choose to start a review now
       Then the review flow should begin regardless of scheduled time
 
+    Scenario: Default review schedule when no preference is set
+      Given I have not configured a weekly review schedule
+      Then my weekly review should default to Sunday at 6 PM in my local timezone
+      And I should receive a notification at the default time
+
     Scenario: Dismiss weekly review prompt
       Given I receive the weekly review notification
       When I dismiss the notification
       Then the review should remain available in the review section
-      And I should receive one follow-up reminder 24 hours later
+      And I should receive one follow-up reminder 24 hours later in my local timezone
       And no further reminders should be sent for this week's review
-
-  # ───────────────────────────────────────────
-  # Basic Review Flow (Free Tier)
-  # ───────────────────────────────────────────
 
   Rule: Free-tier users get a streamlined review covering essential retrospection
 
@@ -53,9 +50,9 @@ Feature: Weekly Review Ritual
         | Current streak         | 11 days   |
         | XP earned              | 420       |
       And I should be prompted with "What went well this week?"
-      When I enter my reflection text
-      And I am prompted with "What could go better next week?"
-      When I enter my reflection text
+      And I enter my reflection text for "What went well this week?"
+      And I should be prompted with "What could go better next week?"
+      And I enter my reflection text for "What could go better next week?"
       Then the review should be saved
       And I should receive weekly review XP
       And the review should appear in my review history
@@ -67,10 +64,6 @@ Feature: Weekly Review Ritual
       And each review should show the week's summary metrics
       And each review should show my reflection notes
 
-  # ───────────────────────────────────────────
-  # Advanced Review Flow (Premium Tier)
-  # ───────────────────────────────────────────
-
   @premium
   Rule: Premium users get data-rich retrospectives with visual insights
 
@@ -78,7 +71,7 @@ Feature: Weekly Review Ritual
       Given I have a premium subscription
       When I start the weekly review
       Then I should see the basic summary metrics
-      And I should see a productivity chart comparing this week to the last 4 weeks
+      And I should see a productivity chart comparing this week to the last 4 weeks showing completed tasks, XP earned, and streak status
       And I should see my most productive day and time window
       And I should see tasks I avoided or rescheduled repeatedly
       And I should see estimation accuracy for the week
@@ -95,10 +88,6 @@ Feature: Weekly Review Ritual
         | Your Tuesday productivity has increased 30% over the last month  |
         | You complete more creative tasks in the morning                  |
         | Your estimation accuracy has improved from 55% to 72%            |
-
-  # ───────────────────────────────────────────
-  # Review Streaks and XP
-  # ───────────────────────────────────────────
 
   Rule: Completing weekly reviews earns XP and maintains a review streak
 
@@ -119,3 +108,20 @@ Feature: Weekly Review Ritual
       Then my streak should be paused
       And I should have a 1-week grace period to complete the missed review
       And if I complete next week's review, my streak should continue from 8
+
+    Scenario: Complete two missed weeks during the grace period
+      Given I have a review streak of 5 weeks
+      And I missed the last two weeks' reviews
+      And I am within the 1-week grace period
+      When I complete both the missed week's review and the current week's review
+      Then both reviews should be saved and counted
+      And my review streak should continue from 7 weeks
+
+    Scenario: Progress is saved as draft when user logs out mid-review
+      Given I have started my weekly review
+      And I have entered reflection text for "What went well this week?"
+      When I log out before completing the review
+      Then my in-progress review should be saved as a draft
+      And when I log back in and navigate to the weekly review section
+      Then I should see the option to resume my draft review
+      And my previously entered reflection text should be preserved

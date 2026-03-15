@@ -8,10 +8,6 @@ Feature: Accountability Partners
     Given I am an authenticated user
     And I have reached at least level 7
 
-  # ───────────────────────────────────────────
-  # Pairing
-  # ───────────────────────────────────────────
-
   Rule: Users can pair with one accountability partner at a time
 
     Scenario: Send an accountability partner request
@@ -44,10 +40,6 @@ Feature: Accountability Partners
       And "Jordan" should be notified
       And both our past shared summaries should remain in our individual histories
 
-  # ───────────────────────────────────────────
-  # Shared Visibility
-  # ───────────────────────────────────────────
-
   Rule: Partners see daily summaries, not task-level detail
 
     Scenario: View partner's daily summary
@@ -74,5 +66,25 @@ Feature: Accountability Partners
     Scenario: Partner check-in messages are limited scope
       Given I have an accountability partner "Jordan"
       When I view the messaging interface
-      Then I should only be able to send short encouragement messages
+      Then I should only be able to send encouragement messages up to 280 characters
       And the messaging should not function as a full chat system
+
+    Scenario: Partner account is deactivated
+      Given I have an accountability partner "Jordan"
+      When "Jordan" deactivates their account
+      Then the partnership should be automatically dissolved
+      And I should be notified that my partner is no longer available
+      And I should be able to send a new partner request to someone else
+
+    Scenario: Re-pair with a former partner
+      Given I previously had a partnership with "Jordan" that was ended
+      When I send a new accountability partner request to "Jordan"
+      Then the request should be sent successfully
+      And our previous shared history should remain separate from the new partnership
+
+    Scenario: Existing partnership persists regardless of level changes
+      Given I have an accountability partner "Jordan"
+      And I was level 7 when the partnership was formed
+      When my level calculation is adjusted and I am now below level 7
+      Then the existing partnership should remain active
+      And I should not be able to form new partnerships until I return to level 7

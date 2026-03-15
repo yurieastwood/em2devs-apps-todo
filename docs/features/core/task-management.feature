@@ -6,11 +6,6 @@ Feature: Task Management
 
   Background:
     Given I am an authenticated user
-    And I am on the task management screen
-
-  # ───────────────────────────────────────────
-  # Task Creation
-  # ───────────────────────────────────────────
 
   Rule: Users can create tasks with minimal friction
 
@@ -40,7 +35,8 @@ Feature: Task Management
       Then the due date should resolve to the next occurring Tuesday
       And the task should appear in my upcoming view on that date
 
-    Scenario: Create a task via quick-add
+    Scenario: Create a task via quick-add from any screen
+      Given I am on any screen in the application
       When I activate the quick-add shortcut
       And I type "Submit tax return #personal !high ^April 15"
       Then a task "Submit tax return" should be created
@@ -48,9 +44,10 @@ Feature: Task Management
       And it should have priority "High"
       And it should have a due date of April 15
 
-  # ───────────────────────────────────────────
-  # Task Completion
-  # ───────────────────────────────────────────
+    Scenario: Reject a task with an empty title
+      When I attempt to create a task with an empty title
+      Then the task should not be created
+      And I should see a validation error indicating a title is required
 
   Rule: Completing a task triggers progression and records actual effort
 
@@ -62,13 +59,17 @@ Feature: Task Management
       And I should receive XP for the task
       And the task should appear in my completed tasks history
 
-    Scenario: Complete a task and record actual time spent
+    Scenario: Complete a task with an estimated time
       Given I have an open task "Write Q2 report" with an estimated time of 2 hours
       When I mark the task as complete
-      Then I should be prompted to record actual time spent
-      When I enter "2 hours 45 minutes" as actual time
+      Then the task status should change to "Completed"
+      And I should be prompted to record actual time spent
+
+    Scenario: Record actual time spent after completing a task
+      Given I have just completed the task "Write Q2 report" with an estimated time of 2 hours
+      When I record the actual time spent as "2 hours 45 minutes"
       Then the time estimation variance should be recorded as +37.5%
-      And the data should feed into my estimation learning model
+      And the variance should be visible in my estimation history
 
     Scenario: Complete a task that is overdue
       Given I have a task "Submit proposal" that was due 3 days ago
@@ -85,9 +86,18 @@ Feature: Task Management
       And I should receive quest completion bonus XP
       And a quest completion event should appear on my journey timeline
 
-  # ───────────────────────────────────────────
-  # Task Editing
-  # ───────────────────────────────────────────
+    Scenario: Complete an already-completed task
+      Given I have a completed task "Buy groceries"
+      When I attempt to mark the task as complete again
+      Then the task status should remain "Completed"
+      And no additional XP should be awarded
+
+    Scenario: Re-open a completed task
+      Given I have a completed task "Submit report"
+      When I re-open the task
+      Then the task status should change to "Open"
+      And the XP previously earned for completing it should be deducted
+      And the task should reappear in my active task list
 
   Rule: Users can modify any aspect of an existing task
 
@@ -100,7 +110,7 @@ Feature: Task Management
       Given I have an open task "Update website" with priority "Low"
       When I change the priority to "High"
       Then the task priority should be "High"
-      And the task difficulty rating should be recalculated
+      And the task difficulty rating should be updated accordingly
 
     Scenario: Reschedule a task
       Given I have an open task "Team lunch" due on "2026-04-10"
@@ -113,19 +123,26 @@ Feature: Task Management
       When I add the description "Focus on gamified productivity apps in the market"
       Then the task description should be saved
 
-  # ───────────────────────────────────────────
-  # Task Deletion
-  # ───────────────────────────────────────────
+    Scenario: Edit a completed task
+      Given I have a completed task "Submit report"
+      When I edit the task description to "Updated summary"
+      Then the task description should be saved
+      And the task status should remain "Completed"
 
   Rule: Deleting a task requires confirmation and does not award XP
 
     Scenario: Delete a task
       Given I have an open task "Cancelled meeting prep"
       When I delete the task "Cancelled meeting prep"
-      Then I should be asked to confirm the deletion
-      When I confirm the deletion
+      And I confirm the deletion
       Then the task should be removed from my task list
       And no XP should be awarded or deducted
+
+    Scenario: Cancel a task deletion
+      Given I have an open task "Important work"
+      When I delete the task "Important work"
+      And I cancel the deletion
+      Then the task should remain in my task list
 
     Scenario: Delete a task that belongs to a quest
       Given I have a quest "Launch campaign" containing 4 tasks
@@ -135,9 +152,12 @@ Feature: Task Management
       Then the quest "Launch campaign" should show 3 remaining tasks
       And the quest progress should be recalculated
 
-  # ───────────────────────────────────────────
-  # Task Organisation
-  # ───────────────────────────────────────────
+    Scenario: Delete a completed task
+      Given I have a completed task "Old report"
+      When I delete the task "Old report"
+      And I confirm the deletion
+      Then the task should be removed from my completed tasks history
+      And the XP earned from the task should be retained
 
   Rule: Tasks can be filtered, sorted, and searched
 
@@ -167,10 +187,6 @@ Feature: Task Management
       Given I have 20 tasks with various titles and descriptions
       When I search for "report"
       Then I should see only tasks whose title or description contains "report"
-
-  # ───────────────────────────────────────────
-  # Task Views
-  # ───────────────────────────────────────────
 
   Rule: Multiple views provide different perspectives on tasks
 

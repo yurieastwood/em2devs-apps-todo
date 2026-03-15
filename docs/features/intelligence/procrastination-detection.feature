@@ -7,15 +7,11 @@ Feature: Procrastination Detection
   Background:
     Given I am an authenticated user
 
-  # ───────────────────────────────────────────
-  # Detection Signals
-  # ───────────────────────────────────────────
-
   Rule: The system identifies procrastination through multiple signals
 
     Scenario: Task rescheduled multiple times
       Given I have a task "Update resume"
-      And I have rescheduled it 3 times in the last 2 weeks
+      And I have rescheduled it 3 or more times within any 14-day window
       When the system evaluates my task list
       Then the task should be flagged as a procrastination candidate
       And I should receive a gentle intervention prompt
@@ -27,12 +23,29 @@ Feature: Procrastination Detection
       When the system evaluates my task behaviour
       Then the task should be flagged as a procrastination candidate
 
+    Scenario: Task viewed but marked as waiting on someone
+      Given I have a task "Follow up with contractor"
+      And I have opened the task details 5 times in the last week
+      And the task is marked with status "Waiting on someone"
+      When the system evaluates my task behaviour
+      Then the task should not be flagged as a procrastination candidate
+      Because the task is blocked by an external dependency
+
     Scenario: High-priority task consistently skipped
       Given I have a task "Prepare investor pitch" with priority "Critical"
       And the task has been in my Today view for 4 consecutive days
-      And I have completed other lower-priority tasks during those days
+      And I have completed 3 or more lower-priority tasks while the high-priority task remained untouched
       When the system evaluates my completion patterns
       Then the task should be flagged as being avoided
+
+    Scenario: Multiple procrastination signals increase urgency
+      Given I have a task "Complete tax return" with priority "High"
+      And I have rescheduled it 3 times within the last 14 days
+      And I have opened the task details 5 times without taking action
+      And I have completed lower-priority tasks while this task remained untouched
+      When the system evaluates my task behaviour
+      Then the task should be flagged with higher urgency than a task showing only a single signal
+      And the intervention prompt should appear more prominently
 
     Scenario: Task open well past its due date with no progress
       Given I have a task "File insurance claim" that was due 10 days ago
@@ -40,10 +53,6 @@ Feature: Procrastination Detection
       And the task has not been rescheduled
       When the system evaluates my task list
       Then the task should be flagged as a procrastination candidate
-
-  # ───────────────────────────────────────────
-  # Intervention Flow
-  # ───────────────────────────────────────────
 
   Rule: Interventions are helpful, never punitive, and offer multiple paths forward
 
@@ -89,6 +98,14 @@ Feature: Procrastination Detection
       And I should be offered the full Boss Task intervention flow
       And the Boss Task bonus XP should be highlighted as motivation
 
+    Scenario: Completing a Boss Task promoted from procrastination clears signals
+      Given the task "Write thesis chapter" was promoted to Boss Task from a procrastination intervention
+      And the task had been flagged with procrastination signals
+      When I complete the Boss Task "Write thesis chapter"
+      Then all procrastination signals for that task should be cleared
+      And the task should not appear in procrastination insights
+      And the completion should count positively toward my intervention success rate
+
     Scenario: Reschedule with commitment note
       Given I am viewing the intervention for "Schedule dentist appointment"
       When I choose "Reschedule with intent"
@@ -97,10 +114,6 @@ Feature: Procrastination Detection
       Then the task should be rescheduled to next Monday
       And the commitment note should be visible on the task
       And on Monday, the task should appear with the note prominently displayed
-
-  # ───────────────────────────────────────────
-  # Procrastination Insights
-  # ───────────────────────────────────────────
 
   Rule: Users can learn about their procrastination patterns over time
 
@@ -116,6 +129,7 @@ Feature: Procrastination Detection
     Scenario: Intervention tone is always supportive
       Given a task has been flagged for procrastination
       When the system presents an intervention
-      Then the language should be encouraging, not shaming
-      And the message should normalise the experience
-      And the focus should be on moving forward, not dwelling on delay
+      Then the message should include an acknowledgement of difficulty such as "This task can feel overwhelming"
+      And the message should include a constructive suggestion such as "Try starting with just the first step"
+      And the message should not contain words like "failure", "lazy", "behind", or "overdue guilt"
+      And the focus should be on actionable next steps

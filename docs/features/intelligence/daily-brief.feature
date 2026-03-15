@@ -8,10 +8,6 @@ Feature: Smart Daily Brief
     Given I am an authenticated user
     And I have reached at least level 5
 
-  # ───────────────────────────────────────────
-  # Brief Generation
-  # ───────────────────────────────────────────
-
   Rule: The daily brief generates a recommended day based on priorities and patterns
 
     Scenario: Daily brief generated on first session
@@ -24,6 +20,7 @@ Feature: Smart Daily Brief
       And the sequence should account for my energy patterns
       And the sequence should account for task deadlines and priorities
 
+    @premium
     Scenario: Daily brief factors in calendar blocks
       Given I have a premium subscription with calendar integration
       And I have a 2-hour meeting block from 10 AM to 12 PM
@@ -31,6 +28,15 @@ Feature: Smart Daily Brief
       When the daily brief is generated
       Then no tasks should be suggested during the 10 AM to 12 PM block
       And harder tasks should be suggested for my peak energy windows outside the meeting
+
+    Scenario: Daily brief without calendar integration
+      Given I do not have calendar integration enabled
+      And I have 6 tasks to schedule today
+      And I have energy pattern data available
+      When the daily brief is generated
+      Then the brief should be generated from tasks only
+      And it should recommend a prioritised task sequence based on energy patterns and deadlines
+      And no calendar-related scheduling adjustments should be applied
 
     Scenario: Daily brief highlights overdue tasks
       Given I have 3 overdue tasks and 5 tasks due today
@@ -45,10 +51,6 @@ Feature: Smart Daily Brief
       Then the brief should recommend 6 priority tasks as the core plan
       And the remaining 4 should be listed as "if time allows"
       And I should see a note about today exceeding typical capacity
-
-  # ───────────────────────────────────────────
-  # Brief Interaction
-  # ───────────────────────────────────────────
 
   Rule: Users can accept, modify, or dismiss the daily brief
 
@@ -66,6 +68,12 @@ Feature: Smart Daily Brief
       Then my Today view should reflect my modifications
       And the system should learn from my modifications for future briefs
 
+    Scenario: User modifies brief to exceed capacity limit
+      Given the daily brief recommends 6 tasks matching my capacity model
+      When I add additional tasks to the brief beyond my capacity of 6
+      Then the system should show a gentle warning "This plan exceeds your typical daily capacity of 6 tasks — you may want to mark some as 'if time allows'"
+      And I should still be able to confirm the modified brief
+
     Scenario: Dismiss the daily brief
       Given the daily brief is displayed
       When I dismiss the daily brief
@@ -73,14 +81,10 @@ Feature: Smart Daily Brief
       And the brief should not reappear until the next day
 
     Scenario: Brief not generated when insufficient tasks
-      Given I have only 1 task due today
+      Given I have fewer than 2 tasks due today
       When I open Waypoint
       Then no daily brief should be generated
       And I should see my standard Today view
-
-  # ───────────────────────────────────────────
-  # Brief Learning
-  # ───────────────────────────────────────────
 
   Rule: The daily brief improves based on what users actually complete
 

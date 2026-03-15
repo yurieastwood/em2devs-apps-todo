@@ -8,10 +8,6 @@ Feature: Time Estimation Learning
     Given I am an authenticated user
     And I have a premium subscription
 
-  # ───────────────────────────────────────────
-  # Estimation Tracking
-  # ───────────────────────────────────────────
-
   Rule: The system tracks estimated vs actual time for every task
 
     Scenario: Record estimation variance on task completion
@@ -33,14 +29,10 @@ Feature: Time Estimation Learning
       Then the actual time should be auto-populated as 45 minutes
       And I should be able to adjust the time before confirming
 
-  # ───────────────────────────────────────────
-  # Estimation Bias Detection
-  # ───────────────────────────────────────────
-
   Rule: The system identifies systematic estimation biases by task type
 
     Scenario: Detect consistent underestimation for a task category
-      Given I have completed 10 writing tasks over the last month
+      Given I have completed at least 10 tasks in the "writing" category over the last month
       And my average estimation for writing tasks was 1 hour
       And my average actual time for writing tasks was 1 hour 25 minutes
       When the system analyses my estimation patterns
@@ -48,21 +40,24 @@ Feature: Time Estimation Learning
       And this bias should be stored in my estimation model
 
     Scenario: Detect consistent overestimation for a task category
-      Given I have completed 8 code review tasks over the last month
+      Given I have completed at least 10 tasks in the "code review" category over the last month
       And my average estimation was 1 hour
       And my average actual time was 35 minutes
       When the system analyses my estimation patterns
       Then it should detect a -42% overestimation bias for code review tasks
 
+    Scenario: Detect dramatic overestimation
+      Given I have a task "Organise inbox" with estimated time of 2 hours
+      When I complete the task and record actual time as 30 minutes
+      Then the system should record a variance of -75%
+      And this data point should feed into my estimation model
+      And if this pattern recurs across 10 or more tasks in the same category the system should flag a significant overestimation bias
+
     Scenario: No bias detected when estimates are accurate
       Given I have completed 12 meeting prep tasks
-      And my average estimation variance is within ±15%
+      And my average estimation variance is within the configurable accuracy threshold of ±15%
       When the system analyses my estimation patterns
       Then no bias should be flagged for meeting prep tasks
-
-  # ───────────────────────────────────────────
-  # Corrected Suggestions
-  # ───────────────────────────────────────────
 
   Rule: The system offers corrected time estimates based on learned biases
 
@@ -78,15 +73,19 @@ Feature: Time Estimation Learning
       When I accept the corrected estimate
       Then the task estimated time should be updated to 2 hours 48 minutes
 
+    Scenario: User accepts corrected estimate but completes in original time
+      Given the system has detected I underestimate writing tasks by 40%
+      And I accepted a corrected estimate of 2 hours 48 minutes for a writing task
+      When I complete the task and record actual time as 2 hours
+      Then the system should record this as a data point where the original estimate was more accurate
+      And the estimation model should reduce the bias correction factor for this category
+      And the model should not over-correct based on a single instance
+
     Scenario: User dismisses corrected estimate
       Given the system suggests a corrected estimate of 2 hours 48 minutes
       When I dismiss the suggestion
       Then the task estimated time should remain at 2 hours
-      And the system should respect my choice without repeating the suggestion for this task
-
-  # ───────────────────────────────────────────
-  # Estimation Insights
-  # ───────────────────────────────────────────
+      And the system should respect my choice without repeating the suggestion for this specific task instance
 
   Rule: Users can view their estimation accuracy trends
 

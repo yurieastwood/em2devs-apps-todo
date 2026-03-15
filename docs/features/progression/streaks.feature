@@ -7,10 +7,6 @@ Feature: Streaks and Grace Days
   Background:
     Given I am an authenticated user
 
-  # ───────────────────────────────────────────
-  # Streak Tracking
-  # ───────────────────────────────────────────
-
   Rule: Streaks track consecutive days of completing at least one task
 
     Scenario: Streak increments on daily completion
@@ -33,22 +29,18 @@ Feature: Streaks and Grace Days
       And "7-day streak" should appear on my journey timeline
 
     Scenario Outline: Streak milestones are celebrated at key thresholds
-      Given my streak is at <streak_days> minus 1
-      When my streak reaches <streak_days>
+      Given my current streak is <previous_days> days
+      When I complete a task and my streak reaches <streak_days> days
       Then I should see a milestone celebration for "<label>"
 
       Examples:
-        | streak_days | label             |
-        | 7           | One Week          |
-        | 14          | Two Weeks         |
-        | 30          | One Month         |
-        | 60          | Two Months        |
-        | 100         | The Century       |
-        | 365         | The Full Year     |
-
-  # ───────────────────────────────────────────
-  # Grace Days
-  # ───────────────────────────────────────────
+        | previous_days | streak_days | label             |
+        | 6             | 7           | One Week          |
+        | 13            | 14          | Two Weeks         |
+        | 29            | 30          | One Month         |
+        | 59            | 60          | Two Months        |
+        | 99            | 100         | The Century       |
+        | 364           | 365         | The Full Year     |
 
   Rule: Grace days protect streaks from occasional missed days
 
@@ -81,9 +73,8 @@ Feature: Streaks and Grace Days
       And I complete no tasks today
       When the day ends
       Then my streak should reset to 0
-      And I should see an encouraging message, not a punishment
+      And I should see an encouraging restart message mentioning my previous 20-day streak
       And I should see my previous streak of 20 days recorded in my history
-      And the message should say something like "Your 20-day streak was impressive. Let us start the next one."
 
     Scenario: No negative consequences for broken streak
       Given my streak just reset from 20 to 0
@@ -91,10 +82,6 @@ Feature: Streaks and Grace Days
       And no titles should be revoked
       And no skill tree progress should be lost
       And my past streak should remain on my journey timeline as an achievement
-
-  # ───────────────────────────────────────────
-  # Streak Freeze
-  # ───────────────────────────────────────────
 
   Rule: Users can manually freeze their streak when they know they will be unavailable
 
@@ -116,3 +103,21 @@ Feature: Streaks and Grace Days
       When the freeze period ends
       And I complete a task the next day
       Then my streak should continue from 31 days
+
+  Rule: Streak day boundaries are determined by the user's configured timezone
+
+    Scenario: Streak day boundary respects user timezone
+      Given my timezone is set to "Australia/Sydney" (UTC+11)
+      And my current streak is 5 days
+      And it is 11:30 PM in my timezone
+      When I complete a task
+      Then it should count toward today's streak in my timezone
+      And my streak should remain at 5 days if I already completed a task today
+
+    Scenario: Completing tasks during a streak freeze does not end the freeze early
+      Given my streak is frozen at 30 days for 5 days
+      And I am on day 2 of the freeze
+      When I complete a task
+      Then the freeze should remain active for the remaining 3 days
+      And the task completion should be recorded normally
+      And the streak should remain frozen at 30 days

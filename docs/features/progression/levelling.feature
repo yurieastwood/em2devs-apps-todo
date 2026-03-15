@@ -7,10 +7,6 @@ Feature: Levelling System
   Background:
     Given I am an authenticated user
 
-  # ───────────────────────────────────────────
-  # Level Progression
-  # ───────────────────────────────────────────
-
   Rule: Levels require logarithmically scaling XP to prevent inflation
 
     Scenario: New user starts at level 1
@@ -36,8 +32,8 @@ Feature: Levelling System
         | 10    | 1,000                  |
         | 20    | 4,000                  |
         | 50    | 25,000                 |
-      And early levels should feel achievable within the first week
-      And later levels should require weeks of sustained effort
+      And level 5 should be reachable by completing 10 Normal tasks per day for 5 days
+      And level 50 should require at least 30 days of sustained high-difficulty completions
 
     Scenario: Level up unlocks new features progressively
       Given I am level 2
@@ -59,10 +55,6 @@ Feature: Levelling System
         | 10    | Leaderboards, Challenge Mode |
         | 15    | Insight Cards                |
         | 20    | Advanced Analytics           |
-
-  # ───────────────────────────────────────────
-  # Level Display
-  # ───────────────────────────────────────────
 
   Rule: Level information is visible and motivating
 
@@ -86,3 +78,20 @@ Feature: Levelling System
       Then I should see an enhanced celebration animation
       And I should receive a milestone achievement
       And the milestone should be shareable
+
+  Rule: There is a maximum level that gracefully handles continued progression
+
+    Scenario: User reaches maximum level
+      Given I am at the maximum level
+      When I earn additional XP
+      Then my level should remain at the maximum
+      And the XP should still be tracked as lifetime XP
+      And I should see a "Max Level" badge on my profile
+      And I should still earn seasonal XP and rewards
+
+    Scenario: Existing users retain levels when XP thresholds are rebalanced
+      Given I am level 15 with 3,500 XP
+      And the XP thresholds have been rebalanced
+      When I view my profile
+      Then my level should reflect the new thresholds applied to my existing XP
+      And I should never lose levels due to a rebalance

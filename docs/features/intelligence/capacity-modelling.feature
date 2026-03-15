@@ -9,10 +9,6 @@ Feature: Capacity Modelling
     And I have a premium subscription
     And I have at least 14 days of task completion history
 
-  # ───────────────────────────────────────────
-  # Capacity Learning
-  # ───────────────────────────────────────────
-
   Rule: The system builds a personal capacity model from historical data
 
     Scenario: Capacity model established from history
@@ -23,21 +19,34 @@ Feature: Capacity Modelling
       Then my weekday capacity should be approximately 6 tasks
       And my weekend capacity should be approximately 3 tasks
 
-    Scenario: Capacity model accounts for task difficulty
+    Scenario: Capacity model accounts for task difficulty weighting
       Given my capacity model shows I complete approximately 6 "Normal" tasks per day
       When I have 4 "Hard" tasks and 2 "Normal" tasks scheduled today
       Then the system should calculate this as exceeding my typical capacity
-      Because hard tasks consume more capacity than normal tasks
+      Because hard tasks consume 2 capacity units while normal tasks consume 1
 
-    Scenario: Capacity model updates as behaviour changes
+    Scenario: Tasks with no difficulty assigned default to Normal
+      Given my capacity model shows I complete approximately 6 "Normal" tasks per day
+      When I create a task without specifying a difficulty level
+      Then the task should default to "Normal" difficulty
+      And it should count as 1 capacity unit in my daily plan
+
+    Scenario: Capacity model updates gradually as behaviour changes
       Given my historical weekday capacity is 6 tasks
       And over the last 3 weeks I have consistently completed 8 tasks on weekdays
       When the system recalibrates my capacity model
-      Then my weekday capacity should adjust upward toward 8
+      Then my weekday capacity should adjust upward gradually based on actual completion patterns
+      And the adjustment should not exceed 1 task per recalibration cycle
 
-  # ───────────────────────────────────────────
-  # Overcommitment Warnings
-  # ───────────────────────────────────────────
+    Scenario: Weekend capacity may differ from weekday capacity
+      Given I have completed tasks for 30 days
+      And my average daily completion is 6 tasks on weekdays
+      And my average daily completion is 2 tasks on Saturdays
+      And my average daily completion is 3 tasks on Sundays
+      When the system builds my capacity model
+      Then my Saturday capacity should be approximately 2 tasks
+      And my Sunday capacity should be approximately 3 tasks
+      And weekend capacity should be evaluated independently from weekday capacity
 
   Rule: Users are warned when scheduled tasks exceed their realistic capacity
 
@@ -61,6 +70,14 @@ Feature: Capacity Modelling
       When I view my Today tasks
       Then I should not see any capacity warning
 
+    Scenario: Capacity warnings dismissed repeatedly
+      Given my weekday capacity is 6 tasks
+      And I have dismissed the capacity warning 3 times this week
+      When I exceed my capacity again
+      Then the system should still show the capacity indicator in a reduced, non-intrusive form
+      And it should not show a modal or interruptive warning
+      And the full warning should resume the following week
+
     Scenario: Reprioritisation assistance offered
       Given I have 12 tasks scheduled for today
       And my capacity is 6 tasks
@@ -68,10 +85,6 @@ Feature: Capacity Modelling
       Then the system should suggest which tasks to defer based on priority and deadlines
       And I should be able to accept, modify, or reject each suggestion
       And deferred tasks should be rescheduled to the next available day within capacity
-
-  # ───────────────────────────────────────────
-  # Capacity Insights
-  # ───────────────────────────────────────────
 
   Rule: Users can view their capacity model and trends
 

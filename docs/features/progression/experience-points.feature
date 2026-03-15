@@ -9,7 +9,7 @@ Feature: Experience Points
 
   Rule: XP is weighted by difficulty, timeliness, and consistency
 
-    @wip
+    @done
     Scenario Outline: XP awarded based on task difficulty
       Given I have a task with difficulty "<difficulty>"
       When I complete the task on time

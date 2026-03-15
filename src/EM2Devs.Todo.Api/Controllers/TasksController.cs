@@ -41,13 +41,10 @@ public sealed class TasksController : ControllerBase
         return CreatedAtAction(nameof(GetTask), new { taskId = task.Id.Value }, MapToResponse(task));
     }
 
-    [HttpGet("{taskId}")]
-    public async Task<IActionResult> GetTask(string taskId, CancellationToken ct)
+    [HttpGet("{taskId:guid}")]
+    public async Task<IActionResult> GetTask(Guid taskId, CancellationToken ct)
     {
-        if (!Guid.TryParseExact(taskId, "D", out var guid) || taskId != guid.ToString("D"))
-        {
-            return NotFound();
-        }
+        var guid = taskId;
 
         var task = await _repository.GetByIdAsync(new TaskId(guid), ct).ConfigureAwait(false);
         return task is null ? NotFound() : Ok(MapToResponse(task));

@@ -6,6 +6,7 @@ using EM2Devs.Todo.Infrastructure.Persistence;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
+builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {

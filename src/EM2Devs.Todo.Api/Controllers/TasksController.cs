@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Domain.Entities;
@@ -58,6 +57,5 @@ public sealed class TasksController : ControllerBase
         new(task.Id.Value, task.Title.Value, task.Status.ToString());
 }
 
-[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed record CreateTaskRequest(string Title);
 public sealed record TaskResponse(Guid Id, string Title, string Status);

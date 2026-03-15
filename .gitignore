@@ -82,3 +82,9 @@ TestResults/
 *.swp
 *.swo
 *~
+
+# CI
+.hypothesis/
+TestResults/
+StrykerOutput/
+node_modules/

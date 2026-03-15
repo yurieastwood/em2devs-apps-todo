@@ -23,6 +23,8 @@ else
     builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
 }
 
+builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
+
 builder.Services.AddSingleton<IMediator, Mediator>();
 
 builder.Services.AddTransient<IRequestHandler<CreateTaskCommand, TodoTask>, CreateTaskCommandHandler>();

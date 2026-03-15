@@ -120,6 +120,17 @@ paths:
           description: Invalid task ID format in path
         "409":
           description: Status transition conflict
+  /api/profile:
+    get:
+      operationId: getProfile
+      summary: Get player progression profile
+      responses:
+        "200":
+          description: Player progression profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
 components:
   schemas:
     CreateTaskRequest:
@@ -145,6 +156,30 @@ components:
             - Todo
             - InProgress
             - Done
+    ProfileResponse:
+      type: object
+      required:
+        - totalXp
+        - level
+        - xpToNextLevel
+        - currentStreak
+        - longestStreak
+      properties:
+        totalXp:
+          type: integer
+          minimum: 0
+        level:
+          type: integer
+          minimum: 1
+        xpToNextLevel:
+          type: integer
+          minimum: 0
+        currentStreak:
+          type: integer
+          minimum: 0
+        longestStreak:
+          type: integer
+          minimum: 0
     TaskResponse:
       type: object
       required:

@@ -11,6 +11,7 @@ Feature: Leaderboards
 
   Rule: Leaderboards compare users within similar cohorts only
 
+    @wip
     Scenario: View my leaderboard cohort
       Given I am level 15
       When I view the leaderboard
@@ -50,6 +51,7 @@ Feature: Leaderboards
 
   Rule: Multiple leaderboard types cater to different motivations
 
+    @wip
     Scenario Outline: View a leaderboard by type
       When I select the "<leaderboard>" leaderboard
       Then I should see cohort members ranked by <ranking_metric>
@@ -68,6 +70,7 @@ Feature: Leaderboards
 
   Rule: Users control their leaderboard visibility
 
+    @wip
     Scenario: Opt out of leaderboards
       When I navigate to my privacy settings
       And I disable leaderboard participation

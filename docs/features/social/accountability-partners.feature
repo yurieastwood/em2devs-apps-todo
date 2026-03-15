@@ -10,13 +10,13 @@ Feature: Accountability Partners
 
   Rule: Users can pair with one accountability partner at a time
 
-    @wip
+    @done
     Scenario: Send an accountability partner request
       When I send an accountability partner request to user "Jordan"
       Then "Jordan" should receive a partner request notification
       And the request should be in a "Pending" state
 
-    @wip
+    @done
     Scenario: Accept a partner request
       Given I have a pending partner request from "Casey"
       When I accept the request
@@ -29,14 +29,14 @@ Feature: Accountability Partners
       Then the request should be removed
       And "Casey" should be notified that the request was declined
 
-    @wip
+    @done
     Scenario: Only one active partner at a time
       Given I already have an accountability partner "Jordan"
       When I attempt to send a partner request to "Alex"
       Then I should see a message that I already have an active partner
       And I should be offered the option to end my current partnership first
 
-    @wip
+    @done
     Scenario: End an accountability partnership
       Given I have an accountability partner "Jordan"
       When I choose to end the partnership

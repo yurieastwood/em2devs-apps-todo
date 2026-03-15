@@ -8,6 +8,7 @@ public sealed class TodoTask
     public TaskId Id { get; }
     public TaskTitle Title { get; private set; }
     public TaskStatus Status { get; private set; }
+    public bool IsBossTask { get; private set; }
 
     private TodoTask(TaskId id, TaskTitle title)
     {
@@ -39,5 +40,20 @@ public sealed class TodoTask
         }
 
         Status = TaskStatus.Done;
+    }
+
+    public void PromoteToBossTask()
+    {
+        if (Status == TaskStatus.Done)
+        {
+            throw new DomainException("Cannot promote a completed task to Boss Task.");
+        }
+
+        IsBossTask = true;
+    }
+
+    public void DemoteFromBossTask()
+    {
+        IsBossTask = false;
     }
 }

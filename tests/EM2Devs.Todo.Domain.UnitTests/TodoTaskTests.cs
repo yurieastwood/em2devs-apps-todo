@@ -158,4 +158,73 @@ public sealed class TodoTaskTests
         var exToDone = Should.Throw<DomainException>(() => task.MarkAsDone());
         exToDone.Message.ShouldContain("Cannot transition");
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeBossTask_When_NewTaskIsCreated()
+    {
+        // Given / When
+        var task = TodoTask.Create(new TaskTitle("Normal task"));
+
+        // Then
+        task.IsBossTask.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_BecomeBossTask_When_Promoted()
+    {
+        // Given
+        var task = TodoTask.Create(new TaskTitle("Hard task"));
+
+        // When
+        task.PromoteToBossTask();
+
+        // Then
+        task.IsBossTask.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_StopBeingBossTask_When_Demoted()
+    {
+        // Given
+        var task = TodoTask.Create(new TaskTitle("Was hard"));
+        task.PromoteToBossTask();
+
+        // When
+        task.DemoteFromBossTask();
+
+        // Then
+        task.IsBossTask.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_RemainBossTask_When_PromotedTwice()
+    {
+        // Given
+        var task = TodoTask.Create(new TaskTitle("Already boss"));
+        task.PromoteToBossTask();
+
+        // When
+        task.PromoteToBossTask();
+
+        // Then
+        task.IsBossTask.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_PromotingDoneTask()
+    {
+        // Given
+        var task = TodoTask.Create(new TaskTitle("Finished"));
+        task.MoveToInProgress();
+        task.MarkAsDone();
+
+        // When / Then
+        var ex = Should.Throw<DomainException>(() => task.PromoteToBossTask());
+        ex.Message.ShouldContain("Cannot promote");
+    }
 }

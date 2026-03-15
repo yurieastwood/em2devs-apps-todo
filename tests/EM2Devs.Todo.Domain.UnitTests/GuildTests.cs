@@ -287,6 +287,24 @@ public sealed class GuildTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_PreserveThirdMember_When_TransferringLeadership()
+    {
+        // Given — 3 members: leader, member1, member2
+        var guild = Guild.Create("Test Guild", "desc", _leaderId, _today)
+            .AddMember(_memberId, _today)
+            .AddMember(_memberId2, _today);
+
+        // When — transfer leadership to member1
+        var result = guild.TransferLeadership(_memberId);
+
+        // Then — member2 unchanged
+        GuildMember thirdMember = result.Members.First(m => m.UserId == _memberId2);
+        thirdMember.Role.ShouldBe(GuildRole.Member);
+        result.MemberCount.ShouldBe(3);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_DemoteOldLeader_When_TransferringLeadership()
     {
         // Given

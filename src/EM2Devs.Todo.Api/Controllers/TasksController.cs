@@ -15,9 +15,15 @@ public sealed class TasksController : ControllerBase
     public TasksController(ITaskRepository repository) => _repository = repository;
 
     [HttpGet]
-    public async Task<IActionResult> ListTasks(CancellationToken ct)
+    public async Task<IActionResult> ListTasks([FromQuery] string? status, CancellationToken ct)
     {
         var tasks = await _repository.GetAllAsync(ct).ConfigureAwait(false);
+
+        if (Enum.TryParse<Domain.TaskStatus>(status, ignoreCase: false, out Domain.TaskStatus parsed))
+        {
+            tasks = tasks.Where(t => t.Status == parsed).ToList().AsReadOnly();
+        }
+
         return Ok(tasks.Select(MapToResponse));
     }
 

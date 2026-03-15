@@ -101,10 +101,61 @@ public sealed class TodoTaskTests
         title.Value.ShouldBe("  valid title  ");
     }
 
-    // TODO: Human defines these scenarios, agent implements the production code:
-    //
-    // Should_TransitionToInProgress_When_TaskIsTodo
-    // Should_TransitionToDone_When_TaskIsInProgress
-    // Should_ThrowDomainException_When_TransitioningFromTodoToDone
-    // Should_ThrowDomainException_When_TransitioningFromDoneToAnyStatus
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_TransitionToInProgress_When_TaskIsTodo()
+    {
+        // Given
+        var task = TodoTask.Create(new TaskTitle("Start working"));
+
+        // When
+        task.MoveToInProgress();
+
+        // Then
+        task.Status.ShouldBe(TaskStatus.InProgress);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_TransitionToDone_When_TaskIsInProgress()
+    {
+        // Given
+        var task = TodoTask.Create(new TaskTitle("Finish working"));
+        task.MoveToInProgress();
+
+        // When
+        task.MarkAsDone();
+
+        // Then
+        task.Status.ShouldBe(TaskStatus.Done);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_TransitioningFromTodoToDone()
+    {
+        // Given
+        var task = TodoTask.Create(new TaskTitle("Skip ahead"));
+
+        // When / Then
+        var ex = Should.Throw<DomainException>(() => task.MarkAsDone());
+        ex.Message.ShouldContain("Cannot transition");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_TransitioningFromDoneToAnyStatus()
+    {
+        // Given
+        var task = TodoTask.Create(new TaskTitle("Already finished"));
+        task.MoveToInProgress();
+        task.MarkAsDone();
+
+        // When / Then
+        var exToInProgress = Should.Throw<DomainException>(() => task.MoveToInProgress());
+        exToInProgress.Message.ShouldContain("Cannot transition");
+
+        var exToDone = Should.Throw<DomainException>(() => task.MarkAsDone());
+        exToDone.Message.ShouldContain("Cannot transition");
+    }
 }

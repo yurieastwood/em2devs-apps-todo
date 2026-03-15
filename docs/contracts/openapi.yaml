@@ -8,6 +8,16 @@ paths:
     get:
       operationId: listTasks
       summary: List all tasks
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - Todo
+              - InProgress
+              - Done
       responses:
         "200":
           description: A list of tasks

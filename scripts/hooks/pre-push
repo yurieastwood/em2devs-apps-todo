@@ -26,6 +26,7 @@ npx --yes @stoplight/spectral-cli lint docs/contracts/openapi.yaml --ruleset .sp
 
 # Phase 2: dynamic — running implementation honors the spec
 API_PORT=5001
+dotnet build src/EM2Devs.Todo.Api --configuration Release --verbosity quiet || fail "API build failed"
 dotnet run --project src/EM2Devs.Todo.Api --configuration Release --no-build \
   --urls "http://localhost:${API_PORT}" &>/dev/null &
 API_PID=$!

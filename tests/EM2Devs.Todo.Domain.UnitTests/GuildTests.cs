@@ -266,4 +266,58 @@ public sealed class GuildTests
         // Then
         guild.Description.ShouldBe(string.Empty);
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_ConstructorExceedsMaxMembers()
+    {
+        // Given — build a list exceeding max
+        var leader = new GuildMember(_leaderId, GuildRole.Leader, _today);
+        List<GuildMember> members = [leader];
+        for (int i = 0; i < Guild.MaxMembers; i++)
+        {
+            members.Add(new GuildMember(Guid.NewGuid(), GuildRole.Member, _today));
+        }
+
+        // When / Then — 13 members exceeds max of 12
+        var ex = Should.Throw<DomainException>(
+            () => new Guild("Test", "desc", members));
+        ex.Message.ShouldContain("more than");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_DemoteOldLeader_When_TransferringLeadership()
+    {
+        // Given
+        var guild = Guild.Create("Test Guild", "desc", _leaderId, _today)
+            .AddMember(_memberId, _today);
+
+        // When
+        var result = guild.TransferLeadership(_memberId);
+
+        // Then — old leader is now a regular member
+        GuildMember oldLeader = result.Members.First(m => m.UserId == _leaderId);
+        oldLeader.Role.ShouldBe(GuildRole.Member);
+
+        // And new leader is leader
+        GuildMember newLeader = result.Members.First(m => m.UserId == _memberId);
+        newLeader.Role.ShouldBe(GuildRole.Leader);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnLeaderId_When_GuildHasLeader()
+    {
+        // Given
+        var guild = Guild.Create("Test Guild", "desc", _leaderId, _today)
+            .AddMember(_memberId, _today);
+
+        // When
+        Guid leaderId = guild.LeaderId;
+
+        // Then
+        leaderId.ShouldBe(_leaderId);
+        leaderId.ShouldNotBe(Guid.Empty);
+    }
 }

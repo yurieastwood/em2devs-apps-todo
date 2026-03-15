@@ -95,4 +95,24 @@ public sealed class DailyBriefTests
         DomainException ex = Should.Throw<DomainException>(() => brief.Modify([]));
         ex.Message.ShouldContain("at least");
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_CreatedWithNullTaskList()
+    {
+        // Given / When / Then
+        Should.Throw<ArgumentNullException>(() =>
+            DailyBrief.Create(new DateOnly(2026, 3, 15), null!));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_ModifiedWithNullTaskList()
+    {
+        // Given
+        DailyBrief brief = DailyBrief.Create(new DateOnly(2026, 3, 15), [TaskId.New()]);
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => brief.Modify(null!));
+    }
 }

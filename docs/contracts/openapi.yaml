@@ -56,6 +56,24 @@ paths:
                 $ref: "#/components/schemas/TaskResponse"
         "404":
           description: Task not found
+    delete:
+      operationId: deleteTask
+      summary: Delete a task by ID
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      responses:
+        "204":
+          description: Task deleted
+        "400":
+          description: Invalid task ID format
+        "404":
+          description: Task not found
   /api/tasks/{taskId}/status:
     patch:
       operationId: updateTaskStatus

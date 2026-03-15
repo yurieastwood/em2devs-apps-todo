@@ -8,4 +8,5 @@ public interface ITaskRepository
     Task<TodoTask?> GetByIdAsync(TaskId id, CancellationToken ct = default);
     Task<IReadOnlyList<TodoTask>> GetAllAsync(CancellationToken ct = default);
     Task SaveAsync(TodoTask task, CancellationToken ct = default);
+    Task<bool> DeleteAsync(TaskId id, CancellationToken ct = default);
 }

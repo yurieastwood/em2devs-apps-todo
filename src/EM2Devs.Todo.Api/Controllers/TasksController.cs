@@ -87,6 +87,13 @@ public sealed class TasksController : ControllerBase
         return Ok(MapToResponse(task));
     }
 
+    [HttpDelete("{taskId:guid}")]
+    public async Task<IActionResult> DeleteTask(Guid taskId, CancellationToken ct)
+    {
+        bool deleted = await _repository.DeleteAsync(new TaskId(taskId), ct).ConfigureAwait(false);
+        return deleted ? NoContent() : NotFound();
+    }
+
     private static void ApplyStatusTransition(TodoTask task, Domain.TaskStatus targetStatus)
     {
         switch (targetStatus)

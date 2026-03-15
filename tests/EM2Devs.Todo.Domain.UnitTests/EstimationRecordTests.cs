@@ -91,4 +91,26 @@ public sealed class EstimationRecordTests
         DomainException ex = Should.Throw<DomainException>(() => TimeEstimate.FromMinutes(0));
         ex.Message.ShouldContain("must be greater than zero");
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_EstimatedIsNull()
+    {
+        // Given
+        TimeEstimate actual = TimeEstimate.FromMinutes(60);
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => EstimationRecord.Create(null!, actual));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_ActualIsNull()
+    {
+        // Given
+        TimeEstimate estimated = TimeEstimate.FromMinutes(60);
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => EstimationRecord.Create(estimated, null!));
+    }
 }

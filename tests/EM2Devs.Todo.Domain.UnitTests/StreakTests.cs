@@ -169,6 +169,64 @@ public sealed class StreakTests
         result.GraceDaysAvailable.ShouldBe(Streak.MaxGraceDays);
     }
 
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NoOp_When_ProcessDayEndCalledOnActiveDay()
+    {
+        // Given — already active today
+        var streak = new Streak(10, _today, 1);
+
+        // When — day ends but we already completed today
+        var result = streak.ProcessDayEnd(_today);
+
+        // Then — unchanged
+        result.CurrentDays.ShouldBe(10);
+        result.GraceDaysAvailable.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NoOp_When_ProcessDayEndCalledWithZeroStreak()
+    {
+        // Given — no active streak
+        var streak = Streak.NewStreak();
+
+        // When — day ends
+        var result = streak.ProcessDayEnd(_today);
+
+        // Then — still zero
+        result.CurrentDays.ShouldBe(0);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NoOp_When_ProcessDayEndCalledWithZeroStreakAndPastDate()
+    {
+        // Given — streak reset but has a past active date and grace days
+        var streak = new Streak(0, _yesterday, 1);
+
+        // When — day ends
+        var result = streak.ProcessDayEnd(_today);
+
+        // Then — no change, no grace day consumed (nothing to protect)
+        result.CurrentDays.ShouldBe(0);
+        result.GraceDaysAvailable.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NoOp_When_ProcessDayEndCalledWithNullLastActiveDate()
+    {
+        // Given — streak with days but no last active date (edge case)
+        var streak = new Streak(5, null, 0);
+
+        // When — day ends
+        var result = streak.ProcessDayEnd(_today);
+
+        // Then — unchanged (no date to compare against)
+        result.CurrentDays.ShouldBe(5);
+    }
+
     // --- Validation ---
 
     [Fact]

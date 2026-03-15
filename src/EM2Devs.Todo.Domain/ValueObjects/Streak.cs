@@ -56,32 +56,24 @@ public sealed record Streak
 
     public Streak ProcessDayEnd(DateOnly today)
     {
-        // Already active today — no action needed
-        if (LastActiveDate == today)
+        // Only act if there's an active streak that missed today
+        bool missedToday = CurrentDays > 0
+            && LastActiveDate is not null
+            && today.DayNumber > LastActiveDate.Value.DayNumber;
+
+        if (!missedToday)
         {
             return this;
         }
 
-        // No streak to protect
-        if (CurrentDays == 0)
+        // Use grace day if available
+        if (GraceDaysAvailable > 0)
         {
-            return this;
+            return new Streak(CurrentDays, LastActiveDate, GraceDaysAvailable - 1);
         }
 
-        // Day ended without completion — missed today
-        if (LastActiveDate is not null && today.DayNumber > LastActiveDate.Value.DayNumber)
-        {
-            // Use grace day if available
-            if (GraceDaysAvailable > 0)
-            {
-                return new Streak(CurrentDays, LastActiveDate, GraceDaysAvailable - 1);
-            }
-
-            // No grace days — reset streak
-            return new Streak(0, LastActiveDate, 0);
-        }
-
-        return this;
+        // No grace days — reset streak
+        return new Streak(0, LastActiveDate, 0);
     }
 
     public Streak AddGraceDay()

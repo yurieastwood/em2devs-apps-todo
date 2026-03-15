@@ -14,10 +14,26 @@ public sealed class TasksController : ControllerBase
 
     public TasksController(ITaskRepository repository) => _repository = repository;
 
+    private static readonly HashSet<string> _validStatusValues =
+        new(Enum.GetNames<Domain.TaskStatus>(), StringComparer.Ordinal);
+
     [HttpGet]
-    public async Task<IActionResult> ListTasks(CancellationToken ct)
+    public async Task<IActionResult> ListTasks([FromQuery] string? status, CancellationToken ct)
     {
+        bool statusParamPresent = Request.Query.ContainsKey("status");
+
+        if (statusParamPresent && !_validStatusValues.Contains(status ?? string.Empty))
+        {
+            return BadRequest(new { error = $"Invalid status filter '{status}'. Valid values: Todo, InProgress, Done." });
+        }
+
         var tasks = await _repository.GetAllAsync(ct).ConfigureAwait(false);
+
+        if (statusParamPresent && Enum.TryParse<Domain.TaskStatus>(status, ignoreCase: false, out Domain.TaskStatus parsed))
+        {
+            tasks = tasks.Where(t => t.Status == parsed).ToList().AsReadOnly();
+        }
+
         return Ok(tasks.Select(MapToResponse));
     }
 

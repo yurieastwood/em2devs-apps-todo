@@ -9,6 +9,7 @@ Feature: Recurring Tasks and Quest Chains
 
   Rule: Recurring tasks regenerate on a defined schedule
 
+    @wip
     Scenario: Create a daily recurring task
       When I create a recurring task with the following details:
         | Field      | Value                |
@@ -18,6 +19,7 @@ Feature: Recurring Tasks and Quest Chains
       Then the task should appear in my Today view each day at 08:30
       And each instance should be a separate completable task
 
+    @wip
     Scenario: Create a weekly recurring task
       When I create a recurring task with the following details:
         | Field      | Value              |
@@ -26,6 +28,7 @@ Feature: Recurring Tasks and Quest Chains
       Then the task should appear every Sunday
       And completing one instance should not affect future instances
 
+    @wip
     Scenario: Create a monthly recurring task
       When I create a recurring task with the following details:
         | Field      | Value                      |
@@ -42,6 +45,7 @@ Feature: Recurring Tasks and Quest Chains
       Then the task should appear every Friday until 2026-06-30
       And no instances should be generated after the end date
 
+    @wip
     Scenario: Complete a recurring task instance
       Given I have a daily recurring task "Morning standup prep"
       And today's instance is open

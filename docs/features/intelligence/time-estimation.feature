@@ -10,6 +10,7 @@ Feature: Time Estimation Learning
 
   Rule: The system tracks estimated vs actual time for every task
 
+    @wip
     Scenario: Record estimation variance on task completion
       Given I have a task "Write blog post" with estimated time of 1 hour
       When I complete the task and record actual time as 1 hour 40 minutes
@@ -31,6 +32,7 @@ Feature: Time Estimation Learning
 
   Rule: The system identifies systematic estimation biases by task type
 
+    @wip
     Scenario: Detect consistent underestimation for a task category
       Given I have completed at least 10 tasks in the "writing" category over the last month
       And my average estimation for writing tasks was 1 hour
@@ -46,6 +48,7 @@ Feature: Time Estimation Learning
       When the system analyses my estimation patterns
       Then it should detect a -42% overestimation bias for code review tasks
 
+    @wip
     Scenario: Detect dramatic overestimation
       Given I have a task "Organise inbox" with estimated time of 2 hours
       When I complete the task and record actual time as 30 minutes

@@ -114,6 +114,8 @@ paths:
           description: Invalid status value
         "404":
           description: Task not found
+        "405":
+          description: Invalid task ID format in path
         "409":
           description: Status transition conflict
 components:

@@ -29,11 +29,11 @@ public sealed class LevelTests
     public void Should_CreateLevel_When_ValueIsValid()
     {
         // Given / When
-        var level = new Level(5, new ExperiencePoints(200));
+        var level = new Level(5, new ExperiencePoints(100));
 
         // Then
         level.Value.ShouldBe(5);
-        level.CurrentXp.Value.ShouldBe(200);
+        level.CurrentXp.Value.ShouldBe(100);
     }
 
     [Fact]

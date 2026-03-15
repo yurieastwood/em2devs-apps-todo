@@ -14,11 +14,15 @@ public sealed record Level
     /// Matches feature-specified anchors: L2=50, L5=300, L10=1000, L20=4000, L50=25000.
     /// Intermediate values follow a logarithmic interpolation curve.
     /// </summary>
-    private static readonly int[] _thresholds = Build_thresholds();
+    private static readonly int[] _thresholds = BuildThresholds();
 
     public int Value { get; }
     public ExperiencePoints CurrentXp { get; }
 
+    /// <remarks>
+    /// CurrentXp is not validated against the level threshold to allow
+    /// reconstitution from persistence without coupling to threshold logic.
+    /// </remarks>
     public Level(int value, ExperiencePoints currentXp)
     {
         ArgumentNullException.ThrowIfNull(currentXp);
@@ -94,7 +98,7 @@ public sealed record Level
         return cumulativeNext - cumulativeCurrent;
     }
 
-    private static int[] Build_thresholds()
+    private static int[] BuildThresholds()
     {
         // Anchor points from levelling.feature
         int[] anchors = [50, 100, 200, 300, 450, 600, 800, 900, 1_000];

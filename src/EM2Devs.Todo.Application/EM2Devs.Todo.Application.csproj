@@ -2,4 +2,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EM2Devs.Todo.Domain\EM2Devs.Todo.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
+  </ItemGroup>
 </Project>

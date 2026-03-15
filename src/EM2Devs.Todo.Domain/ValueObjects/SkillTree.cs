@@ -72,8 +72,7 @@ public sealed record SkillTree
         return tier switch
         {
             2 => 30,
-            3 => 60,
-            _ => throw new ArgumentOutOfRangeException(nameof(tier), tier, "Unknown tier.")
+            _ => 60
         };
     }
 }

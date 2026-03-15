@@ -78,13 +78,25 @@ public sealed class ExperiencePointsTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_AddingNullXp()
+    {
+        // Given
+        var xp = new ExperiencePoints(10);
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => xp.Add(null!));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_ThrowArgumentException_When_DifficultyIsInvalid()
     {
         // Given
         var invalidDifficulty = (TaskDifficulty)999;
 
         // When / Then
-        Should.Throw<ArgumentOutOfRangeException>(
+        var ex = Should.Throw<ArgumentOutOfRangeException>(
             () => ExperiencePoints.BaseForDifficulty(invalidDifficulty));
+        ex.Message.ShouldContain("Unknown task difficulty");
     }
 }

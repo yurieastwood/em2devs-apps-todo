@@ -28,8 +28,8 @@ public sealed record Guild
             throw new Exceptions.DomainException("Guild name cannot exceed 50 characters.");
         }
 
-        ArgumentNullException.ThrowIfNull(members);
-        _members = [.. members];
+        _members = members?.ToList()
+            ?? throw new ArgumentNullException(nameof(members));
 
         if (_members.Count > MaxMembers)
         {

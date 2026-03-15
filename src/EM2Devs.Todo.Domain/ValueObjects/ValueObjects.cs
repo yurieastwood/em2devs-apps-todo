@@ -10,6 +10,14 @@ public sealed record TaskId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed recurring task identifier (ADR-0002).
+/// </summary>
+public sealed record RecurringTaskId(Guid Value)
+{
+    public static RecurringTaskId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>
@@ -24,7 +32,7 @@ public sealed record TaskTitle
             throw new Exceptions.DomainException("Task title cannot be empty.");
         }
 
-        if (value.Length > 200)
+        if (value.EnumerateRunes().Count() > 200)
         {
             throw new Exceptions.DomainException("Task title cannot exceed 200 characters.");
         }

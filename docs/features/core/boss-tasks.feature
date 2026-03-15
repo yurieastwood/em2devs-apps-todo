@@ -9,6 +9,7 @@ Feature: Boss Tasks
 
   Rule: Tasks are promoted to Boss Task status based on procrastination signals
 
+    @wip
     Scenario: Task promoted after repeated rescheduling
       Given I have a task "Write architecture decision record"
       And I have rescheduled it 3 or more times
@@ -30,6 +31,7 @@ Feature: Boss Tasks
       When the system evaluates my task list
       Then the task should be flagged as a Boss Task
 
+    @wip
     Scenario: User manually promotes a task to Boss Task
       Given I have a task "Have difficult conversation with manager"
       When I manually flag the task as a Boss Task
@@ -43,6 +45,7 @@ Feature: Boss Tasks
       Then the task should not be flagged as a Boss Task
       And it should be suggested for deletion or archival instead
 
+    @wip
     Scenario: Boss Task is demoted when conditions no longer apply
       Given I have a Boss Task "Refactor authentication module" promoted due to age and priority
       When I change the priority to "Low"

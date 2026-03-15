@@ -9,6 +9,7 @@ Feature: Task Management
 
   Rule: Users can create tasks with minimal friction
 
+    @done
     Scenario: Create a task with only a title
       When I create a task with the title "Buy groceries"
       Then the task "Buy groceries" should appear in my inbox
@@ -44,6 +45,7 @@ Feature: Task Management
       And it should have priority "High"
       And it should have a due date of April 15
 
+    @done
     Scenario: Reject a task with an empty title
       When I attempt to create a task with an empty title
       Then the task should not be created
@@ -131,6 +133,7 @@ Feature: Task Management
 
   Rule: Deleting a task requires confirmation and does not award XP
 
+    @done
     Scenario: Delete a task
       Given I have an open task "Cancelled meeting prep"
       When I delete the task "Cancelled meeting prep"
@@ -152,6 +155,7 @@ Feature: Task Management
       Then the quest "Launch campaign" should show 3 remaining tasks
       And the quest progress should be recalculated
 
+    @done
     Scenario: Delete a completed task
       Given I have a completed task "Old report"
       When I delete the task "Old report"
@@ -161,6 +165,7 @@ Feature: Task Management
 
   Rule: Tasks can be filtered, sorted, and searched
 
+    @wip
     Scenario: Filter tasks by tag
       Given I have the following tasks:
         | Title             | Tags          |

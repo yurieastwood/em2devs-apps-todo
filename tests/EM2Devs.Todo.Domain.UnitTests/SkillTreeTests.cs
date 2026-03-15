@@ -232,8 +232,28 @@ public sealed class SkillTreeTests
     public void Should_ThrowArgumentOutOfRange_When_TierThresholdIsForTier1OrLess()
     {
         // Given / When / Then
-        Should.Throw<ArgumentOutOfRangeException>(
+        var ex = Should.Throw<ArgumentOutOfRangeException>(
             () => SkillTree.TasksRequiredForTier(1));
+        ex.Message.ShouldContain("Task requirements are only defined for tiers 2 through");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentOutOfRange_When_TierThresholdExceedsMax()
+    {
+        // Given / When / Then
+        var ex = Should.Throw<ArgumentOutOfRangeException>(
+            () => SkillTree.TasksRequiredForTier(SkillTier.MaxTier + 1));
+        ex.Message.ShouldContain("Task requirements are only defined for tiers 2 through");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_CreatingTreeWithNullTier()
+    {
+        // Given / When / Then
+        Should.Throw<ArgumentNullException>(
+            () => new SkillTree(SkillTreeType.Builder, null!, 0));
     }
 
     [Fact]
@@ -241,7 +261,8 @@ public sealed class SkillTreeTests
     public void Should_ThrowArgumentOutOfRange_When_InvalidDiscoveryThreshold()
     {
         // Given / When / Then
-        Should.Throw<ArgumentOutOfRangeException>(
+        var ex = Should.Throw<ArgumentOutOfRangeException>(
             () => SkillTreeDiscovery.DiscoveryThreshold((SkillTreeType)999));
+        ex.Message.ShouldContain("Unknown skill tree type");
     }
 }

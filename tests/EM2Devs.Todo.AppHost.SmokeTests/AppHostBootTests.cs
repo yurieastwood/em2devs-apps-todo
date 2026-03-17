@@ -1,6 +1,8 @@
 using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 using Aspire.Hosting.Testing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
 
@@ -8,8 +10,8 @@ namespace EM2Devs.Todo.AppHost.SmokeTests;
 
 /// <summary>
 /// Smoke tests that verify the Aspire AppHost assembles and boots correctly.
-/// Catches assembly binding failures (e.g. TypeLoadException) and resource
-/// wiring issues before they surface at deploy time.
+/// Catches assembly binding failures (e.g. TypeLoadException), missing
+/// configuration, and resource wiring issues before they surface at deploy time.
 /// </summary>
 [Trait("Category", "Smoke")]
 public sealed class AppHostBootTests
@@ -49,5 +51,23 @@ public sealed class AppHostBootTests
         postgresResource.ShouldNotBeNull();
         redisResource.ShouldNotBeNull();
         tododbResource.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task Should_StartSuccessfully_When_AppHostIsLaunched()
+    {
+        // Given — build the distributed application
+        IDistributedApplicationTestingBuilder builder = await DistributedApplicationTestingBuilder
+            .CreateAsync<Projects.EM2Devs_Todo_AppHost>();
+
+        await using DistributedApplication app = await builder.BuildAsync();
+
+        // When — start the app (triggers lifecycle hooks including dashboard setup)
+        // This catches configuration errors (missing env vars, dashboard config)
+        // that only surface at startup, not at build time.
+        await app.StartAsync();
+
+        // Then — no exception means the host started successfully
+        app.Services.ShouldNotBeNull();
     }
 }

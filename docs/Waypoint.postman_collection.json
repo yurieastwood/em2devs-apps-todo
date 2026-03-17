@@ -1,0 +1,529 @@
+{
+  "info": {
+    "name": "Waypoint API",
+    "description": "Postman collection for validating the Waypoint PoC API.\n\nRun requests in order — the collection uses variables captured from previous responses.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5001",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "taskId2",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Task CRUD",
+      "item": [
+        {
+          "name": "1.1 List tasks (empty)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/tasks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.2 Create task",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/tasks",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Write architecture tests\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const task = pm.response.json();",
+                  "pm.test('Has id', () => pm.expect(task.id).to.be.a('string'));",
+                  "pm.test('Title matches', () => pm.expect(task.title).to.eql('Write architecture tests'));",
+                  "pm.test('Status is Todo', () => pm.expect(task.status).to.eql('Todo'));",
+                  "pm.collectionVariables.set('taskId', task.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.3 Create second task",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/tasks",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Implement domain events\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('taskId2', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.4 Get task by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const task = pm.response.json();",
+                  "pm.test('Correct task returned', () => pm.expect(task.id).to.eql(pm.collectionVariables.get('taskId')));",
+                  "pm.test('Title matches', () => pm.expect(task.title).to.eql('Write architecture tests'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.5 List tasks (has items)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/tasks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has at least 2 tasks', () => pm.expect(pm.response.json().length).to.be.at.least(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.6 Get nonexistent task (404)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/tasks/00000000-0000-0000-0000-000000000000"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Status Transitions",
+      "item": [
+        {
+          "name": "2.1 Transition Todo → InProgress",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/status",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\": \"InProgress\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status is InProgress', () => pm.expect(pm.response.json().status).to.eql('InProgress'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.2 Transition InProgress → Done",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/tasks/{{taskId}}/status",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\": \"Done\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status is Done', () => pm.expect(pm.response.json().status).to.eql('Done'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.3 Invalid transition Todo → Done (conflict)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/tasks/{{taskId2}}/status",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\": \"Done\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 409 (conflict)', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.4 Same status (conflict)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/tasks/{{taskId2}}/status",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\": \"Todo\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 409 (already in status)', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2.5 Invalid status value (400)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/tasks/{{taskId2}}/status",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\": \"InvalidStatus\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Filtering",
+      "item": [
+        {
+          "name": "3.1 Filter by status=Done",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?status=Done",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                { "key": "status", "value": "Done" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const tasks = pm.response.json();",
+                  "pm.test('All tasks are Done', () => tasks.forEach(t => pm.expect(t.status).to.eql('Done')));",
+                  "pm.test('Has at least 1 task', () => pm.expect(tasks.length).to.be.at.least(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3.2 Filter by status=Todo",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/tasks?status=Todo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "tasks"],
+              "query": [
+                { "key": "status", "value": "Todo" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const tasks = pm.response.json();",
+                  "pm.test('All tasks are Todo', () => tasks.forEach(t => pm.expect(t.status).to.eql('Todo')));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Profile / Progression",
+      "item": [
+        {
+          "name": "4.1 Get player profile",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/profile"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const profile = pm.response.json();",
+                  "pm.test('Has totalXp', () => pm.expect(profile.totalXp).to.be.a('number'));",
+                  "pm.test('Has level', () => pm.expect(profile.level).to.be.a('number'));",
+                  "pm.test('Has xpToNextLevel', () => pm.expect(profile.xpToNextLevel).to.be.a('number'));",
+                  "pm.test('Has currentStreak', () => pm.expect(profile.currentStreak).to.be.a('number'));",
+                  "pm.test('Has longestStreak', () => pm.expect(profile.longestStreak).to.be.a('number'));",
+                  "pm.test('Level is at least 1', () => pm.expect(profile.level).to.be.at.least(1));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Deletion",
+      "item": [
+        {
+          "name": "5.1 Delete task",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/tasks/{{taskId2}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.2 Verify deleted task returns 404",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/tasks/{{taskId2}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.3 Delete nonexistent task (404)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/tasks/00000000-0000-0000-0000-000000000000"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Validation / Edge Cases",
+      "item": [
+        {
+          "name": "6.1 Create task with empty title (400)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/tasks",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6.2 Create task with unknown property (400)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/tasks",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"test\", \"extra\": 42}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 400 (rejects unknown properties)', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6.3 Create task with title exceeding 200 chars (400)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/tasks",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 400 (title too long)', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6.4 Update status of nonexistent task (404)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/tasks/00000000-0000-0000-0000-000000000000/status",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\": \"InProgress\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

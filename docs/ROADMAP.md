@@ -6,46 +6,47 @@ Status tags: no tag = not started, `wip` = in progress, `done` = delivered and m
 
 A user can create tasks, complete them, earn XP, and see their level — backed by a real database, orchestrated by Aspire, tested with Testcontainers.
 
-### 1.1 Aspire Orchestration
+### 1.1 Aspire Orchestration — `done` (PR #26, #31)
 
-- [ ] AppHost project with PostgreSQL and Redis resources
-- [ ] ServiceDefaults project (OpenTelemetry, health checks, resilience)
+- [x] AppHost project with PostgreSQL and Redis resources
+- [x] ServiceDefaults project (OpenTelemetry, health checks, resilience)
 
-### 1.2 Data Access — PostgreSQL + EF Core
+### 1.2 Data Access — PostgreSQL + EF Core — `done` (PR #26, #30)
 
-- [ ] EF Core DbContext with TodoTask entity configuration
-- [ ] Initial PostgreSQL migration (tasks table)
-- [ ] Real TaskRepository: EF Core for writes, Dapper for reads
-- [ ] Integration tests with Testcontainers (PostgreSQL)
+- [x] EF Core DbContext with TodoTask entity configuration
+- [x] Initial PostgreSQL migration (tasks table)
+- [x] Real TaskRepository: EF Core for writes
+- [x] Integration tests with Testcontainers (PostgreSQL)
+- [ ] Dapper for reads (deferred — EF Core handling both for now)
 
-### 1.3 Application Layer — CQRS + Mediator
+### 1.3 Application Layer — CQRS + Mediator — `done` (PR #25, #29)
 
-- [ ] Custom lightweight mediator (per ADR-010)
-- [ ] Commands: CreateTask, UpdateTaskStatus, DeleteTask
-- [ ] Queries: GetTask, ListTasks (with filtering)
-- [ ] Domain events infrastructure (publish on task completion)
+- [x] Custom lightweight mediator (per ADR-010)
+- [x] Commands: CreateTask, UpdateTaskStatus, DeleteTask
+- [x] Queries: GetTask, ListTasks (with filtering)
+- [x] Domain events infrastructure (publish on task completion)
 
-### 1.4 API Refactor — Controller → Mediator
+### 1.4 API Refactor — Controller → Mediator — `done` (PR #25)
 
-- [ ] Refactor TasksController to dispatch commands/queries via mediator
-- [ ] Wire DI with real infrastructure (EF Core, Dapper, PostgreSQL)
-- [ ] Update OpenAPI contract for any endpoint changes (requires human approval)
+- [x] Refactor TasksController to dispatch commands/queries via mediator
+- [x] Wire DI with real infrastructure (EF Core, PostgreSQL)
+- [x] Conditional DI: PostgreSQL when connection string present, in-memory fallback for tests
 
-### 1.5 Progression Integration
+### 1.5 Progression Integration — `done` (PR #28, #29)
 
-- [ ] XP award on task completion (domain event → handler)
-- [ ] Player profile aggregate (XP total, current level, streak)
-- [ ] API endpoint: GET /api/profile (XP, level, streak)
-- [ ] Update OpenAPI contract for profile endpoint (requires human approval)
+- [x] XP award on task completion (domain event → handler)
+- [x] Player profile aggregate (XP total, current level, streak)
+- [x] API endpoint: GET /api/profile (XP, level, streak)
+- [x] Update OpenAPI contract for profile endpoint (human approved)
 
-### PoC Exit Criteria
+### PoC Exit Criteria — `done`
 
-- [ ] `dotnet run --project src/EM2Devs.Todo.AppHost` starts the full stack
-- [ ] Task CRUD via API with PostgreSQL persistence
-- [ ] XP earned on task completion, level calculated, visible on profile
-- [ ] Data persists across restarts
-- [ ] All 7 gates pass
-- [ ] Integration tests with Testcontainers green
+- [x] `dotnet run --project src/EM2Devs.Todo.AppHost` starts the full stack
+- [x] Task CRUD via API with PostgreSQL persistence
+- [x] XP earned on task completion, level calculated, visible on profile
+- [x] Data persists across restarts
+- [x] All 7 gates pass
+- [x] Integration tests with Testcontainers green
 
 ---
 

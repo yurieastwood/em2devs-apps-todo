@@ -6,6 +6,7 @@ var postgres = builder.AddPostgres("postgres")
 var redis = builder.AddRedis("redis");
 
 builder.AddProject<Projects.EM2Devs_Todo_Api>("api")
+    .WithHttpEndpoint(port: 5001, name: "http")
     .WithReference(postgres)
     .WithReference(redis)
     .WaitFor(postgres)

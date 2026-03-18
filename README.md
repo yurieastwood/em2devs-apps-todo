@@ -91,14 +91,29 @@ waypoint/
 
 ```bash
 # Clone the repository
-git clone https://github.com/em2devs/em2devs-apps-todo.git
+git clone https://github.com/yurieastwood/em2devs-apps-todo.git
 cd em2devs-apps-todo
 
 # Start the full stack via Aspire
 dotnet run --project src/EM2Devs.Todo.AppHost
 ```
 
-The Aspire dashboard will open automatically, providing access to all services, logs, and traces.
+The Aspire dashboard is available at the URL printed in the console (e.g., `https://localhost:17178/login?t=<token>`). The API port is configured to **5001**.
+
+### Applying Database Migrations
+
+Migrations are not applied automatically at startup (see [ADR-020](docs/decisions/20260305-020-db-migrations.md)). After starting the AppHost for the first time, apply them manually:
+
+1. Open the Aspire dashboard and find the **postgres** resource to get the connection details (host, port, password)
+2. Restore local tools and apply the migration:
+
+```bash
+dotnet tool restore
+dotnet dotnet-ef database update \
+  --project src/EM2Devs.Todo.Infrastructure \
+  --startup-project src/EM2Devs.Todo.Api \
+  --connection "Host=localhost;Port=<port>;Database=tododb;Username=postgres;Password=<password>"
+```
 
 ## Quality Gates
 

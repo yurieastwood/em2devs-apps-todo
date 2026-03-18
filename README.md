@@ -6,8 +6,6 @@
 
 A gamified productivity app that turns task management into an RPG-style progression system. Complete quests, earn XP, level up, unlock skill trees, and collaborate with others — all while getting things done.
 
-> **Status:** Architecture & design phase — ADRs and BDD feature specs are in place; implementation is next.
-
 ## Features
 
 | Category | Highlights |

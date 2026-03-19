@@ -38,7 +38,7 @@ npx --yes @stoplight/spectral-cli lint docs/contracts/openapi.yaml --ruleset .sp
   || fail "Spec violation — see ADR-0004"
 
 # Phase 2: dynamic — running implementation honors the spec
-API_PORT=5001
+API_PORT=15001
 dotnet run --project src/EM2Devs.Todo.Api --configuration Release --no-build \
   --urls "http://localhost:${API_PORT}" &>/dev/null &
 API_PID=$!

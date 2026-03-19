@@ -19,7 +19,8 @@ public partial class InitialCreate : Migration
             {
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
-                status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
+                status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                IsBossTask = table.Column<bool>(type: "boolean", nullable: false)
             },
             constraints: table =>
             {

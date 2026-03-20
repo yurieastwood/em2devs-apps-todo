@@ -103,6 +103,34 @@ public sealed class TodoTaskTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_AcceptTitle_When_CombiningCharactersMakeVisualLength200()
+    {
+        // Given — 200 base chars each followed by a combining acute accent (U+0301)
+        // string.Length = 400 code units, EnumerateRunes().Count() = 400 runes,
+        // but StringInfo.LengthInTextElements = 200 grapheme clusters
+        string title200Graphemes = string.Concat(Enumerable.Range(0, 200).Select(_ => "a\u0301"));
+
+        // When
+        var title = new TaskTitle(title200Graphemes);
+
+        // Then
+        title.Value.ShouldBe(title200Graphemes);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_GraphemeLengthExceeds200()
+    {
+        // Given — 201 grapheme clusters using combining characters
+        string title201Graphemes = string.Concat(Enumerable.Range(0, 201).Select(_ => "e\u0300"));
+
+        // When / Then
+        var ex = Should.Throw<DomainException>(() => new TaskTitle(title201Graphemes));
+        ex.Message.ShouldContain("cannot exceed 200");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_TransitionToInProgress_When_TaskIsTodo()
     {
         // Given

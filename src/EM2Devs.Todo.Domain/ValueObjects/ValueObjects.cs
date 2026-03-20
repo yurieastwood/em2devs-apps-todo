@@ -72,7 +72,7 @@ public sealed record TaskTitle
             throw new Exceptions.DomainException("Task title cannot be empty.");
         }
 
-        if (value.EnumerateRunes().Count() > 200)
+        if (new System.Globalization.StringInfo(value).LengthInTextElements > 200)
         {
             throw new Exceptions.DomainException("Task title cannot exceed 200 characters.");
         }

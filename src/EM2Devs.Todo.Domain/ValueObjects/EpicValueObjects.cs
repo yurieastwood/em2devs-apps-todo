@@ -23,7 +23,7 @@ public sealed record EpicTitle
             throw new Exceptions.DomainException("Epic title cannot be empty.");
         }
 
-        if (value.EnumerateRunes().Count() > 200)
+        if (new System.Globalization.StringInfo(value).LengthInTextElements > 200)
         {
             throw new Exceptions.DomainException("Epic title cannot exceed 200 characters.");
         }

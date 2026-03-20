@@ -23,7 +23,7 @@ public sealed record QuestTitle
             throw new Exceptions.DomainException("Quest title cannot be empty.");
         }
 
-        if (value.EnumerateRunes().Count() > 200)
+        if (new System.Globalization.StringInfo(value).LengthInTextElements > 200)
         {
             throw new Exceptions.DomainException("Quest title cannot exceed 200 characters.");
         }

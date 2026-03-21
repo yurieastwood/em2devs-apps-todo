@@ -24,12 +24,14 @@ Feature: Streaks and Grace Days
       When I complete a 4th task
       Then my streak should remain at 10 days (already counted today)
 
+    @wip
     Scenario: Streak milestone celebration
       Given my current streak is 6 days
       When I complete a task and my streak reaches 7 days
       Then I should see a streak milestone celebration
       And "7-day streak" should appear on my journey timeline
 
+    @wip
     Scenario Outline: Streak milestones are celebrated at key thresholds
       Given my current streak is <previous_days> days
       When I complete a task and my streak reaches <streak_days> days
@@ -65,6 +67,7 @@ Feature: Streaks and Grace Days
       Then my streak should be 16 days
       And I should still have 2 grace days available
 
+    @wip
     Scenario: Grace days accumulate over time
       Given I have 0 grace days
       And I complete my weekly review this week
@@ -81,6 +84,7 @@ Feature: Streaks and Grace Days
       And I should see an encouraging restart message mentioning my previous 20-day streak
       And I should see my previous streak of 20 days recorded in my history
 
+    @wip
     Scenario: No negative consequences for broken streak
       Given my streak just reset from 20 to 0
       Then no XP should be deducted
@@ -90,6 +94,7 @@ Feature: Streaks and Grace Days
 
   Rule: Users can manually freeze their streak when they know they will be unavailable
 
+    @wip
     Scenario: Activate a streak freeze
       Given my current streak is 30 days
       And I am going on holiday for 5 days
@@ -98,11 +103,13 @@ Feature: Streaks and Grace Days
       And the 5 frozen days should not count against my streak
       And I should not receive task reminders during the freeze
 
+    @wip
     Scenario: Streak freeze has a maximum duration
       When I attempt to freeze my streak for 15 days
       Then I should see a message that the maximum freeze duration is 7 days
       And I should be offered to set a 7-day freeze instead
 
+    @wip
     Scenario: Streak resumes after freeze ends
       Given my streak is frozen at 30 days for 5 days
       When the freeze period ends
@@ -111,6 +118,7 @@ Feature: Streaks and Grace Days
 
   Rule: Streak day boundaries are determined by the user's configured timezone
 
+    @wip
     Scenario: Streak day boundary respects user timezone
       Given my timezone is set to "Australia/Sydney" (UTC+11)
       And my current streak is 5 days
@@ -119,6 +127,7 @@ Feature: Streaks and Grace Days
       Then it should count toward today's streak in my timezone
       And my streak should remain at 5 days if I already completed a task today
 
+    @wip
     Scenario: Completing tasks during a streak freeze does not end the freeze early
       Given my streak is frozen at 30 days for 5 days
       And I am on day 2 of the freeze

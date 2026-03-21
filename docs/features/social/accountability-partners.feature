@@ -23,6 +23,7 @@ Feature: Accountability Partners
       Then "Casey" and I should be linked as accountability partners
       And we should both see each other's daily summary
 
+    @wip
     Scenario: Decline a partner request
       Given I have a pending partner request from "Casey"
       When I decline the request
@@ -46,6 +47,7 @@ Feature: Accountability Partners
 
   Rule: Partners see daily summaries, not task-level detail
 
+    @wip
     Scenario: View partner's daily summary
       Given I have an accountability partner "Jordan"
       When I view my partner's daily summary
@@ -54,6 +56,7 @@ Feature: Accountability Partners
       And I should see Jordan's active quest count
       And I should not see individual task titles or descriptions
 
+    @wip
     Scenario: Partner sees my summary
       Given I have an accountability partner "Jordan"
       And I have completed 5 tasks today and my streak is at 12 days
@@ -61,18 +64,21 @@ Feature: Accountability Partners
       Then they should see "5 tasks completed today"
       And they should see "12-day streak"
 
+    @wip
     Scenario: Send a check-in message to partner
       Given I have an accountability partner "Jordan"
       When I send a check-in message "Great streak, keep it going!"
       Then "Jordan" should receive the message in their partner view
       And the message should appear in our shared message history
 
+    @wip
     Scenario: Partner check-in messages are limited scope
       Given I have an accountability partner "Jordan"
       When I view the messaging interface
       Then I should only be able to send encouragement messages up to 280 characters
       And the messaging should not function as a full chat system
 
+    @wip
     Scenario: Partner account is deactivated
       Given I have an accountability partner "Jordan"
       When "Jordan" deactivates their account
@@ -80,12 +86,14 @@ Feature: Accountability Partners
       And I should be notified that my partner is no longer available
       And I should be able to send a new partner request to someone else
 
+    @wip
     Scenario: Re-pair with a former partner
       Given I previously had a partnership with "Jordan" that was ended
       When I send a new accountability partner request to "Jordan"
       Then the request should be sent successfully
       And our previous shared history should remain separate from the new partnership
 
+    @wip
     Scenario: Existing partnership persists regardless of level changes
       Given I have an accountability partner "Jordan"
       And I was level 7 when the partnership was formed

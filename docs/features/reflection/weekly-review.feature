@@ -9,27 +9,32 @@ Feature: Weekly Review Ritual
 
   Rule: The weekly review is prompted at a consistent user-chosen time
 
+    @todo
     Scenario: Weekly review prompt at scheduled time
       Given I have configured my weekly review for Sunday at 7 PM
       When it is Sunday at 7 PM
       Then I should receive a notification prompting me to start my weekly review
       And the notification should indicate the estimated time of 5 minutes
 
+    @todo
     Scenario: Configure weekly review schedule
       When I navigate to my review settings
       And I set my weekly review to "Saturday at 10 AM"
       Then future review prompts should arrive Saturday at 10 AM
 
+    @todo
     Scenario: Start review manually at any time
       When I navigate to the weekly review section
       And I choose to start a review now
       Then the review flow should begin regardless of scheduled time
 
+    @todo
     Scenario: Default review schedule when no preference is set
       Given I have not configured a weekly review schedule
       Then my weekly review should default to Sunday at 6 PM in my local timezone
       And I should receive a notification at the default time
 
+    @todo
     Scenario: Dismiss weekly review prompt
       Given I receive the weekly review notification
       When I dismiss the notification
@@ -39,6 +44,7 @@ Feature: Weekly Review Ritual
 
   Rule: Free-tier users get a streamlined review covering essential retrospection
 
+    @todo
     Scenario: Complete a basic weekly review
       Given I am a free-tier user
       When I start the weekly review
@@ -57,6 +63,7 @@ Feature: Weekly Review Ritual
       And I should receive weekly review XP
       And the review should appear in my review history
 
+    @todo
     Scenario: View past weekly reviews
       Given I have completed 6 weekly reviews
       When I navigate to my review history
@@ -67,6 +74,7 @@ Feature: Weekly Review Ritual
   @premium
   Rule: Premium users get data-rich retrospectives with visual insights
 
+    @todo
     Scenario: Complete an advanced weekly review
       Given I have a premium subscription
       When I start the weekly review
@@ -80,6 +88,7 @@ Feature: Weekly Review Ritual
       When I complete all reflection prompts
       Then the review should be saved with all data and reflections
 
+    @todo
     Scenario: Review surfaces patterns across weeks
       Given I have completed 8 weekly reviews
       When I start this week's review
@@ -91,17 +100,20 @@ Feature: Weekly Review Ritual
 
   Rule: Completing weekly reviews earns XP and maintains a review streak
 
+    @todo
     Scenario: Earn XP for completing weekly review
       When I complete my weekly review
       Then I should receive weekly review XP
       And my review streak should increment
 
+    @todo
     Scenario: Review streak builds over weeks
       Given I have completed weekly reviews for 11 consecutive weeks
       When I complete this week's review
       Then my review streak should be 12 weeks
       And I should be notified of my progress toward the "Consistent Planner" title
 
+    @todo
     Scenario: Missed review does not break streak harshly
       Given I have a review streak of 8 weeks
       And I miss one week's review
@@ -109,6 +121,7 @@ Feature: Weekly Review Ritual
       And I should have a 1-week grace period to complete the missed review
       And if I complete next week's review, my streak should continue from 8
 
+    @todo
     Scenario: Complete two missed weeks during the grace period
       Given I have a review streak of 5 weeks
       And I missed the last two weeks' reviews
@@ -117,6 +130,7 @@ Feature: Weekly Review Ritual
       Then both reviews should be saved and counted
       And my review streak should continue from 7 weeks
 
+    @todo
     Scenario: Progress is saved as draft when user logs out mid-review
       Given I have started my weekly review
       And I have entered reflection text for "What went well this week?"

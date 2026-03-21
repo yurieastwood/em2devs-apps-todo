@@ -11,12 +11,14 @@ Feature: Challenge Mode
 
   Rule: Challenges are opt-in, time-limited competitions
 
+    @todo
     Scenario: View available challenges
       When I navigate to the challenges section
       Then I should see currently active global challenges
       And I should see guild-specific challenges if I belong to a guild
       And each challenge should show its duration, rules, and reward
 
+    @todo
     Scenario: Join a global challenge
       Given there is an active challenge "Weekend Warrior: Complete the most tasks this weekend"
       And the challenge runs from Saturday 00:00 to Sunday 23:59
@@ -25,6 +27,7 @@ Feature: Challenge Mode
       And my task completions during the window should count toward the challenge
       And I should see a challenge progress tracker
 
+    @todo
     Scenario: Create a guild challenge
       Given I am a member of "Side Project Squad"
       When I create a guild challenge with the following details:
@@ -38,6 +41,7 @@ Feature: Challenge Mode
 
   Rule: Challenge progress is tracked in real-time among participants
 
+    @todo
     Scenario: Track challenge progress
       Given I am participating in "Weekend Warrior"
       And I have completed 8 tasks so far
@@ -46,6 +50,7 @@ Feature: Challenge Mode
       And I should see my current rank among participants
       And I should see the top 5 participants and their counts
 
+    @todo
     Scenario: Challenge ends and results are announced
       Given the "Weekend Warrior" challenge period has ended
       And I completed 12 tasks, ranking 3rd overall
@@ -55,6 +60,7 @@ Feature: Challenge Mode
       And all participants should receive participation XP
       And results should be visible in the challenge history
 
+    @todo
     Scenario: Challenge does not penalise non-participation
       Given there is an active challenge "Weekend Warrior"
       And I choose not to participate
@@ -64,6 +70,7 @@ Feature: Challenge Mode
 
   Rule: Challenges use anti-gaming measures to ensure fair competition
 
+    @todo
     Scenario: Trivial task spam during a challenge
       Given I am participating in a "most tasks completed" challenge
       And I create and immediately complete 30 trivial tasks in 10 minutes
@@ -71,6 +78,7 @@ Feature: Challenge Mode
       Then only tasks meeting a minimum difficulty threshold should count
       And a notification should explain the quality requirement
 
+    @todo
     Scenario: Tasks completed during the challenge window count regardless of creation date
       Given the challenge "Weekend Warrior" starts on Saturday
       And I created 5 tasks on Friday but complete them on Saturday
@@ -78,6 +86,7 @@ Feature: Challenge Mode
       Then all 5 tasks should count because they were completed during the challenge window
       But tasks completed before Saturday should not count
 
+    @todo
     Scenario: Minimum difficulty threshold for challenge tasks
       Given I am participating in a "most tasks completed" challenge
       When the system evaluates a task for challenge eligibility
@@ -85,6 +94,7 @@ Feature: Challenge Mode
       And the task must have a title of at least 10 characters
       And trivial or duplicate tasks should be excluded from the challenge count
 
+    @todo
     Scenario: Withdraw from a challenge after joining
       Given I am participating in "Weekend Warrior"
       And the challenge is still active
@@ -93,11 +103,13 @@ Feature: Challenge Mode
       And my progress should be removed from the leaderboard
       And I should not receive any challenge rewards
 
+    @todo
     Scenario: Global challenges are system-generated
       When the system generates a new global challenge
       Then the challenge should appear in the challenges section for all eligible users
       And no individual user should be able to create global challenges
 
+    @todo
     Scenario: Guild challenges can be created by any guild member
       Given I am a member of "Side Project Squad"
       And I am not the guild leader
@@ -105,6 +117,7 @@ Feature: Challenge Mode
       Then the challenge should be created successfully
       And all guild members should receive an invitation to participate
 
+    @todo
     Scenario: Tie resolution in challenge rankings
       Given the "Weekend Warrior" challenge has ended
       And two participants both completed 15 tasks

@@ -17,12 +17,14 @@ Feature: Time Estimation Learning
       Then the system should record a variance of +66.7%
       And this data point should feed into my estimation model
 
+    @wip
     Scenario: Prompt for actual time only when estimate was provided
       Given I have a task "Buy milk" with no time estimate
       When I complete the task
       Then I should not be prompted for actual time spent
       And no estimation data should be recorded
 
+    @wip
     Scenario: Optional time tracking during task execution
       Given I have a task "Code review" with estimated time of 30 minutes
       When I start a timer for the task
@@ -41,6 +43,7 @@ Feature: Time Estimation Learning
       Then it should detect a +42% underestimation bias for writing tasks
       And this bias should be stored in my estimation model
 
+    @wip
     Scenario: Detect consistent overestimation for a task category
       Given I have completed at least 10 tasks in the "code review" category over the last month
       And my average estimation was 1 hour
@@ -56,6 +59,7 @@ Feature: Time Estimation Learning
       And this data point should feed into my estimation model
       And if this pattern recurs across 10 or more tasks in the same category the system should flag a significant overestimation bias
 
+    @wip
     Scenario: No bias detected when estimates are accurate
       Given I have completed 12 meeting prep tasks
       And my average estimation variance is within the configurable accuracy threshold of ±15%
@@ -64,6 +68,7 @@ Feature: Time Estimation Learning
 
   Rule: The system offers corrected time estimates based on learned biases
 
+    @wip
     Scenario: Suggest corrected estimate for new task
       Given the system has detected I underestimate writing tasks by 40%
       When I create a new task tagged "writing" with estimated time of 2 hours
@@ -71,11 +76,13 @@ Feature: Time Estimation Learning
       And the suggestion should explain "Based on your history, writing tasks typically take 40% longer than estimated"
       And I should be able to accept or dismiss the suggestion
 
+    @wip
     Scenario: User accepts corrected estimate
       Given the system suggests a corrected estimate of 2 hours 48 minutes
       When I accept the corrected estimate
       Then the task estimated time should be updated to 2 hours 48 minutes
 
+    @wip
     Scenario: User accepts corrected estimate but completes in original time
       Given the system has detected I underestimate writing tasks by 40%
       And I accepted a corrected estimate of 2 hours 48 minutes for a writing task
@@ -84,6 +91,7 @@ Feature: Time Estimation Learning
       And the estimation model should reduce the bias correction factor for this category
       And the model should not over-correct based on a single instance
 
+    @wip
     Scenario: User dismisses corrected estimate
       Given the system suggests a corrected estimate of 2 hours 48 minutes
       When I dismiss the suggestion
@@ -92,12 +100,14 @@ Feature: Time Estimation Learning
 
   Rule: Users can view their estimation accuracy trends
 
+    @wip
     Scenario: View estimation accuracy dashboard
       When I navigate to my estimation insights
       Then I should see my overall estimation accuracy percentage
       And I should see estimation bias broken down by task category
       And I should see a trend line showing accuracy improvement over time
 
+    @wip
     Scenario: Estimation accuracy improves over time
       Given I have been using corrected estimates for 8 weeks
       When I view my estimation accuracy trend

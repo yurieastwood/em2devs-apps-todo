@@ -40,6 +40,7 @@ Feature: Quest Hierarchy
       When I complete the task "Write abstract"
       Then the quest progress should be 20%
 
+    @wip
     Scenario: Complete a quest
       Given I have a quest "Prepare conference talk" with 5 tasks
       And 4 tasks are completed
@@ -49,6 +50,7 @@ Feature: Quest Hierarchy
       And I should receive quest completion bonus XP
       And a celebration animation should be displayed
 
+    @wip
     Scenario: View quest details
       Given I have a quest "Prepare conference talk" with 5 tasks
       And 3 tasks are completed
@@ -59,6 +61,7 @@ Feature: Quest Hierarchy
       And I should see the total XP earned so far
       And I should see the estimated remaining effort
 
+    @wip
     Scenario: Move a task between quests
       Given I have a quest "Work tasks" containing the task "Update docs"
       And I have a quest "Side project" with 2 tasks
@@ -66,12 +69,14 @@ Feature: Quest Hierarchy
       Then "Work tasks" should no longer contain "Update docs"
       And "Side project" should contain 3 tasks
 
+    @wip
     Scenario: Remove a task from a quest without deleting it
       Given I have a quest "Sprint work" containing the task "Fix CSS bug"
       When I unassign the task "Fix CSS bug" from the quest
       Then the task should appear in my inbox
       And the quest progress should be recalculated
 
+    @wip
     Scenario: Delete a quest
       Given I have a quest "Abandoned project" containing 3 tasks
       When I delete the quest "Abandoned project"
@@ -80,6 +85,7 @@ Feature: Quest Hierarchy
       And the 3 tasks should be moved to my inbox
       And the quest XP bonus should not be affected for completed tasks
 
+    @wip
     Scenario: A quest cannot belong to more than one epic
       Given I have a quest "Build authentication" assigned to the epic "Launch MVP"
       When I attempt to assign the quest to the epic "Side Project"
@@ -121,6 +127,7 @@ Feature: Quest Hierarchy
       When I view the epic progress
       Then the epic progress should be 37.5%
 
+    @wip
     Scenario: Complete an epic
       Given I have an epic "Launch MVP" with 4 quests
       And 3 quests are completed
@@ -129,6 +136,7 @@ Feature: Quest Hierarchy
       And I should receive epic completion bonus XP
       And a milestone event should appear on my journey timeline
 
+    @wip
     Scenario: Delete an epic
       Given I have an epic "Abandoned initiative" containing 3 quests
       When I delete the epic "Abandoned initiative"
@@ -136,6 +144,7 @@ Feature: Quest Hierarchy
       Then the epic should be removed from my epic list
       And the 3 quests should remain intact but no longer belong to any epic
 
+    @wip
     Scenario: Remove a quest from an epic
       Given I have an epic "Launch MVP" with 4 quests
       When I remove the quest "Beta testing" from the epic
@@ -144,7 +153,7 @@ Feature: Quest Hierarchy
 
   Rule: Sagas are life-chapter goals representing major personal ambitions
     
-    @premium
+    @wip @premium
     Scenario: Create a saga
       Given I have a premium subscription
       When I create a saga with the following details:
@@ -156,7 +165,7 @@ Feature: Quest Hierarchy
       And it should appear in my saga view
       And it should have no target date by default
 
-    @premium
+    @wip @premium
     Scenario: Assign epics to a saga
       Given I have a saga "Launch my SaaS business"
       And I have epics "Launch MVP" and "Acquire first 100 users"
@@ -164,7 +173,7 @@ Feature: Quest Hierarchy
       Then the saga should contain 2 epics
       And the saga progress should reflect aggregate epic progress
 
-    @premium
+    @wip @premium
     Scenario: View saga timeline
       Given I have a saga "Launch my SaaS business" with 3 epics
       And work has been ongoing for 4 months
@@ -173,6 +182,7 @@ Feature: Quest Hierarchy
       And I should see completed and in-progress epics
       And I should see a projected completion trajectory
 
+    @wip
     Scenario: Free-tier user attempts to create a saga
       Given I have a free-tier account
       When I attempt to create a saga
@@ -180,7 +190,7 @@ Feature: Quest Hierarchy
       And I should be offered the option to upgrade
       And I should still be able to create tasks, quests, and epics
 
-    @premium
+    @wip @premium
     Scenario: An epic cannot belong to more than one saga
       Given I have an epic "Launch MVP" assigned to the saga "Launch my SaaS business"
       When I attempt to assign the epic to the saga "Career growth"
@@ -189,6 +199,7 @@ Feature: Quest Hierarchy
 
   Rule: Users can navigate the full hierarchy and see how tasks connect to goals
 
+    @wip
     Scenario: View task context within hierarchy
       Given I have a task "Write unit tests" in the quest "Build authentication"
       And the quest belongs to the epic "Launch MVP"
@@ -197,6 +208,7 @@ Feature: Quest Hierarchy
       Then I should see the full breadcrumb: Saga > Epic > Quest > Task
       And each level should be clickable for navigation
 
+    @wip
     Scenario: View all unassigned tasks
       Given I have 10 tasks total
       And 6 tasks are assigned to quests

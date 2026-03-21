@@ -9,6 +9,7 @@ Feature: Local-First Data and Export
 
   Rule: All data is stored locally by default and the app works offline
 
+    @todo
     Scenario: App works without internet connection
       Given I have no internet connection
       When I open Waypoint
@@ -18,6 +19,7 @@ Feature: Local-First Data and Export
       And I should be able to earn XP
       And all changes should be saved locally
 
+    @todo
     Scenario: Data persists across app restarts
       Given I have created 10 tasks and completed 5
       When I close and reopen the app
@@ -25,6 +27,7 @@ Feature: Local-First Data and Export
       And 5 should show as completed
       And my XP and level should be correct
 
+    @todo
     Scenario: No data sent to servers without explicit opt-in
       Given I have a free-tier account without sync enabled
       When I use the app for a full week
@@ -35,6 +38,7 @@ Feature: Local-First Data and Export
   @premium
   Rule: Premium users can opt into cross-device sync
 
+    @todo
     Scenario: Enable cross-device sync
       Given I have a premium subscription
       When I enable cross-device sync in settings
@@ -44,6 +48,7 @@ Feature: Local-First Data and Export
       Then my data should begin syncing to the cloud
       And changes should propagate to my other devices
 
+    @todo
     Scenario: Sync conflict resolution
       Given I have sync enabled on two devices
       And I complete a task on device A while offline
@@ -53,6 +58,7 @@ Feature: Local-First Data and Export
       And the change with the most recent server-side timestamp should take priority
       And both versions should be available in a conflict log for manual review
 
+    @todo
     Scenario: Disable sync and delete cloud data
       Given I have sync enabled
       When I disable sync
@@ -62,6 +68,7 @@ Feature: Local-First Data and Export
       And my local data should remain intact
       And the app should continue working offline
 
+    @todo
     Scenario: Social features require server-side state
       Given I am a member of a guild with shared quests
       And I have no internet connection
@@ -72,6 +79,7 @@ Feature: Local-First Data and Export
 
   Rule: Users can export all their data at any time in open formats
 
+    @todo
     Scenario: Export all data as JSON
       When I navigate to data export settings
       And I choose to export all data as JSON
@@ -91,18 +99,21 @@ Feature: Local-First Data and Export
         | Settings           |
       And the file should be downloadable to my device
 
+    @todo
     Scenario: Export tasks as CSV
       When I choose to export tasks as CSV
       Then a CSV file should be generated with all task data
       And the CSV should include all fields: title, description, status, dates, tags, XP, difficulty, quest assignment
       And the file should be compatible with spreadsheet applications
 
+    @todo
     Scenario: Export is always available regardless of subscription
       Given I have a free-tier account
       When I navigate to data export
       Then the full JSON and CSV export options should be available
       And no export functionality should be restricted by tier
 
+    @todo
     Scenario: Import data from a previous export
       When I navigate to data import settings
       And I select a previously exported JSON file
@@ -112,6 +123,7 @@ Feature: Local-First Data and Export
       Then all data from the export file should be restored
       And my XP, level, and progression should reflect the imported state
 
+    @todo
     Scenario: Scheduled automatic export
       Given I have a premium subscription
       When I configure a weekly automatic export
@@ -119,6 +131,7 @@ Feature: Local-First Data and Export
       And it should be stored in my designated local directory
       And the 4 most recent backups should be retained
 
+    @todo
     Scenario: Scheduled export when local directory is unavailable
       Given I have configured a weekly automatic export
       And the designated local directory is unavailable
@@ -129,6 +142,7 @@ Feature: Local-First Data and Export
 
   Rule: Users can delete their data and account permanently
 
+    @todo
     Scenario: Delete all data
       When I choose to delete all my Waypoint data
       Then I should see a warning about permanent data loss
@@ -138,6 +152,7 @@ Feature: Local-First Data and Export
       And all cloud data (if sync was enabled) should be permanently deleted
       And my account should remain active but empty
 
+    @todo
     Scenario: Delete account entirely
       When I choose to delete my account
       Then I should see a warning about permanent account and data loss
@@ -147,6 +162,7 @@ Feature: Local-First Data and Export
       And my account should be deactivated
       And my username should be released after a 30-day holding period
 
+    @todo
     Scenario: Recover account during the 30-day holding period
       Given I have deleted my account within the last 30 days
       When I sign in using my original social login provider

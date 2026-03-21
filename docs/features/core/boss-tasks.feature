@@ -18,6 +18,7 @@ Feature: Boss Tasks
       And I should receive a notification about the promotion
       And the task should display a distinct Boss Task visual indicator
 
+    @wip
     Scenario: Task promoted based on age and priority
       Given I have a task "Refactor authentication module" with priority "High"
       And the task has been open for more than 14 days
@@ -25,6 +26,7 @@ Feature: Boss Tasks
       When the system evaluates my task list
       Then the task should be flagged as a Boss Task
 
+    @wip
     Scenario: Task promoted based on high difficulty and avoidance
       Given I have a task "Prepare annual tax filing" with difficulty "Hard"
       And I have viewed the task 5 or more times without completing any part of it
@@ -38,6 +40,7 @@ Feature: Boss Tasks
       Then the task should display the Boss Task indicator
       And I should be offered the Boss Task intervention flow
 
+    @wip
     Scenario: Low-priority task is not promoted despite age
       Given I have a task "Reorganise bookshelf" with priority "Low"
       And the task has been open for 30 days
@@ -55,12 +58,14 @@ Feature: Boss Tasks
 
   Rule: Boss Tasks trigger a structured intervention flow to support completion
 
+    @wip
     Scenario: Offer task breakdown
       Given I have a Boss Task "Write architecture decision record"
       When I open the Boss Task intervention flow
       Then I should be offered the option to break it into smaller subtasks
       And the system should suggest a breakdown based on similar tasks
 
+    @wip
     Scenario: Accept suggested breakdown
       Given I have a Boss Task "Prepare annual tax filing"
       And the system suggests breaking it into 4 subtasks:
@@ -74,6 +79,7 @@ Feature: Boss Tasks
       And each subtask should have its own difficulty rating
       And the Boss Task becomes a parent task tracking subtask completion
 
+    @wip
     Scenario: Offer re-evaluation of task necessity
       Given I have a Boss Task "Redesign landing page"
       When I open the Boss Task intervention flow
@@ -82,6 +88,7 @@ Feature: Boss Tasks
       Then I should see prompts asking about the task's current relevance
       And I should be able to archive the task without penalty if it is no longer needed
 
+    @wip
     Scenario: Offer delegation suggestion
       Given I have a Boss Task "Create onboarding documentation"
       And I am a member of a guild
@@ -89,6 +96,7 @@ Feature: Boss Tasks
       Then I should be offered the option to convert it to a shared quest
       And I should be able to assign it to a guild member
 
+    @wip
     Scenario: Trigger focus mode for a Boss Task
       Given I have a Boss Task "Write Q3 strategy document"
       When I choose to enter Focus Mode for the Boss Task
@@ -99,6 +107,7 @@ Feature: Boss Tasks
 
   Rule: Completing a Boss Task awards significantly more XP and recognition
 
+    @wip
     Scenario: Complete a Boss Task
       Given I have a Boss Task "Write architecture decision record"
       When I mark the Boss Task as complete
@@ -107,6 +116,7 @@ Feature: Boss Tasks
       And a celebration animation should be displayed
       And my "Boss Slayer" achievement counter should increment
 
+    @wip
     Scenario: Complete a Boss Task within Focus Mode
       Given I am in Focus Mode working on the Boss Task "Write Q3 strategy document"
       And I have been in Focus Mode for 45 minutes
@@ -116,12 +126,14 @@ Feature: Boss Tasks
       And I should receive Focus Mode bonus XP
       And the total XP should be displayed in a combined breakdown
 
+    @wip
     Scenario: Boss Task completion contributes to title progression
       Given I have completed 9 Boss Tasks total
       When I complete my 10th Boss Task
       Then I should earn the title "Boss Slayer"
       And the title should be visible on my profile
 
+    @wip
     Scenario: Delete a Boss Task
       Given I have a Boss Task "Obsolete research"
       When I delete the Boss Task
@@ -130,6 +142,7 @@ Feature: Boss Tasks
       And no XP should be awarded or deducted
       And my "Boss Slayer" achievement counter should not change
 
+    @wip
     Scenario: Boss Task that is also a recurring task instance
       Given I have a recurring task "Weekly report" flagged as a Boss Task
       When I complete the Boss Task

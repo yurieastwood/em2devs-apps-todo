@@ -7,6 +7,63 @@ on:
     branches: [main]
 
 jobs:
+  lint-branch-name:
+    name: "Lint|Branch Name"
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch name
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if echo "$BRANCH" | grep -qE "^(feat|fix|chore|hotfix)/.+$"; then
+            echo "✓ Branch '${BRANCH}' follows conventional naming"
+          elif echo "$BRANCH" | grep -qE "^release/.+$"; then
+            echo "✓ Branch '${BRANCH}' follows conventional naming"
+          else
+            echo "::error::Invalid branch name: '${BRANCH}'"
+            echo ""
+            echo "Expected: <type>/<description>"
+            echo "Allowed: feat/, fix/, chore/, hotfix/, release/"
+            exit 1
+          fi
+
+  lint-commit-messages:
+    name: "Lint|Commit Messages"
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate commit messages
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch origin "$BASE_REF"
+          PATTERN="^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?!?: .{1,}"
+          SKIP="^(Merge |Revert |Initial commit|fixup! |squash! )"
+          FAILED=0
+          while IFS= read -r msg; do
+            if echo "$msg" | grep -qE "$SKIP"; then
+              echo "✓ (skip) $msg"
+              continue
+            fi
+            if echo "$msg" | grep -qE "$PATTERN"; then
+              echo "✓ $msg"
+            else
+              echo "✗ $msg"
+              FAILED=1
+            fi
+          done < <(git log --format="%s" "origin/${BASE_REF}..HEAD")
+          if [ "$FAILED" -eq 1 ]; then
+            echo ""
+            echo "::error::One or more commit messages do not follow Conventional Commits"
+            echo "Expected: <type>[optional scope]: <description>"
+            echo "Valid types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+            exit 1
+          fi
+
   gate-1-compile:
     name: "G1|Compiler / Type System"
     runs-on: ubuntu-latest
@@ -109,8 +166,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "9.0.x"
       - run: dotnet tool restore
-      - run: dotnet stryker -f stryker-config.json
+      - name: Run mutation testing (since mode on PRs)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin ${{ github.base_ref }}
+            dotnet stryker -f stryker-config.json --since:origin/${{ github.base_ref }}
+          else
+            dotnet stryker -f stryker-config.json
+          fi

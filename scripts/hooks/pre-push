@@ -16,6 +16,29 @@ require dotnet       "install .NET SDK from https://dot.net"
 require schemathesis "install via 'pip install schemathesis' or 'pipx install schemathesis'"
 require curl         "install via your system package manager"
 
+gate "Branch Name Validation"
+branch=$(git rev-parse --abbrev-ref HEAD)
+
+if echo "$branch" | grep -qE "^main$"; then
+  pass "Branch '${branch}' — default branch"
+elif echo "$branch" | grep -qE "^(feat|fix|chore|hotfix)/.+$"; then
+  pass "Branch '${branch}' follows conventional naming"
+elif echo "$branch" | grep -qE "^release/.+$"; then
+  pass "Branch '${branch}' follows conventional naming"
+else
+  fail "Invalid branch name: '${branch}'
+
+  Expected: <type>/<description>
+
+  Allowed patterns:
+    feat/<short-description>
+    fix/<short-description>
+    chore/<short-description>
+    hotfix/<short-description>
+    release/<version>
+    main"
+fi
+
 echo -e "${YELLOW}Running pre-push gates (G6–G7)...${NC}"
 
 gate "G6 — API Contract Validation"

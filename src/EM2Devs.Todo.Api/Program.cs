@@ -8,6 +8,8 @@ using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Infrastructure.Persistence;
 using EM2Devs.Todo.ServiceDefaults;
 
+const string CorsPolicyName = "Frontend";
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
@@ -36,20 +38,23 @@ builder.Services.AddTransient<IRequestHandler<ListTasksQuery, IReadOnlyList<Todo
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.XpAwardHandler>();
 
-builder.Services.AddCors(options =>
-{
-    string[] allowedOrigins = builder.Configuration
-        .GetSection("Cors:AllowedOrigins")
-        .Get<string[]>() ?? [];
+string[] allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
 
-    options.AddPolicy("Frontend", policy =>
+if (allowedOrigins.Length > 0)
+{
+    builder.Services.AddCors(options =>
     {
-        policy.WithOrigins(allowedOrigins)
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+        options.AddPolicy(CorsPolicyName, policy =>
+        {
+            policy.WithOrigins(allowedOrigins)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
     });
-});
+}
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -61,7 +66,10 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
-app.UseCors("Frontend");
+if (allowedOrigins.Length > 0)
+{
+    app.UseCors(CorsPolicyName);
+}
 app.MapOpenApi();
 app.MapScalarApiReference();
 app.MapControllers();

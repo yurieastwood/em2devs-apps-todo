@@ -6,12 +6,12 @@ using Xunit;
 namespace EM2Devs.Todo.Api.UnitTests;
 
 [Trait("Category", "Api")]
-public sealed class CorsMiddlewareTests : IDisposable
+public sealed class CorsConfigurationTests : IDisposable
 {
     private readonly WebApplicationFactory<Program> _factory;
     private readonly HttpClient _client;
 
-    public CorsMiddlewareTests()
+    public CorsConfigurationTests()
     {
         _factory = new WebApplicationFactory<Program>();
         _client = _factory.CreateClient();
@@ -53,7 +53,7 @@ public sealed class CorsMiddlewareTests : IDisposable
     }
 
     [Fact]
-    public async Task Should_ReturnCorsHeaders_When_PreflightRequestSent()
+    public async Task Should_ReturnPreflightHeaders_When_PreflightRequestSent()
     {
         // Given
         var request = new HttpRequestMessage(HttpMethod.Options, "/api/tasks");
@@ -65,8 +65,16 @@ public sealed class CorsMiddlewareTests : IDisposable
         var response = await _client.SendAsync(request);
 
         // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         response.Headers.Contains("Access-Control-Allow-Origin").ShouldBeTrue();
         response.Headers.GetValues("Access-Control-Allow-Origin")
             .ShouldContain("http://localhost:5173");
+        response.Headers.Contains("Access-Control-Allow-Methods").ShouldBeTrue();
+        response.Headers.GetValues("Access-Control-Allow-Methods")
+            .ShouldContain("POST");
+        response.Headers.Contains("Access-Control-Allow-Headers").ShouldBeTrue();
+        response.Headers.GetValues("Access-Control-Allow-Headers")
+            .ShouldContain("Content-Type");
+        response.Headers.Contains("Access-Control-Allow-Credentials").ShouldBeTrue();
     }
 }

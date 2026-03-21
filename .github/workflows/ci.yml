@@ -119,7 +119,7 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             git fetch origin ${{ github.base_ref }}
-            dotnet stryker -f stryker-config.json --since origin/${{ github.base_ref }}
+            dotnet stryker -f stryker-config.json --since:origin/${{ github.base_ref }}
           else
             dotnet stryker -f stryker-config.json
           fi

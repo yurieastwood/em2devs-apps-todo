@@ -109,8 +109,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "9.0.x"
       - run: dotnet tool restore
-      - run: dotnet stryker -f stryker-config.json
+      - name: Run mutation testing (since mode on PRs)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin ${{ github.base_ref }}
+            dotnet stryker -f stryker-config.json --since:origin/${{ github.base_ref }}
+          else
+            dotnet stryker -f stryker-config.json
+          fi

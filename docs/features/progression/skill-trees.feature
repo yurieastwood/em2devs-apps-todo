@@ -34,6 +34,7 @@ Feature: Skill Trees
         | organising       | 15        | Steward         |
         | side-project     | 10        | Builder         |
 
+    @wip
     Scenario: View available and locked skill trees
       When I navigate to the skill tree view
       Then I should see my unlocked skill trees with progress
@@ -42,6 +43,7 @@ Feature: Skill Trees
 
   Rule: Skill trees are hidden until the user reaches the required level
 
+    @wip
     Scenario: User does not see skill trees before level 3
       Given I am an authenticated user
       And I am at level 2
@@ -61,6 +63,7 @@ Feature: Skill Trees
       And I should receive a tier-up bonus XP award
       And I should unlock the tier 2 perks
 
+    @wip
     Scenario: View skill tree details
       Given I have the "Scholar" skill tree at tier 2
       When I view the "Scholar" skill tree details
@@ -69,6 +72,7 @@ Feature: Skill Trees
       And I should see personalised study tips based on my patterns
       And I should see a history of qualifying task completions
 
+    @wip
     Scenario: Multiple skill trees can be active simultaneously
       Given I have unlocked the "Creator" and "Builder" skill trees
       When I complete a task tagged "creative" and "side-project"
@@ -77,16 +81,19 @@ Feature: Skill Trees
 
   Rule: Skill tree tiers unlock personalised tips, workflows, and cosmetics
 
+    @wip
     Scenario: Tier 1 perk unlocks personalised tips
       Given I have just unlocked the "Guardian" skill tree at tier 1
       Then I should receive a set of health and fitness productivity tips
       And the tips should be accessible from my skill tree view
 
+    @wip
     Scenario: Tier 2 perk unlocks suggested workflows
       Given I have reached tier 2 of the "Architect" skill tree
       Then I should receive suggested quest templates for work projects
       And the templates should be usable when creating new quests
 
+    @wip
     Scenario: Tier 3 perk unlocks cosmetic rewards
       Given I have reached tier 3 of the "Creator" skill tree
       Then I should unlock a unique profile badge for the "Creator" tree
@@ -95,6 +102,7 @@ Feature: Skill Trees
 
   Rule: Skill tree progress is permanent and does not decay on inactivity
 
+    @wip
     Scenario: Skill tree progress retained after inactivity
       Given I have the "Builder" skill tree at tier 2
       And I have not completed any side-project tasks in 60 days

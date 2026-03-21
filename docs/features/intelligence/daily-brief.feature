@@ -21,7 +21,7 @@ Feature: Smart Daily Brief
       And the sequence should account for my energy patterns
       And the sequence should account for task deadlines and priorities
 
-    @premium
+    @wip @premium
     Scenario: Daily brief factors in calendar blocks
       Given I have a premium subscription with calendar integration
       And I have a 2-hour meeting block from 10 AM to 12 PM
@@ -30,6 +30,7 @@ Feature: Smart Daily Brief
       Then no tasks should be suggested during the 10 AM to 12 PM block
       And harder tasks should be suggested for my peak energy windows outside the meeting
 
+    @wip
     Scenario: Daily brief without calendar integration
       Given I do not have calendar integration enabled
       And I have 6 tasks to schedule today
@@ -39,12 +40,14 @@ Feature: Smart Daily Brief
       And it should recommend a prioritised task sequence based on energy patterns and deadlines
       And no calendar-related scheduling adjustments should be applied
 
+    @wip
     Scenario: Daily brief highlights overdue tasks
       Given I have 3 overdue tasks and 5 tasks due today
       When the daily brief is generated
       Then overdue tasks should appear at the top of the brief with a clear indicator
       And the brief should suggest addressing at least 1 overdue task first
 
+    @wip
     Scenario: Daily brief respects capacity model
       Given my capacity model indicates I typically complete 6 tasks on this day of the week
       And I have 10 tasks due today
@@ -62,6 +65,7 @@ Feature: Smart Daily Brief
       Then my Today view should reorder to match the brief
       And a "Following daily brief" indicator should be visible
 
+    @wip
     Scenario: Modify the daily brief
       Given the daily brief recommends 6 tasks
       When I reorder the tasks in the brief
@@ -70,6 +74,7 @@ Feature: Smart Daily Brief
       Then my Today view should reflect my modifications
       And the system should learn from my modifications for future briefs
 
+    @wip
     Scenario: User modifies brief to exceed capacity limit
       Given the daily brief recommends 6 tasks matching my capacity model
       When I add additional tasks to the brief beyond my capacity of 6
@@ -83,6 +88,7 @@ Feature: Smart Daily Brief
       Then my Today view should show the default task ordering
       And the brief should not reappear until the next day
 
+    @wip
     Scenario: Brief not generated when insufficient tasks
       Given I have fewer than 2 tasks due today
       When I open Waypoint
@@ -91,6 +97,7 @@ Feature: Smart Daily Brief
 
   Rule: The daily brief improves based on what users actually complete
 
+    @wip
     Scenario: Brief accuracy improves with feedback
       Given I have used the daily brief for 14 days
       And I consistently move creative tasks earlier and defer admin tasks

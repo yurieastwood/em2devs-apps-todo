@@ -1,42 +1,40 @@
-# sv
+# EM2Devs.Todo.Web
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+SvelteKit frontend for the EM2Devs Todo application.
 
-## Creating a project
+## Prerequisites
 
-If you're seeing this, you've probably already done this step. Congrats!
+- Node.js (see `.nvmrc` for pinned version)
+- Backend API running at `http://localhost:5001` (or set `API_BASE_URL`)
 
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
+## Development
 
 ```sh
-# recreate this project
-npx sv@0.12.8 create --template minimal --types ts --no-install EM2Devs.Todo.Web
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
-
-To create a production version of your app:
+Or use .NET Aspire from the repo root to launch both frontend and backend:
 
 ```sh
-npm run build
+dotnet run --project src/EM2Devs.Todo.AppHost
 ```
 
-You can preview the production build with `npm run preview`.
+## Scripts
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+| Script                 | Description               |
+| ---------------------- | ------------------------- |
+| `npm run dev`          | Start dev server          |
+| `npm run build`        | Production build          |
+| `npm run check`        | Type check (svelte-check) |
+| `npm run lint`         | Lint (ESLint)             |
+| `npm run format`       | Format (Prettier)         |
+| `npm run format:check` | Verify formatting         |
+| `npm run test`         | Run unit tests (Vitest)   |
+
+## Tech Stack
+
+- SvelteKit with Svelte 5 (runes)
+- TypeScript
+- Vitest + @testing-library/svelte
+- ESLint + Prettier

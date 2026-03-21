@@ -18,7 +18,7 @@ describe('listTasks', () => {
 			'http://localhost:5001'
 		);
 
-		expect(mockFetch).toHaveBeenCalledWith('http://localhost:5001/api/tasks');
+		expect(mockFetch).toHaveBeenCalledWith(new URL('http://localhost:5001/api/tasks'));
 		expect(result).toEqual(expected);
 	});
 

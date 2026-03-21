@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+pass() { echo -e "${GREEN}✓ $1${NC}"; }
+fail() { echo -e "${RED}✗ $1${NC}"; exit 1; }
+
+commit_msg_file="$1"
+commit_msg=$(head -1 "$commit_msg_file")
+
+echo -e "${YELLOW}Validating commit message...${NC}"
+
+# Allow standard Git-generated messages
+if echo "$commit_msg" | grep -qE "^(Merge |Revert |Initial commit|fixup! |squash! )"; then
+  pass "Git-generated message — skipping validation"
+  exit 0
+fi
+
+# Conventional Commits pattern: type(optional-scope)[!]: description
+pattern="^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?!?: .{1,}"
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+  echo ""
+  fail "Invalid commit message format.
+
+  Got: $commit_msg
+
+  Expected: <type>[optional scope]: <description>
+
+  Valid types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert
+
+  Examples:
+    feat: add user registration
+    fix(auth): resolve token expiration bug
+    chore(deps): update dependencies"
+fi
+
+pass "Commit message follows Conventional Commits"

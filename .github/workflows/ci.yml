@@ -64,6 +64,36 @@ jobs:
             exit 1
           fi
 
+  frontend-lint:
+    name: "Frontend|Lint & Type Check"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/EM2Devs.Todo.Web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/EM2Devs.Todo.Web/.nvmrc
+      - run: npm ci
+      - run: npm run check
+      - run: npm run lint
+      - run: npm run format:check
+
+  frontend-test:
+    name: "Frontend|Tests"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/EM2Devs.Todo.Web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/EM2Devs.Todo.Web/.nvmrc
+      - run: npm ci
+      - run: npm run test
+
   gate-1-compile:
     name: "G1|Compiler / Type System"
     runs-on: ubuntu-latest

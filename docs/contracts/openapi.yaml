@@ -78,6 +78,10 @@ paths:
           description: Invalid task ID format
         "404":
           description: Task not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
     delete:
       operationId: deleteTask
       summary: Delete a task by ID
@@ -96,6 +100,10 @@ paths:
           description: Invalid task ID format
         "404":
           description: Task not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
   /api/tasks/{taskId}/status:
     patch:
       operationId: updateTaskStatus
@@ -107,6 +115,7 @@ paths:
           schema:
             type: string
             format: uuid
+            pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
       requestBody:
         required: true
         content:
@@ -128,6 +137,10 @@ paths:
                 $ref: "#/components/schemas/ValidationProblemDetails"
         "404":
           description: Task not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
         "405":
           description: Invalid task ID format in path
         "409":

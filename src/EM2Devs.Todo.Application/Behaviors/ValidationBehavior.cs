@@ -17,6 +17,7 @@ public sealed class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<
 
     public async Task<TResponse> Handle(TRequest request, Func<Task<TResponse>> continuation, CancellationToken ct)
     {
+        ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(continuation);
 
         if (!_validators.Any())

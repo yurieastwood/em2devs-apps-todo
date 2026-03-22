@@ -121,4 +121,26 @@ public sealed class ResultTests
         validation.Match(_ => "", e => e is ValidationError ? "400" : "other").ShouldBe("400");
         conflict.Match(_ => "", e => e is ConflictError ? "409" : "other").ShouldBe("409");
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_OnSuccessIsNull()
+    {
+        // Given
+        Result<int> result = 42;
+
+        // When/Then
+        Should.Throw<ArgumentNullException>(() => result.Match(null!, _ => ""));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_OnErrorIsNull()
+    {
+        // Given
+        Result<int> result = new NotFoundError("missing");
+
+        // When/Then
+        Should.Throw<ArgumentNullException>(() => result.Match(v => v.ToString(System.Globalization.CultureInfo.InvariantCulture), (Func<ResultError, string>)null!));
+    }
 }

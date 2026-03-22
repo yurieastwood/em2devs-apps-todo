@@ -24,7 +24,8 @@ public sealed class ApiVersioningTests : IDisposable
     public async Task Should_ReturnSameResults_When_UsingVersionedAndUnversionedTasksRoute()
     {
         // Given
-        await _client.PostAsJsonAsync("/api/tasks", new { title = "Versioning test" });
+        HttpResponseMessage seedResponse = await _client.PostAsJsonAsync("/api/tasks", new { title = "Versioning test" });
+        seedResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         // When
         HttpResponseMessage unversioned = await _client.GetAsync("/api/tasks");
@@ -77,7 +78,9 @@ public sealed class ApiVersioningTests : IDisposable
 
         // Then
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
-        TaskResponseDto? task = await response.Content.ReadFromJsonAsync<TaskResponseDto>();
+        VersionedTaskResponse? task = await response.Content.ReadFromJsonAsync<VersionedTaskResponse>();
         task!.Title.ShouldBe("Versioned create");
     }
+
+    private sealed record VersionedTaskResponse(Guid Id, string Title, string Status);
 }

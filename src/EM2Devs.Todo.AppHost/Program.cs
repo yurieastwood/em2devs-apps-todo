@@ -13,6 +13,7 @@ var api = builder.AddProject<Projects.EM2Devs_Todo_Api>("api")
     .WaitFor(redis);
 
 builder.AddNpmApp("web", "../EM2Devs.Todo.Web", "dev")
+    .WithNpmPackageInstallation()
     .WithHttpEndpoint(port: 5173, env: "PORT")
     .WithEnvironment("API_BASE_URL", api.GetEndpoint("http"))
     .WithReference(api)

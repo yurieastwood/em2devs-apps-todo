@@ -1,13 +1,14 @@
 using EM2Devs.Todo.Application.Mediator;
 using EM2Devs.Todo.Application.Ports;
+using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
 
 namespace EM2Devs.Todo.Application.Queries;
 
-public sealed record GetTaskQuery(Guid TaskId) : IRequest<TodoTask?>;
+public sealed record GetTaskQuery(Guid TaskId) : IRequest<Result<TodoTask>>;
 
-public sealed class GetTaskQueryHandler : IRequestHandler<GetTaskQuery, TodoTask?>
+public sealed class GetTaskQueryHandler : IRequestHandler<GetTaskQuery, Result<TodoTask>>
 {
     private readonly ITaskRepository _repository;
 
@@ -16,10 +17,17 @@ public sealed class GetTaskQueryHandler : IRequestHandler<GetTaskQuery, TodoTask
         _repository = repository;
     }
 
-    public async Task<TodoTask?> Handle(GetTaskQuery request, CancellationToken ct)
+    public async Task<Result<TodoTask>> Handle(GetTaskQuery request, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        return await _repository.GetByIdAsync(new TaskId(request.TaskId), ct).ConfigureAwait(false);
+        TodoTask? task = await _repository.GetByIdAsync(new TaskId(request.TaskId), ct).ConfigureAwait(false);
+
+        if (task is null)
+        {
+            return new NotFoundError($"Task with id '{request.TaskId}' was not found.");
+        }
+
+        return task;
     }
 }

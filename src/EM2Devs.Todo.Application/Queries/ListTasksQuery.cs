@@ -5,9 +5,9 @@ using EM2Devs.Todo.Domain.Entities;
 
 namespace EM2Devs.Todo.Application.Queries;
 
-public sealed record ListTasksQuery(Domain.TaskStatus? StatusFilter) : IRequest<IReadOnlyList<TodoTask>>;
+public sealed record ListTasksQuery(string? StatusFilter) : IRequest<Result<IReadOnlyList<TodoTask>>>;
 
-public sealed class ListTasksQueryHandler : IRequestHandler<ListTasksQuery, IReadOnlyList<TodoTask>>
+public sealed class ListTasksQueryHandler : IRequestHandler<ListTasksQuery, Result<IReadOnlyList<TodoTask>>>
 {
     private readonly ITaskRepository _repository;
 
@@ -16,17 +16,18 @@ public sealed class ListTasksQueryHandler : IRequestHandler<ListTasksQuery, IRea
         _repository = repository;
     }
 
-    public async Task<IReadOnlyList<TodoTask>> Handle(ListTasksQuery request, CancellationToken ct)
+    public async Task<Result<IReadOnlyList<TodoTask>>> Handle(ListTasksQuery request, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         IReadOnlyList<TodoTask> tasks = await _repository.GetAllAsync(ct).ConfigureAwait(false);
 
-        if (request.StatusFilter.HasValue)
+        if (request.StatusFilter is not null &&
+            Enum.TryParse<Domain.TaskStatus>(request.StatusFilter, ignoreCase: false, out Domain.TaskStatus parsed))
         {
-            tasks = tasks.Where(t => t.Status == request.StatusFilter.Value).ToList().AsReadOnly();
+            tasks = tasks.Where(t => t.Status == parsed).ToList().AsReadOnly();
         }
 
-        return tasks;
+        return Result<IReadOnlyList<TodoTask>>.Success(tasks);
     }
 }

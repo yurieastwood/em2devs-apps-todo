@@ -36,10 +36,13 @@ public sealed class TasksController : ControllerBase
 
         Result<TodoTask> result = await _mediator.Send(new CreateTaskCommand(request.Title), ct).ConfigureAwait(false);
         return result.ToHttpResult(task =>
-            CreatedAtAction(
-                nameof(GetTask),
-                new { taskId = task.Id.Value, version = HttpContext.GetRequestedApiVersion()?.ToString() },
-                MapToResponse(task)));
+        {
+            string? version = HttpContext.GetRequestedApiVersion()?.ToString();
+            object routeValues = version is not null
+                ? new { taskId = task.Id.Value, version }
+                : new { taskId = task.Id.Value };
+            return CreatedAtAction(nameof(GetTask), routeValues, MapToResponse(task));
+        });
     }
 
     [HttpGet("{taskId:guid}")]

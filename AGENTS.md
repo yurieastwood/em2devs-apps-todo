@@ -33,7 +33,7 @@ A task is ready to be picked up when:
 
 A task is done when ALL of the following are true:
 
-- All local gates pass (pre-commit G1–G5, pre-push G6–G7)
+- All local gates pass (pre-commit G1–G5 + conditional G2a for `src/EM2Devs.Todo.Web/` changes, pre-push G6–G7)
 - Scenario tags updated (`@wip` on start, `@done` before PR)
 - PR created to `main` with a conventional commit message
 - PR reviewed by a different agent or human — never the author
@@ -46,11 +46,11 @@ A task is done when ALL of the following are true:
 
 ### Step 1: Understand the Scenario
 
-Identify the behaviour being added or changed. Express it as: "Given [context], when [action], then [outcome]." Tag the scenario `@wip` in the feature file.
+Identify the behavior being added or changed. Express it as: "Given [context], when [action], then [outcome]." Tag the scenario `@wip` in the feature file.
 
 ### Step 2: Write the Test First
 
-Write a failing test that encodes the scenario. Run `dotnet test` (backend) or `npm run test` (frontend) and confirm it **fails**. If the test passes already, it's not testing the new behaviour — rewrite it.
+Write a failing test that encodes the scenario. Run `dotnet test` (backend) or `npm run test` (frontend) and confirm it **fails**. If the test passes already, it's not testing the new behavior — rewrite it.
 
 Do NOT write the production code yet.
 
@@ -102,7 +102,7 @@ BDD scenarios in `docs/features/` use status tags to track implementation progre
 |-----|---------|
 | `@todo` | Not started — no implementation exists |
 | `@wip` | Work in progress — an agent is actively implementing |
-| `@done` | Implemented, tested, and merged to `main` |
+| `@done` | Implemented and verified in a PR that is ready to merge (remains true once merged to `main`) |
 
 Tag changes must be included in the PR. For the full tag taxonomy (category tags like `@core`, `@xp`, etc.), see [`docs/features/README.md`](docs/features/README.md).
 
@@ -143,7 +143,7 @@ Changing it requires **explicit human approval**:
 ### Testing ([ADR-024](docs/decisions/20260314-024-scenario-driven-testing.md))
 
 - Never delete or weaken a test — fix the production code
-- Tests must be scenario-driven: test behaviours, not methods
+- Tests must be scenario-driven: test behaviors, not methods
 - Test names: `Should_[ExpectedBehaviour]_When_[Condition]`
 
 ### Mutation Testing ([ADR-026](docs/decisions/20260314-026-mutation-testing.md))
@@ -161,15 +161,15 @@ Changing it requires **explicit human approval**:
 
 | Error pattern | Gate | What to do |
 |---|---|---|
-| `CS0029: Cannot implicitly convert type` | G1 | Mixing value objects. Check ADR-023. |
+| `CS0029: Cannot implicitly convert type` | G1 | Mixing value objects. Check ADR-0002 / [ADR-023](docs/decisions/20260314-023-strongly-typed-domain-ids.md). |
 | `Whitespace / formatting differs` | G2 | Run `dotnet format` to auto-fix. |
-| `Types in Domain should not depend on Infrastructure` | G3 | Wrong dependency. Check ADR-022. |
-| `Test failed: Should_...` | G4 | Fix the production code, not the test. |
+| `Types in Domain should not depend on Infrastructure` | G3 | Wrong dependency. Check ADR-0001 / [ADR-022](docs/decisions/20260314-022-clean-architecture-enforcement.md). |
+| `Test failed: Should_...` | G4 | Fix the production code, not the test. Check ADR-0003 / [ADR-024](docs/decisions/20260314-024-scenario-driven-testing.md). |
 | `Warning treated as error` | G1 | Address the analyzer warning. Do not suppress it. |
 | `has the following vulnerable packages` | G5 | A NuGet dependency has a known CVE. Update or replace it. |
-| `OpenAPI violation` (Spectral) | G6 | Spec is malformed. Fix the spec. Check ADR-025. |
-| `Contract drift` (Schemathesis) | G6 | Implementation doesn't match spec. Fix the controller/DTO. |
-| `Mutant survived` | G7 | Add a test that catches the mutation. Check ADR-026. |
+| `OpenAPI violation` (Spectral) | G6 | Spec is malformed. Fix the spec. Check ADR-0004 / [ADR-025](docs/decisions/20260314-025-api-contract-source-of-truth.md). |
+| `Contract drift` (Schemathesis) | G6 | Implementation doesn't match spec. Fix the controller/DTO. Check ADR-0004 / [ADR-025](docs/decisions/20260314-025-api-contract-source-of-truth.md). |
+| `Mutant survived` | G7 | Add a test that catches the mutation. Check ADR-0005 / [ADR-026](docs/decisions/20260314-026-mutation-testing.md). |
 | `Frontend format violations` | G2a | Run `npm run format` in `src/EM2Devs.Todo.Web/`. |
 | `Frontend lint violations` | G2a | Run `npm run lint` in `src/EM2Devs.Todo.Web/`. |
 | `Svelte type errors` | G2a | Run `npm run check` in `src/EM2Devs.Todo.Web/`. |

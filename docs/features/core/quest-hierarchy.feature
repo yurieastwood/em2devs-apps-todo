@@ -152,7 +152,7 @@ Feature: Quest Hierarchy
       And the epic progress should be recalculated
 
   Rule: Sagas are life-chapter goals representing major personal ambitions
-    
+
     @wip @premium
     Scenario: Create a saga
       Given I have a premium subscription

@@ -1,18 +1,26 @@
 using System.Text.Json.Serialization;
 using Scalar.AspNetCore;
+using EM2Devs.Todo.Application.Behaviors;
 using EM2Devs.Todo.Application.Commands;
 using EM2Devs.Todo.Application.Mediator;
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.Queries;
+using EM2Devs.Todo.Application.Validators;
+using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Infrastructure.Persistence;
 using EM2Devs.Todo.ServiceDefaults;
+using EM2Devs.Todo.Api.Middleware;
+using FluentValidation;
 
 const string CorsPolicyName = "Frontend";
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 string? connectionString = builder.Configuration.GetConnectionString("tododb");
 if (!string.IsNullOrEmpty(connectionString))
@@ -27,16 +35,21 @@ else
 
 builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
 
-builder.Services.AddSingleton<IMediator, Mediator>();
+builder.Services.AddScoped<IMediator, Mediator>();
 
-builder.Services.AddTransient<IRequestHandler<CreateTaskCommand, TodoTask>, CreateTaskCommandHandler>();
-builder.Services.AddTransient<IRequestHandler<UpdateTaskStatusCommand, TodoTask?>, UpdateTaskStatusCommandHandler>();
-builder.Services.AddTransient<IRequestHandler<DeleteTaskCommand, bool>, DeleteTaskCommandHandler>();
-builder.Services.AddTransient<IRequestHandler<GetTaskQuery, TodoTask?>, GetTaskQueryHandler>();
-builder.Services.AddTransient<IRequestHandler<ListTasksQuery, IReadOnlyList<TodoTask>>, ListTasksQueryHandler>();
+// CQRS handlers (return Result<T> per ADR-018)
+builder.Services.AddTransient<IRequestHandler<CreateTaskCommand, Result<TodoTask>>, CreateTaskCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<UpdateTaskStatusCommand, Result<TodoTask>>, UpdateTaskStatusCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<DeleteTaskCommand, Result<bool>>, DeleteTaskCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<GetTaskQuery, Result<TodoTask>>, GetTaskQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<ListTasksQuery, Result<IReadOnlyList<TodoTask>>>, ListTasksQueryHandler>();
 
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.XpAwardHandler>();
+
+// FluentValidation + pipeline behavior (ADR-018)
+builder.Services.AddValidatorsFromAssemblyContaining<CreateTaskCommandValidator>();
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 string[] allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
@@ -65,6 +78,7 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
 app.MapDefaultEndpoints();
 if (allowedOrigins.Length > 0)
 {

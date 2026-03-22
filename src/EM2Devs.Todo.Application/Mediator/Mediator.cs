@@ -4,7 +4,7 @@ namespace EM2Devs.Todo.Application.Mediator;
 
 /// <summary>
 /// Lightweight mediator that resolves handlers from the DI container.
-/// ~30 lines of infrastructure per ADR-010.
+/// Supports pipeline behaviors for cross-cutting concerns (ADR-010, ADR-018).
 /// </summary>
 public sealed class Mediator : IMediator
 {
@@ -19,10 +19,23 @@ public sealed class Mediator : IMediator
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        Type handlerType = typeof(IRequestHandler<,>).MakeGenericType(request.GetType(), typeof(TResponse));
+        Type requestType = request.GetType();
+        Type handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
         dynamic handler = _provider.GetRequiredService(handlerType);
 
-        return handler.Handle((dynamic)request, ct);
+        Type behaviorType = typeof(IPipelineBehavior<,>).MakeGenericType(requestType, typeof(TResponse));
+        IEnumerable<dynamic> behaviors = _provider.GetServices(behaviorType).Cast<dynamic>();
+
+        Func<Task<TResponse>> handlerDelegate = () => handler.Handle((dynamic)request, ct);
+
+        // Build pipeline from innermost (handler) outward
+        foreach (dynamic behavior in behaviors.Reverse())
+        {
+            Func<Task<TResponse>> next = handlerDelegate;
+            handlerDelegate = () => behavior.Handle((dynamic)request, next, ct);
+        }
+
+        return handlerDelegate();
     }
 
     public async Task Publish<TNotification>(TNotification notification, CancellationToken ct = default)

@@ -29,6 +29,10 @@ paths:
                   $ref: "#/components/schemas/TaskResponse"
         "400":
           description: Invalid status filter value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
     post:
       operationId: createTask
       summary: Create a new task
@@ -47,6 +51,10 @@ paths:
                 $ref: "#/components/schemas/TaskResponse"
         "400":
           description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
   /api/tasks/{taskId}:
     get:
       operationId: getTask
@@ -68,8 +76,16 @@ paths:
                 $ref: "#/components/schemas/TaskResponse"
         "400":
           description: Invalid task ID format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
         "404":
           description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
     delete:
       operationId: deleteTask
       summary: Delete a task by ID
@@ -86,8 +102,16 @@ paths:
           description: Task deleted
         "400":
           description: Invalid task ID format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
         "404":
           description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
   /api/tasks/{taskId}/status:
     patch:
       operationId: updateTaskStatus
@@ -114,12 +138,24 @@ paths:
                 $ref: "#/components/schemas/TaskResponse"
         "400":
           description: Invalid status value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
         "404":
           description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
         "405":
           description: Invalid task ID format in path
         "409":
           description: Status transition conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
   /api/profile:
     get:
       operationId: getProfile
@@ -133,6 +169,46 @@ paths:
                 $ref: "#/components/schemas/ProfileResponse"
 components:
   schemas:
+    ProblemDetails:
+      type: object
+      description: RFC 9457 Problem Details for HTTP APIs
+      properties:
+        type:
+          type: string
+          description: A URI reference identifying the problem type
+          example: "https://tools.ietf.org/html/rfc9457"
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type
+          example: "Resource not found"
+        status:
+          type: integer
+          description: The HTTP status code
+          example: 404
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence
+          example: "Task with id '550e8400-e29b-41d4-a716-446655440000' was not found."
+        traceId:
+          type: string
+          description: Distributed trace identifier for correlation
+          example: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+    ValidationProblemDetails:
+      allOf:
+        - $ref: "#/components/schemas/ProblemDetails"
+        - type: object
+          properties:
+            errors:
+              type: object
+              description: Field-level validation errors
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+              example:
+                Title:
+                  - "Title is required."
+                  - "Title must not exceed 200 characters."
     CreateTaskRequest:
       type: object
       additionalProperties: false

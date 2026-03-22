@@ -19,7 +19,10 @@ public sealed class TasksController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> ListTasks([FromQuery] string? status, CancellationToken ct)
     {
-        Result<IReadOnlyList<TodoTask>> result = await _mediator.Send(new ListTasksQuery(status), ct).ConfigureAwait(false);
+        // ASP.NET binds ?status= as null for string?; use Request.Query to detect presence with empty value
+        string? statusFilter = Request.Query.ContainsKey("status") ? (status ?? string.Empty) : null;
+
+        Result<IReadOnlyList<TodoTask>> result = await _mediator.Send(new ListTasksQuery(statusFilter), ct).ConfigureAwait(false);
         return result.ToHttpResult(tasks => Ok(tasks.Select(MapToResponse)));
     }
 

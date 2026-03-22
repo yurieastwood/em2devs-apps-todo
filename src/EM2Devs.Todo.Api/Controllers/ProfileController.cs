@@ -1,10 +1,13 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using EM2Devs.Todo.Application.Ports;
 
 namespace EM2Devs.Todo.Api.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/profile")]
+[Route("api/v{version:apiVersion}/profile")]
 public sealed class ProfileController : ControllerBase
 {
     private readonly IPlayerProfileRepository _profileRepository;

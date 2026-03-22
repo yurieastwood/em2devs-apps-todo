@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using EM2Devs.Todo.Api.Extensions;
 using EM2Devs.Todo.Application.Commands;
@@ -9,7 +10,9 @@ using EM2Devs.Todo.Domain.Entities;
 namespace EM2Devs.Todo.Api.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/tasks")]
+[Route("api/v{version:apiVersion}/tasks")]
 public sealed class TasksController : ControllerBase
 {
     private readonly IMediator _mediator;

@@ -11,6 +11,7 @@ using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Infrastructure.Persistence;
 using EM2Devs.Todo.ServiceDefaults;
 using EM2Devs.Todo.Api.Middleware;
+using Asp.Versioning;
 using FluentValidation;
 
 const string CorsPolicyName = "Frontend";
@@ -68,6 +69,14 @@ if (allowedOrigins.Length > 0)
         });
     });
 }
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+}).AddMvc();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

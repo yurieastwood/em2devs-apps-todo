@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import type { ActionData, PageData } from './$types';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let { data, form }: { data: PageData; form: ActionData | null } = $props();
 
 	let tasks = $derived(data.tasks);
 	let loadError = $derived(data.error);
@@ -16,7 +16,9 @@
 		form?.action === 'create' && form?.error ? String(form.error) : null
 	);
 	let actionError = $derived(
-		form?.action === 'updateStatus' && form?.error ? String(form.error) : null
+		(form?.action === 'updateStatus' || form?.action === 'delete') && form?.error
+			? String(form.error)
+			: null
 	);
 
 	$effect(() => {
@@ -59,10 +61,13 @@
 		action="?/create"
 		use:enhance={() => {
 			creating = true;
-			return async ({ update }) => {
-				await update();
-				creating = false;
-				if (!createError) newTitle = '';
+			return async ({ update, result }) => {
+				try {
+					await update();
+				} finally {
+					creating = false;
+					if (result.type === 'success') newTitle = '';
+				}
 			};
 		}}
 		class="create-form"
@@ -92,7 +97,9 @@
 			{#each tasks as task (task.id)}
 				<li class="task-item" data-status={task.status}>
 					<div class="task-info">
-						<span class="task-title" class:done={task.status === 'Done'}>{task.title}</span>
+						<span class="task-title" class:done={task.status === 'Done'}
+							>{task.title}</span
+						>
 						<span class="task-status" data-status={task.status}>{task.status}</span>
 					</div>
 					<div class="task-actions">
@@ -103,19 +110,28 @@
 								use:enhance={() => {
 									actionInFlight = task.id;
 									return async ({ update }) => {
-										await update();
-										actionInFlight = null;
+										try {
+											await update();
+										} finally {
+											actionInFlight = null;
+										}
 									};
 								}}
 							>
 								<input type="hidden" name="taskId" value={task.id} />
-								<input type="hidden" name="status" value={nextStatus(task.status)} />
+								<input
+									type="hidden"
+									name="status"
+									value={nextStatus(task.status)}
+								/>
 								<button
 									type="submit"
 									class="btn-action"
 									disabled={actionInFlight === task.id}
 								>
-									{actionInFlight === task.id ? '...' : nextStatusLabel(task.status)}
+									{actionInFlight === task.id
+										? '...'
+										: nextStatusLabel(task.status)}
 								</button>
 							</form>
 						{/if}
@@ -125,8 +141,11 @@
 							use:enhance={() => {
 								actionInFlight = task.id;
 								return async ({ update }) => {
-									await update();
-									actionInFlight = null;
+									try {
+										await update();
+									} finally {
+										actionInFlight = null;
+									}
 								};
 							}}
 						>

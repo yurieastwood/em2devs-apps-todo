@@ -1,12 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import {
-	listTasks,
-	createTask,
-	updateTaskStatus,
-	deleteTask,
-	ApiError,
-	type Task
-} from './tasks';
+import { listTasks, createTask, updateTaskStatus, deleteTask, ApiError, type Task } from './tasks';
 
 function mockOk<T>(data: T, contentType = 'application/json') {
 	return vi.fn().mockResolvedValue({

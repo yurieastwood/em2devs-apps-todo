@@ -20,11 +20,7 @@ export class ApiError extends Error {
 	}
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
-	if (response.ok) {
-		return response.json();
-	}
-
+async function throwIfError(response: Response): Promise<void> {
 	const contentType = response.headers.get('content-type') ?? '';
 	if (
 		contentType.includes('application/problem+json') ||
@@ -42,10 +38,14 @@ async function handleResponse<T>(response: Response): Promise<T> {
 	});
 }
 
-export async function listTasks(
-	fetch: typeof globalThis.fetch,
-	baseUrl: string
-): Promise<Task[]> {
+async function handleResponse<T>(response: Response): Promise<T> {
+	if (response.ok) {
+		return response.json();
+	}
+	return throwIfError(response) as never;
+}
+
+export async function listTasks(fetch: typeof globalThis.fetch, baseUrl: string): Promise<Task[]> {
 	const url = new URL('/api/tasks', baseUrl);
 	const response = await fetch(url);
 	return handleResponse<Task[]>(response);
@@ -88,20 +88,5 @@ export async function deleteTask(
 	const url = new URL(`/api/tasks/${taskId}`, baseUrl);
 	const response = await fetch(url, { method: 'DELETE' });
 	if (response.ok) return;
-
-	const contentType = response.headers.get('content-type') ?? '';
-	if (
-		contentType.includes('application/problem+json') ||
-		contentType.includes('application/json')
-	) {
-		const problem: ProblemDetails = await response.json();
-		throw new ApiError(problem);
-	}
-
-	throw new ApiError({
-		type: 'https://tools.ietf.org/html/rfc9457',
-		title: response.statusText,
-		status: response.status,
-		detail: `Delete failed with status ${response.status}`
-	});
+	await throwIfError(response);
 }

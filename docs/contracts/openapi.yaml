@@ -30,7 +30,7 @@ paths:
         "400":
           description: Invalid status filter value
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
     post:
@@ -52,7 +52,7 @@ paths:
         "400":
           description: Validation error
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: "#/components/schemas/ValidationProblemDetails"
   /api/tasks/{taskId}:
@@ -76,14 +76,10 @@ paths:
                 $ref: "#/components/schemas/TaskResponse"
         "400":
           description: Invalid task ID format
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetails"
         "404":
           description: Task not found
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
     delete:
@@ -102,14 +98,10 @@ paths:
           description: Task deleted
         "400":
           description: Invalid task ID format
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetails"
         "404":
           description: Task not found
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
   /api/tasks/{taskId}/status:
@@ -139,13 +131,13 @@ paths:
         "400":
           description: Invalid status value
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: "#/components/schemas/ValidationProblemDetails"
         "404":
           description: Task not found
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
         "405":
@@ -153,7 +145,7 @@ paths:
         "409":
           description: Status transition conflict
           content:
-            application/json:
+            application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
   /api/profile:
@@ -172,6 +164,11 @@ components:
     ProblemDetails:
       type: object
       description: RFC 9457 Problem Details for HTTP APIs
+      required:
+        - type
+        - title
+        - status
+        - detail
       properties:
         type:
           type: string

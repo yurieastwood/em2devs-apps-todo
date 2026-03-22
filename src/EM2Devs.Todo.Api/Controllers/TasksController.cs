@@ -23,13 +23,17 @@ public sealed class TasksController : ControllerBase
 
         if (statusParamPresent && !Enum.TryParse<Domain.TaskStatus>(status, out _))
         {
-            return BadRequest(new ProblemDetails
+            return new ObjectResult(new ProblemDetails
             {
                 Type = "https://tools.ietf.org/html/rfc9457",
                 Title = "Validation failed",
                 Status = StatusCodes.Status400BadRequest,
                 Detail = $"Invalid status filter '{status}'. Valid values: Todo, InProgress, Done."
-            });
+            })
+            {
+                StatusCode = StatusCodes.Status400BadRequest,
+                ContentTypes = { "application/problem+json" }
+            };
         }
 
         Domain.TaskStatus? filter = null;

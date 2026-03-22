@@ -22,44 +22,48 @@ public static class ResultExtensions
     {
         ProblemDetails problem = error switch
         {
-            ValidationError v => new ProblemDetails
-            {
-                Type = "https://tools.ietf.org/html/rfc9457",
-                Title = "Validation failed",
-                Status = StatusCodes.Status400BadRequest,
-                Detail = v.Message,
-                Extensions =
-                {
-                    ["traceId"] = Activity.Current?.Id,
-                    ["errors"] = v.Errors
-                }
-            },
-            NotFoundError n => new ProblemDetails
-            {
-                Type = "https://tools.ietf.org/html/rfc9457",
-                Title = "Resource not found",
-                Status = StatusCodes.Status404NotFound,
-                Detail = n.Message,
-                Extensions = { ["traceId"] = Activity.Current?.Id }
-            },
-            ConflictError c => new ProblemDetails
-            {
-                Type = "https://tools.ietf.org/html/rfc9457",
-                Title = "Conflict",
-                Status = StatusCodes.Status409Conflict,
-                Detail = c.Message,
-                Extensions = { ["traceId"] = Activity.Current?.Id }
-            },
-            _ => new ProblemDetails
-            {
-                Type = "https://tools.ietf.org/html/rfc9457",
-                Title = "An error occurred",
-                Status = StatusCodes.Status500InternalServerError,
-                Detail = error.Message,
-                Extensions = { ["traceId"] = Activity.Current?.Id }
-            }
+            ValidationError v => CreateProblem(
+                "Validation failed", StatusCodes.Status400BadRequest, v.Message, v.Errors),
+            NotFoundError n => CreateProblem(
+                "Resource not found", StatusCodes.Status404NotFound, n.Message),
+            ConflictError c => CreateProblem(
+                "Conflict", StatusCodes.Status409Conflict, c.Message),
+            _ => CreateProblem(
+                "An error occurred", StatusCodes.Status500InternalServerError, error.Message)
         };
 
-        return new ObjectResult(problem) { StatusCode = problem.Status };
+        return new ObjectResult(problem)
+        {
+            StatusCode = problem.Status,
+            ContentTypes = { "application/problem+json" }
+        };
+    }
+
+    private static ProblemDetails CreateProblem(
+        string title,
+        int status,
+        string detail,
+        IDictionary<string, string[]>? errors = null)
+    {
+        ProblemDetails problem = new()
+        {
+            Type = "https://tools.ietf.org/html/rfc9457",
+            Title = title,
+            Status = status,
+            Detail = detail
+        };
+
+        string? traceId = Activity.Current?.Id;
+        if (traceId is not null)
+        {
+            problem.Extensions["traceId"] = traceId;
+        }
+
+        if (errors is not null)
+        {
+            problem.Extensions["errors"] = errors;
+        }
+
+        return problem;
     }
 }

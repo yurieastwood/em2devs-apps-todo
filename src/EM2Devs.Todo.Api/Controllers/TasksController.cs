@@ -14,6 +14,9 @@ public sealed class TasksController : ControllerBase
 {
     private readonly IMediator _mediator;
 
+    private static readonly HashSet<string> _validStatusNames =
+        new(Enum.GetNames<Domain.TaskStatus>(), StringComparer.Ordinal);
+
     public TasksController(IMediator mediator) => _mediator = mediator;
 
     [HttpGet]
@@ -21,7 +24,7 @@ public sealed class TasksController : ControllerBase
     {
         bool statusParamPresent = Request.Query.ContainsKey("status");
 
-        if (statusParamPresent && !Enum.TryParse<Domain.TaskStatus>(status, out _))
+        if (statusParamPresent && !_validStatusNames.Contains(status ?? string.Empty))
         {
             return new ObjectResult(new ProblemDetails
             {

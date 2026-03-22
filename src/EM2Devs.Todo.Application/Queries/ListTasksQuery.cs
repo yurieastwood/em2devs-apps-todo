@@ -5,7 +5,7 @@ using EM2Devs.Todo.Domain.Entities;
 
 namespace EM2Devs.Todo.Application.Queries;
 
-public sealed record ListTasksQuery(Domain.TaskStatus? StatusFilter) : IRequest<Result<IReadOnlyList<TodoTask>>>;
+public sealed record ListTasksQuery(string? StatusFilter) : IRequest<Result<IReadOnlyList<TodoTask>>>;
 
 public sealed class ListTasksQueryHandler : IRequestHandler<ListTasksQuery, Result<IReadOnlyList<TodoTask>>>
 {
@@ -22,9 +22,10 @@ public sealed class ListTasksQueryHandler : IRequestHandler<ListTasksQuery, Resu
 
         IReadOnlyList<TodoTask> tasks = await _repository.GetAllAsync(ct).ConfigureAwait(false);
 
-        if (request.StatusFilter.HasValue)
+        if (request.StatusFilter is not null &&
+            Enum.TryParse<Domain.TaskStatus>(request.StatusFilter, ignoreCase: false, out Domain.TaskStatus parsed))
         {
-            tasks = tasks.Where(t => t.Status == request.StatusFilter.Value).ToList().AsReadOnly();
+            tasks = tasks.Where(t => t.Status == parsed).ToList().AsReadOnly();
         }
 
         return Result<IReadOnlyList<TodoTask>>.Success(tasks);

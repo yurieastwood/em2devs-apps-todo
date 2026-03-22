@@ -14,38 +14,12 @@ public sealed class TasksController : ControllerBase
 {
     private readonly IMediator _mediator;
 
-    private static readonly HashSet<string> _validStatusNames =
-        new(Enum.GetNames<Domain.TaskStatus>(), StringComparer.Ordinal);
-
     public TasksController(IMediator mediator) => _mediator = mediator;
 
     [HttpGet]
     public async Task<IActionResult> ListTasks([FromQuery] string? status, CancellationToken ct)
     {
-        bool statusParamPresent = Request.Query.ContainsKey("status");
-
-        if (statusParamPresent && !_validStatusNames.Contains(status ?? string.Empty))
-        {
-            return new ObjectResult(new ProblemDetails
-            {
-                Type = "https://tools.ietf.org/html/rfc9457",
-                Title = "Validation failed",
-                Status = StatusCodes.Status400BadRequest,
-                Detail = $"Invalid status filter '{status}'. Valid values: Todo, InProgress, Done."
-            })
-            {
-                StatusCode = StatusCodes.Status400BadRequest,
-                ContentTypes = { "application/problem+json" }
-            };
-        }
-
-        Domain.TaskStatus? filter = null;
-        if (statusParamPresent && Enum.TryParse<Domain.TaskStatus>(status, ignoreCase: false, out Domain.TaskStatus parsed))
-        {
-            filter = parsed;
-        }
-
-        Result<IReadOnlyList<TodoTask>> result = await _mediator.Send(new ListTasksQuery(filter), ct).ConfigureAwait(false);
+        Result<IReadOnlyList<TodoTask>> result = await _mediator.Send(new ListTasksQuery(status), ct).ConfigureAwait(false);
         return result.ToHttpResult(tasks => Ok(tasks.Select(MapToResponse)));
     }
 

@@ -30,4 +30,15 @@ dotnet test --configuration Release --filter "Category!=Architecture" --verbosit
 gate "G5 — Supply Chain Security"
 dotnet list package --vulnerable --include-transitive 2>&1 | grep -q "has the following vulnerable packages" && fail "Vulnerable NuGet packages found — update or replace them" || pass "No known vulnerabilities"
 
+FRONTEND_STAGED=$(git diff --cached --name-only --diff-filter=d -- 'src/EM2Devs.Todo.Web/*.ts' 'src/EM2Devs.Todo.Web/*.svelte' 'src/EM2Devs.Todo.Web/*.json' 'src/EM2Devs.Todo.Web/*.css' 2>/dev/null)
+
+if [[ -n "${FRONTEND_STAGED}" ]]; then
+  require npx "install Node.js from https://nodejs.org"
+
+  gate "G2a — Frontend Lint & Format"
+  (cd src/EM2Devs.Todo.Web && npm run format:check) && pass "Frontend formatting clean" || fail "Frontend format violations — run 'npm run format' in src/EM2Devs.Todo.Web"
+  (cd src/EM2Devs.Todo.Web && npm run lint) && pass "Frontend lint clean" || fail "Frontend lint violations — run 'npm run lint' in src/EM2Devs.Todo.Web"
+  (cd src/EM2Devs.Todo.Web && npm run check) && pass "Svelte types clean" || fail "Svelte type errors — run 'npm run check' in src/EM2Devs.Todo.Web"
+fi
+
 echo -e "\n${GREEN}━━━ PRE-COMMIT GATES PASSED (G1–G5) ━━━${NC}\n"

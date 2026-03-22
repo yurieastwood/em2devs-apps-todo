@@ -1,0 +1,16 @@
+name: Auto-update PRs
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  autoupdate:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: castastrophe/actions-pr-auto-update@v2.0.0
+        with:
+          include_drafts: true

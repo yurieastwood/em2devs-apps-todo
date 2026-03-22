@@ -5,7 +5,8 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	server: {
 		port: parseInt(process.env.PORT || '5173'),
-		host: true
+		host: true,
+		strictPort: true
 	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],

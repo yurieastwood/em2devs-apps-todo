@@ -51,4 +51,30 @@ public sealed class Quest
 
         _tasks.Add(task);
     }
+
+    public void RemoveTask(TaskId taskId)
+    {
+        ArgumentNullException.ThrowIfNull(taskId);
+
+        TodoTask? task = _tasks.FirstOrDefault(t => t.Id == taskId);
+        if (task is null)
+        {
+            throw new DomainException($"Task with id '{taskId.Value}' is not assigned to this quest.");
+        }
+
+        _tasks.Remove(task);
+    }
+
+    public void Complete()
+    {
+        if (_tasks.Count == 0)
+        {
+            throw new DomainException("Cannot complete a quest with no tasks.");
+        }
+
+        if (Progress < 100)
+        {
+            throw new DomainException("Cannot complete a quest when not all tasks are done.");
+        }
+    }
 }

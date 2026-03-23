@@ -36,6 +36,8 @@ else
 }
 
 builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
+builder.Services.AddSingleton<IQuestRepository, InMemoryQuestRepository>();
+builder.Services.AddSingleton<IEpicRepository, InMemoryEpicRepository>();
 
 builder.Services.AddScoped<DemoCurrentUser>();
 builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<DemoCurrentUser>());
@@ -48,6 +50,24 @@ builder.Services.AddTransient<IRequestHandler<UpdateTaskStatusCommand, Result<To
 builder.Services.AddTransient<IRequestHandler<DeleteTaskCommand, Result<bool>>, DeleteTaskCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<GetTaskQuery, Result<TodoTask>>, GetTaskQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<ListTasksQuery, Result<IReadOnlyList<TodoTask>>>, ListTasksQueryHandler>();
+
+// Quest CQRS handlers
+builder.Services.AddTransient<IRequestHandler<CreateQuestCommand, Result<Quest>>, CreateQuestCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<AddTaskToQuestCommand, Result<Quest>>, AddTaskToQuestCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<RemoveTaskFromQuestCommand, Result<Quest>>, RemoveTaskFromQuestCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<CompleteQuestCommand, Result<Quest>>, CompleteQuestCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<DeleteQuestCommand, Result<bool>>, DeleteQuestCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<GetQuestQuery, Result<Quest>>, GetQuestQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<ListQuestsQuery, Result<IReadOnlyList<Quest>>>, ListQuestsQueryHandler>();
+
+// Epic CQRS handlers
+builder.Services.AddTransient<IRequestHandler<CreateEpicCommand, Result<Epic>>, CreateEpicCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<AssignQuestToEpicCommand, Result<Epic>>, AssignQuestToEpicCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<RemoveQuestFromEpicCommand, Result<Epic>>, RemoveQuestFromEpicCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<CompleteEpicCommand, Result<Epic>>, CompleteEpicCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<DeleteEpicCommand, Result<bool>>, DeleteEpicCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<GetEpicQuery, Result<Epic>>, GetEpicQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<ListEpicsQuery, Result<IReadOnlyList<Epic>>>, ListEpicsQueryHandler>();
 
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.XpAwardHandler>();

@@ -51,4 +51,30 @@ public sealed class Epic
 
         _quests.Add(quest);
     }
+
+    public void RemoveQuest(QuestId questId)
+    {
+        ArgumentNullException.ThrowIfNull(questId);
+
+        Quest? quest = _quests.FirstOrDefault(q => q.Id == questId);
+        if (quest is null)
+        {
+            throw new DomainException($"Quest with id '{questId.Value}' is not assigned to this epic.");
+        }
+
+        _quests.Remove(quest);
+    }
+
+    public void Complete()
+    {
+        if (_quests.Count == 0)
+        {
+            throw new DomainException("Cannot complete an epic with no quests.");
+        }
+
+        if (Progress < 100m)
+        {
+            throw new DomainException("Cannot complete an epic when not all quests are done.");
+        }
+    }
 }

@@ -7,7 +7,7 @@
 	let error = $derived(data.error);
 
 	let progressPercent = $derived(
-		profile
+		profile && profile.totalXp + profile.xpToNextLevel > 0
 			? Math.round((profile.totalXp / (profile.totalXp + profile.xpToNextLevel)) * 100)
 			: 0
 	);

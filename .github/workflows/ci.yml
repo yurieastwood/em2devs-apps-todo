@@ -98,6 +98,29 @@ jobs:
     name: "E2E|Playwright Tests"
     needs: [gate-1-compile, frontend-test]
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: tododb
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: src/EM2Devs.Todo.Web
@@ -111,20 +134,25 @@ jobs:
           dotnet-version: "9.0.x"
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - name: Start API via Aspire
+      - name: Start API
         working-directory: .
         run: |
-          dotnet run --project src/EM2Devs.Todo.AppHost &
-          for i in $(seq 1 90); do
+          nohup dotnet run --project src/EM2Devs.Todo.Api --environment Development \
+            --urls "http://localhost:5001" > /tmp/api.log 2>&1 &
+          for i in $(seq 1 60); do
             curl -sf http://localhost:5001/api/tasks > /dev/null 2>&1 && break || sleep 1
           done
-          curl -sf http://localhost:5001/api/tasks > /dev/null || (echo "API failed to start" && exit 1)
+          curl -sf http://localhost:5001/api/tasks > /dev/null || (cat /tmp/api.log && exit 1)
         env:
           AUTO_MIGRATE: "true"
-          DOTNET_ENVIRONMENT: Development
+          ConnectionStrings__tododb: "Host=localhost;Port=5432;Database=tododb;Username=postgres;Password=postgres"
       - run: npx playwright test
         env:
           API_BASE_URL: http://localhost:5001
+      - name: Show API logs on failure
+        if: failure()
+        working-directory: .
+        run: cat /tmp/api.log || true
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

@@ -127,6 +127,60 @@ public sealed class QuestsControllerTests : IDisposable
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    [Fact]
+    public async Task Should_CompleteQuest_When_AllTasksAreDone()
+    {
+        // Given
+        HttpResponseMessage questResponse = await _client.PostAsJsonAsync("/api/quests",
+            new { title = "Completable", description = "Test" });
+        QuestDto? quest = await questResponse.Content.ReadFromJsonAsync<QuestDto>();
+
+        HttpResponseMessage taskResponse = await _client.PostAsJsonAsync("/api/tasks",
+            new { title = "Only task" });
+        TaskResponseDto? task = await taskResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        await _client.PostAsJsonAsync($"/api/quests/{quest!.Id}/tasks", new { taskId = task!.Id });
+        await _client.PatchAsJsonAsync($"/api/tasks/{task.Id}/status", new { status = "InProgress" });
+        await _client.PatchAsJsonAsync($"/api/tasks/{task.Id}/status", new { status = "Done" });
+
+        // When
+        HttpResponseMessage response = await _client.PostAsync($"/api/quests/{quest.Id}/complete", null);
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        QuestDto? completed = await response.Content.ReadFromJsonAsync<QuestDto>();
+        completed!.IsCompleted.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_ReturnConflict_When_CompletingQuestWithIncompleteTasks()
+    {
+        // Given
+        HttpResponseMessage questResponse = await _client.PostAsJsonAsync("/api/quests",
+            new { title = "Incomplete", description = "Test" });
+        QuestDto? quest = await questResponse.Content.ReadFromJsonAsync<QuestDto>();
+
+        HttpResponseMessage taskResponse = await _client.PostAsJsonAsync("/api/tasks",
+            new { title = "Undone task" });
+        TaskResponseDto? task = await taskResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        await _client.PostAsJsonAsync($"/api/quests/{quest!.Id}/tasks", new { taskId = task!.Id });
+
+        // When
+        HttpResponseMessage response = await _client.PostAsync($"/api/quests/{quest.Id}/complete", null);
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotFound_When_CompletingNonExistentQuest()
+    {
+        HttpResponseMessage response = await _client.PostAsync($"/api/quests/{Guid.NewGuid()}/complete", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
     private sealed record QuestTaskDto(Guid Id, string Title, string Status);
     private sealed record QuestDto(Guid Id, string Title, string Description, DateOnly? DueDate, int Progress, bool IsCompleted, List<QuestTaskDto> Tasks);
 }

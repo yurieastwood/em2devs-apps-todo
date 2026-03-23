@@ -136,7 +136,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Apply database migrations
         working-directory: .
-        run: dotnet ef database update --project src/EM2Devs.Todo.Infrastructure --startup-project src/EM2Devs.Todo.Api
+        run: |
+          dotnet tool restore
+          dotnet ef database update --project src/EM2Devs.Todo.Infrastructure --startup-project src/EM2Devs.Todo.Api
         env:
           ASPNETCORE_ENVIRONMENT: Development
           ConnectionStrings__tododb: "Host=localhost;Port=5432;Database=tododb;Username=postgres;Password=postgres"

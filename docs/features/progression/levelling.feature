@@ -63,7 +63,7 @@ Feature: Levelling System
 
   Rule: Level information is visible and motivating
 
-    @wip
+    @done
     Scenario: View level progress on dashboard
       Given I am level 7 with 850 XP
       And the threshold for level 8 is 1,000 XP
@@ -72,7 +72,7 @@ Feature: Levelling System
       And I should see a progress bar showing 85% toward level 8
       And I should see "150 XP to next level"
 
-    @wip
+    @done
     Scenario: Level badge displayed on profile
       Given I am level 12
       When another user views my profile

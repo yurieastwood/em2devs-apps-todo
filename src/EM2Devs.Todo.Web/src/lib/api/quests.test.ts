@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { listQuests, createQuest, getQuest, deleteQuest, type Quest } from './quests';
+import { ApiError } from './tasks';
 
 const BASE = 'http://localhost:5001';
 
@@ -11,11 +12,13 @@ function mockOk<T>(data: T) {
 	}) as unknown as typeof fetch;
 }
 
-function mockStatus(status: number) {
+function mockError(status: number, problem: object) {
 	return vi.fn().mockResolvedValue({
-		ok: status >= 200 && status < 300,
+		ok: false,
 		status,
-		headers: new Headers()
+		statusText: 'Error',
+		json: () => Promise.resolve(problem),
+		headers: new Headers({ 'content-type': 'application/problem+json' })
 	}) as unknown as typeof fetch;
 }
 
@@ -34,6 +37,17 @@ describe('listQuests', () => {
 
 		const result = await listQuests(mockOk(expected), BASE);
 		expect(result).toEqual(expected);
+	});
+
+	it('Should_ThrowApiError_When_ListFails', async () => {
+		const problem = {
+			type: 'https://tools.ietf.org/html/rfc9457',
+			title: 'Server error',
+			status: 500,
+			detail: 'Something went wrong'
+		};
+
+		await expect(listQuests(mockError(500, problem), BASE)).rejects.toThrow(ApiError);
 	});
 });
 
@@ -58,6 +72,17 @@ describe('createQuest', () => {
 			body: JSON.stringify({ title: 'New Quest', description: 'New desc' })
 		});
 	});
+
+	it('Should_ThrowApiError_When_ValidationFails', async () => {
+		const problem = {
+			type: 'https://tools.ietf.org/html/rfc9457',
+			title: 'Validation failed',
+			status: 400,
+			detail: 'Title cannot be empty'
+		};
+
+		await expect(createQuest(mockError(400, problem), BASE, '', '')).rejects.toThrow(ApiError);
+	});
 });
 
 describe('getQuest', () => {
@@ -74,14 +99,37 @@ describe('getQuest', () => {
 		const result = await getQuest(mockOk(quest), BASE, '1');
 		expect(result).toEqual(quest);
 	});
+
+	it('Should_ThrowApiError_When_QuestNotFound', async () => {
+		const problem = {
+			type: 'https://tools.ietf.org/html/rfc9457',
+			title: 'Not found',
+			status: 404,
+			detail: 'Quest not found'
+		};
+
+		await expect(getQuest(mockError(404, problem), BASE, 'xyz')).rejects.toThrow(ApiError);
+	});
 });
 
 describe('deleteQuest', () => {
 	it('Should_SucceedSilently_When_QuestDeleted', async () => {
-		await expect(deleteQuest(mockStatus(204), BASE, '1')).resolves.toBeUndefined();
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			headers: new Headers()
+		}) as unknown as typeof fetch;
+
+		await expect(deleteQuest(fetchMock, BASE, '1')).resolves.toBeUndefined();
 	});
 
-	it('Should_ThrowError_When_QuestNotFound', async () => {
-		await expect(deleteQuest(mockStatus(404), BASE, 'xyz')).rejects.toThrow();
+	it('Should_ThrowApiError_When_QuestNotFound', async () => {
+		const problem = {
+			type: 'https://tools.ietf.org/html/rfc9457',
+			title: 'Not found',
+			status: 404,
+			detail: 'Quest not found'
+		};
+
+		await expect(deleteQuest(mockError(404, problem), BASE, 'xyz')).rejects.toThrow(ApiError);
 	});
 });

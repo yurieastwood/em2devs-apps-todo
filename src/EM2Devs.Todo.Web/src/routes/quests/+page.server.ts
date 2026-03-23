@@ -1,10 +1,13 @@
-import { env } from '$env/dynamic/private';
 import { fail } from '@sveltejs/kit';
 import { listQuests, createQuest } from '$lib/api/quests';
+import { ApiError } from '$lib/api/tasks';
+import { getBaseUrl } from '$lib/server/config';
 import type { Actions, PageServerLoad } from './$types';
 
-function getBaseUrl(): string {
-	return env.API_BASE_URL ?? 'http://localhost:5001';
+function failFromError(e: unknown, fallbackMessage: string, action: string) {
+	const status = e instanceof ApiError ? (e.problem.status ?? 500) : 500;
+	const message = e instanceof ApiError ? e.problem.detail : fallbackMessage;
+	return fail(status, { action, error: message });
 }
 
 export const load: PageServerLoad = async ({ fetch }) => {
@@ -31,8 +34,7 @@ export const actions: Actions = {
 			await createQuest(fetch, getBaseUrl(), title, description);
 			return { action: 'create', success: true };
 		} catch (e) {
-			const message = e instanceof Error ? e.message : 'Failed to create quest';
-			return fail(500, { action: 'create', error: message });
+			return failFromError(e, 'Failed to create quest', 'create');
 		}
 	}
 };

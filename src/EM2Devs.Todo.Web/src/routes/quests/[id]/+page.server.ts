@@ -1,12 +1,8 @@
-import { env } from '$env/dynamic/private';
-import { error } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { getQuest, deleteQuest } from '$lib/api/quests';
+import { ApiError } from '$lib/api/tasks';
+import { getBaseUrl } from '$lib/server/config';
 import type { Actions, PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
-
-function getBaseUrl(): string {
-	return env.API_BASE_URL ?? 'http://localhost:5001';
-}
 
 export const load: PageServerLoad = async ({ fetch, params }) => {
 	try {
@@ -19,7 +15,12 @@ export const load: PageServerLoad = async ({ fetch, params }) => {
 
 export const actions: Actions = {
 	delete: async ({ fetch, params }) => {
-		await deleteQuest(fetch, getBaseUrl(), params.id);
+		try {
+			await deleteQuest(fetch, getBaseUrl(), params.id);
+		} catch (e) {
+			const message = e instanceof ApiError ? e.problem.detail : 'Failed to delete quest';
+			return fail(500, { action: 'delete', error: message });
+		}
 		throw redirect(303, '/quests');
 	}
 };

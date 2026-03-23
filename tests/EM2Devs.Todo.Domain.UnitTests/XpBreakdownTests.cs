@@ -150,5 +150,34 @@ public sealed class XpBreakdownTests
 
         // Then
         breakdown.StreakMultiplier.ShouldBe(1.0);
+        breakdown.FinalXp.ShouldBe(breakdown.BaseXp);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ApplyEarlyBonus_When_CompletedExactlyAtDeadline()
+    {
+        // Given — completed at the exact deadline moment
+        DateTimeOffset deadline = _now;
+        DateTimeOffset completedAt = _now;
+
+        // When
+        XpBreakdown breakdown = XpCalculator.Calculate(TaskDifficulty.Normal, deadline, completedAt, 0);
+
+        // Then — on-time counts as early
+        breakdown.DeadlineModifier.ShouldBe(1.2);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UseBaseMultiplier_When_StreakIsNegative()
+    {
+        // Given — negative streak (edge case)
+        // When
+        XpBreakdown breakdown = XpCalculator.Calculate(TaskDifficulty.Normal, null, _now, -1);
+
+        // Then
+        breakdown.StreakMultiplier.ShouldBe(1.0);
+        breakdown.FinalXp.ShouldBe(breakdown.BaseXp);
     }
 }

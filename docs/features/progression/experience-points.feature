@@ -74,7 +74,7 @@ Feature: Experience Points
       And each component should display its calculated value
       And the total should equal the sum of all components
 
-    @wip
+    @done
     Scenario: View cumulative XP on profile
       When I view my profile
       Then I should see my total lifetime XP

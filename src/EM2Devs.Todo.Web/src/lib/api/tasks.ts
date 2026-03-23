@@ -20,7 +20,7 @@ export class ApiError extends Error {
 	}
 }
 
-async function throwIfError(response: Response): Promise<void> {
+export async function throwIfError(response: Response): Promise<void> {
 	const contentType = response.headers.get('content-type') ?? '';
 	if (
 		contentType.includes('application/problem+json') ||
@@ -38,7 +38,7 @@ async function throwIfError(response: Response): Promise<void> {
 	});
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
+export async function handleResponse<T>(response: Response): Promise<T> {
 	if (response.ok) {
 		return response.json();
 	}

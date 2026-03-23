@@ -1,13 +1,9 @@
-import { env } from '$env/dynamic/private';
 import { fail } from '@sveltejs/kit';
 import { listTasks, createTask, updateTaskStatus, deleteTask, ApiError } from '$lib/api/tasks';
+import { getBaseUrl } from '$lib/server/config';
 import type { Actions, PageServerLoad } from './$types';
 
 const VALID_STATUSES = ['Todo', 'InProgress', 'Done'];
-
-function getBaseUrl(): string {
-	return env.API_BASE_URL ?? 'http://localhost:5001';
-}
 
 function failFromError(e: unknown, fallbackMessage: string, action: string) {
 	const status = e instanceof ApiError ? (e.problem.status ?? 500) : 500;

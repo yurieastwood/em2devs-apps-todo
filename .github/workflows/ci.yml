@@ -134,6 +134,11 @@ jobs:
           dotnet-version: "9.0.x"
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Apply database migrations
+        working-directory: .
+        run: dotnet ef database update --project src/EM2Devs.Todo.Infrastructure --startup-project src/EM2Devs.Todo.Api
+        env:
+          ConnectionStrings__tododb: "Host=localhost;Port=5432;Database=tododb;Username=postgres;Password=postgres"
       - name: Start API
         working-directory: .
         run: |
@@ -144,7 +149,6 @@ jobs:
           done
           curl -sf http://localhost:5001/api/tasks > /dev/null || (cat /tmp/api.log && exit 1)
         env:
-          AUTO_MIGRATE: "true"
           ConnectionStrings__tododb: "Host=localhost;Port=5432;Database=tododb;Username=postgres;Password=postgres"
       - run: npx playwright test
         env:

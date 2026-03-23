@@ -1,9 +1,29 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-	webServer: {
-		command: 'npm run build && npm run preview',
-		port: 4173
+	testDir: 'e2e',
+	timeout: 30_000,
+	retries: 1,
+	use: {
+		baseURL: 'http://localhost:5173',
+		trace: 'on-first-retry'
 	},
-	testDir: 'e2e'
+	webServer: [
+		{
+			command:
+				'dotnet run --project ../../src/EM2Devs.Todo.AppHost --urls http://localhost:5001',
+			port: 5001,
+			timeout: 60_000,
+			reuseExistingServer: true
+		},
+		{
+			command: 'npm run dev',
+			port: 5173,
+			timeout: 15_000,
+			reuseExistingServer: true,
+			env: {
+				API_BASE_URL: 'http://localhost:5001'
+			}
+		}
+	]
 });

@@ -80,12 +80,13 @@
 			placeholder="What needs to be done?"
 			disabled={creating}
 			maxlength={200}
+			data-testid="task-title-input"
 		/>
-		<button type="submit" disabled={creating || !newTitle.trim()}>
+		<button type="submit" disabled={creating || !newTitle.trim()} data-testid="add-task-button">
 			{creating ? 'Adding...' : 'Add Task'}
 		</button>
 		{#if createError}
-			<p class="form-error" role="alert">{createError}</p>
+			<p class="form-error" role="alert" data-testid="create-error">{createError}</p>
 		{/if}
 	</form>
 
@@ -130,14 +131,20 @@
 	{:else if tasks.length === 0}
 		<p class="empty">No tasks yet. Create your first task to get started!</p>
 	{:else}
-		<ul class="task-list">
+		<ul class="task-list" data-testid="task-list">
 			{#each tasks as task (task.id)}
-				<li class="task-item" data-status={task.status}>
+				<li class="task-item" data-status={task.status} data-testid="task-item">
 					<div class="task-info">
-						<span class="task-title" class:done={task.status === 'Done'}
-							>{task.title}</span
+						<span
+							class="task-title"
+							class:done={task.status === 'Done'}
+							data-testid="task-title">{task.title}</span
 						>
-						<span class="task-status" data-status={task.status}>{task.status}</span>
+						<span
+							class="task-status"
+							data-status={task.status}
+							data-testid="task-status">{task.status}</span
+						>
 					</div>
 					<div class="task-actions">
 						{#if nextStatus(task.status)}
@@ -165,6 +172,7 @@
 									type="submit"
 									class="btn-action"
 									disabled={actionInFlight === task.id}
+									data-testid="task-advance-button"
 								>
 									{actionInFlight === task.id
 										? '...'
@@ -191,6 +199,7 @@
 								type="submit"
 								class="btn-delete"
 								disabled={actionInFlight === task.id}
+								data-testid="task-delete-button"
 							>
 								{actionInFlight === task.id ? '...' : 'Delete'}
 							</button>

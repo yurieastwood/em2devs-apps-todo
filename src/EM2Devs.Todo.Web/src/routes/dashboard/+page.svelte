@@ -32,15 +32,21 @@
 		</div>
 	{:else}
 		<section class="level-section">
-			<div class="level-badge" aria-label={`Level ${profile.level}`}>
-				<span class="level-number">{profile.level}</span>
+			<div
+				class="level-badge"
+				aria-label={`Level ${profile.level}`}
+				data-testid="level-badge"
+			>
+				<span class="level-number" data-testid="level-number">{profile.level}</span>
 				<span class="level-label">Level</span>
 			</div>
 		</section>
 
 		<section class="xp-section">
 			<div class="progress-header">
-				<span class="xp-total">{profile.totalXp.toLocaleString()} XP</span>
+				<span class="xp-total" data-testid="xp-total"
+					>{profile.totalXp.toLocaleString()} XP</span
+				>
 				{#if isMaxLevel}
 					<span class="xp-next">Max Level</span>
 				{:else}
@@ -66,12 +72,12 @@
 		</section>
 
 		<section class="streaks-section">
-			<div class="streak-card">
+			<div class="streak-card" data-testid="current-streak">
 				<span class="streak-value">{profile.currentStreak}</span>
 				<span class="streak-label">Current Streak</span>
 				<span class="streak-unit">days</span>
 			</div>
-			<div class="streak-card">
+			<div class="streak-card" data-testid="longest-streak">
 				<span class="streak-value">{profile.longestStreak}</span>
 				<span class="streak-label">Longest Streak</span>
 				<span class="streak-unit">days</span>

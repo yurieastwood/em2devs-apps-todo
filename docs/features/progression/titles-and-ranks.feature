@@ -10,7 +10,7 @@ Feature: Titles and Ranks
 
   Rule: Titles are earned through sustained behaviour, not one-off achievements
 
-    @done
+    @wip
     Scenario Outline: Earn a title through sustained behaviour
       Given I have met the sustained requirement for the title "<title>"
       When I check my title progress
@@ -77,7 +77,7 @@ Feature: Titles and Ranks
 
   Rule: Titles are permanently earned and never revoked
 
-    @done
+    @wip
     Scenario: Title retained after behaviour change
       Given I earned the title "Early Bird" through consistent morning completions
       And I have not completed a task before 9 AM in the last 3 weeks

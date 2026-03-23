@@ -40,7 +40,7 @@ jobs:
           rm -rf _pages
           mkdir -p _pages/features
           cp -R .pickles/out/. _pages/features/
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/features/"></head><body><a href="/features/">BDD Living Documentation</a></body></html>' > _pages/index.html
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=features/"></head><body><a href="features/">BDD Living Documentation</a></body></html>' > _pages/index.html
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

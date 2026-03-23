@@ -541,10 +541,41 @@
           ]
         },
         {
-          "name": "4.5 Remove task from quest",
+          "name": "4.5 Complete quest task (Todo → InProgress → Done)",
           "request": {
-            "method": "DELETE",
-            "url": "{{baseUrl}}/api/quests/{{questId}}/tasks/{{taskId2}}"
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/tasks/{{taskId2}}/status",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\": \"InProgress\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.6 Complete quest task (InProgress → Done)",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/tasks/{{taskId2}}/status",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\": \"Done\"}"
+            }
           },
           "event": [
             {
@@ -552,14 +583,14 @@
               "script": {
                 "exec": [
                   "pm.test('Status is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Task removed', () => pm.expect(pm.response.json().tasks.length).to.eql(0));"
+                  "pm.test('Task is Done', () => pm.expect(pm.response.json().status).to.eql('Done'));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "4.6 Complete quest",
+          "name": "4.7 Complete quest",
           "request": {
             "method": "POST",
             "url": "{{baseUrl}}/api/quests/{{questId}}/complete"
@@ -577,7 +608,25 @@
           ]
         },
         {
-          "name": "4.7 Delete quest",
+          "name": "4.8 Remove task from quest",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/quests/{{questId}}/tasks/{{taskId2}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Task removed', () => pm.expect(pm.response.json().tasks.length).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.9 Delete quest",
           "request": {
             "method": "DELETE",
             "url": "{{baseUrl}}/api/quests/{{questId}}"
@@ -716,10 +765,10 @@
           ]
         },
         {
-          "name": "5.6 Remove quest from epic",
+          "name": "5.6 Complete sub-quest for epic",
           "request": {
-            "method": "DELETE",
-            "url": "{{baseUrl}}/api/epics/{{epicId}}/quests/{{questId}}"
+            "method": "POST",
+            "url": "{{baseUrl}}/api/quests/{{questId}}/complete"
           },
           "event": [
             {
@@ -727,7 +776,7 @@
               "script": {
                 "exec": [
                   "pm.test('Status is 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Quest removed', () => pm.expect(pm.response.json().quests.length).to.eql(0));"
+                  "pm.test('Quest completed', () => pm.expect(pm.response.json().isCompleted).to.be.true);"
                 ]
               }
             }
@@ -752,7 +801,25 @@
           ]
         },
         {
-          "name": "5.8 Delete epic",
+          "name": "5.8 Remove quest from epic",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/epics/{{epicId}}/quests/{{questId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Quest removed', () => pm.expect(pm.response.json().quests.length).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.9 Delete epic",
           "request": {
             "method": "DELETE",
             "url": "{{baseUrl}}/api/epics/{{epicId}}"
@@ -769,7 +836,7 @@
           ]
         },
         {
-          "name": "5.9 Cleanup quest",
+          "name": "5.10 Cleanup quest",
           "request": {
             "method": "DELETE",
             "url": "{{baseUrl}}/api/quests/{{questId}}"

@@ -16,7 +16,7 @@ public sealed class XpBreakdownTests
     [Trait("Category", "Domain")]
     public void Should_ApplyEarlyBonus_When_CompletedBeforeDeadline()
     {
-        // Given — task due in 3 days, completed 2 days early
+        // Given — task due in 3 days, completed 3 days early
         DateTimeOffset deadline = _now.AddDays(3);
         DateTimeOffset completedAt = _now;
 
@@ -155,7 +155,7 @@ public sealed class XpBreakdownTests
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_ApplyEarlyBonus_When_CompletedExactlyAtDeadline()
+    public void Should_ApplyNeutralModifier_When_CompletedExactlyAtDeadline()
     {
         // Given — completed at the exact deadline moment
         DateTimeOffset deadline = _now;
@@ -164,8 +164,8 @@ public sealed class XpBreakdownTests
         // When
         XpBreakdown breakdown = XpCalculator.Calculate(TaskDifficulty.Normal, deadline, completedAt, 0);
 
-        // Then — on-time counts as early
-        breakdown.DeadlineModifier.ShouldBe(1.2);
+        // Then — on-time is neutral (no bonus, no penalty)
+        breakdown.DeadlineModifier.ShouldBe(1.0);
     }
 
     [Fact]

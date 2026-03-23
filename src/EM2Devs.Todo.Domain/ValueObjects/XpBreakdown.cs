@@ -57,7 +57,17 @@ public static class XpCalculator
             return NoDeadlineModifier;
         }
 
-        return completedAt <= deadline.Value ? EarlyCompletionBonus : LateCompletionPenalty;
+        if (completedAt < deadline.Value)
+        {
+            return EarlyCompletionBonus;
+        }
+
+        if (completedAt > deadline.Value)
+        {
+            return LateCompletionPenalty;
+        }
+
+        return NoDeadlineModifier;
     }
 
     private static double CalculateStreakMultiplier(int currentStreakDays)

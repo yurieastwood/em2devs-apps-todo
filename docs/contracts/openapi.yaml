@@ -241,6 +241,29 @@ components:
         longestStreak:
           type: integer
           minimum: 0
+        lastXpBreakdown:
+          nullable: true
+          $ref: "#/components/schemas/XpBreakdownResponse"
+    XpBreakdownResponse:
+      type: object
+      required:
+        - baseXp
+        - deadlineModifier
+        - streakMultiplier
+        - finalXp
+      properties:
+        baseXp:
+          type: integer
+          minimum: 0
+        deadlineModifier:
+          type: number
+          format: double
+        streakMultiplier:
+          type: number
+          format: double
+        finalXp:
+          type: integer
+          minimum: 1
     TaskResponse:
       type: object
       required:

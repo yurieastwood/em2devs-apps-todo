@@ -30,7 +30,11 @@ if (!string.IsNullOrEmpty(connectionString))
 {
     builder.AddNpgsqlDbContext<TodoDbContext>("tododb");
     builder.Services.AddScoped<ITaskRepository, PostgresTaskRepository>();
-    builder.Services.AddHostedService<MigrationHostedService>();
+
+    if (string.Equals(Environment.GetEnvironmentVariable("AUTO_MIGRATE"), "true", StringComparison.OrdinalIgnoreCase))
+    {
+        builder.Services.AddHostedService<MigrationHostedService>();
+    }
 }
 else
 {

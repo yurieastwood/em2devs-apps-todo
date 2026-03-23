@@ -24,8 +24,12 @@ export async function advanceTaskStatus(page: Page, taskTitle: string, expectedS
 }
 
 export async function deleteAllTasks(page: Page) {
-	while ((await page.getByTestId('task-delete-button').count()) > 0) {
+	let count = await page.getByTestId('task-delete-button').count();
+	while (count > 0) {
 		await page.getByTestId('task-delete-button').first().click();
-		await page.waitForTimeout(500);
+		await expect(page.getByTestId('task-delete-button')).toHaveCount(count - 1, {
+			timeout: 10_000
+		});
+		count--;
 	}
 }

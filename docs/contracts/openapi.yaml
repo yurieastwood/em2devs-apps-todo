@@ -243,7 +243,8 @@ components:
           minimum: 0
         lastXpBreakdown:
           nullable: true
-          $ref: "#/components/schemas/XpBreakdownResponse"
+          allOf:
+            - $ref: "#/components/schemas/XpBreakdownResponse"
     XpBreakdownResponse:
       type: object
       required:

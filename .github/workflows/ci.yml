@@ -121,6 +121,7 @@ jobs:
           curl -sf http://localhost:5001/api/tasks > /dev/null || (echo "API failed to start" && exit 1)
         env:
           AUTO_MIGRATE: "true"
+          DOTNET_ENVIRONMENT: Development
       - run: npx playwright test
         env:
           API_BASE_URL: http://localhost:5001

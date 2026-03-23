@@ -11,6 +11,7 @@ public sealed class Quest
     public QuestTitle Title { get; private set; }
     public string Description { get; private set; }
     public DateOnly? DueDate { get; private set; }
+    public bool IsCompleted { get; private set; }
     public IReadOnlyList<TodoTask> Tasks => _tasks.AsReadOnly();
 
     public int Progress
@@ -50,5 +51,38 @@ public sealed class Quest
         }
 
         _tasks.Add(task);
+    }
+
+    public void RemoveTask(TaskId taskId)
+    {
+        ArgumentNullException.ThrowIfNull(taskId);
+
+        TodoTask? task = _tasks.FirstOrDefault(t => t.Id == taskId);
+        if (task is null)
+        {
+            throw new DomainException($"Task with id '{taskId.Value}' is not assigned to this quest.");
+        }
+
+        _tasks.Remove(task);
+    }
+
+    public void Complete()
+    {
+        if (IsCompleted)
+        {
+            throw new DomainException("Quest is already completed.");
+        }
+
+        if (_tasks.Count == 0)
+        {
+            throw new DomainException("Cannot complete a quest with no tasks.");
+        }
+
+        if (Progress < 100)
+        {
+            throw new DomainException("Cannot complete a quest when not all tasks are done.");
+        }
+
+        IsCompleted = true;
     }
 }

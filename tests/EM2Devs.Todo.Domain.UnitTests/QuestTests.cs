@@ -234,6 +234,140 @@ public sealed class QuestTests
         quest.Progress.ShouldBe(75);
     }
 
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_RemoveTask_When_TaskIsAssigned()
+    {
+        // Given
+        Quest quest = CreateQuest();
+        TodoTask task = TodoTask.Create(new TaskTitle("Removable"));
+        quest.AddTask(task);
+
+        // When
+        quest.RemoveTask(task.Id);
+
+        // Then
+        quest.Tasks.ShouldBeEmpty();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_RemovingUnassignedTask()
+    {
+        // Given
+        Quest quest = CreateQuest();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(
+            () => quest.RemoveTask(new TaskId(Guid.NewGuid())));
+        ex.Message.ShouldContain("not assigned");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_RemovingNullTaskId()
+    {
+        // Given
+        Quest quest = CreateQuest();
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => quest.RemoveTask(null!));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_RecalculateProgress_When_TaskRemoved()
+    {
+        // Given — 2 tasks, 1 done = 50%; remove the incomplete one → 100%
+        Quest quest = CreateQuest();
+        TodoTask done = TodoTask.Create(new TaskTitle("Done task"));
+        done.MoveToInProgress();
+        done.MarkAsDone();
+        TodoTask incomplete = TodoTask.Create(new TaskTitle("Incomplete"));
+        quest.AddTask(done);
+        quest.AddTask(incomplete);
+        quest.Progress.ShouldBe(50);
+
+        // When
+        quest.RemoveTask(incomplete.Id);
+
+        // Then
+        quest.Progress.ShouldBe(100);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Complete_When_AllTasksAreDone()
+    {
+        // Given
+        Quest quest = CreateQuestWithTasks(2);
+        foreach (TodoTask task in quest.Tasks)
+        {
+            task.MoveToInProgress();
+            task.MarkAsDone();
+        }
+
+        // When / Then — should not throw
+        Should.NotThrow(() => quest.Complete());
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_SetIsCompleted_When_QuestCompleted()
+    {
+        // Given
+        Quest quest = CreateQuestWithTasks(1);
+        quest.Tasks[0].MoveToInProgress();
+        quest.Tasks[0].MarkAsDone();
+
+        // When
+        quest.Complete();
+
+        // Then
+        quest.IsCompleted.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_CompletingAlreadyCompletedQuest()
+    {
+        // Given
+        Quest quest = CreateQuestWithTasks(1);
+        quest.Tasks[0].MoveToInProgress();
+        quest.Tasks[0].MarkAsDone();
+        quest.Complete();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => quest.Complete());
+        ex.Message.ShouldContain("already completed");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_CompletingWithNoTasks()
+    {
+        // Given
+        Quest quest = CreateQuest();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => quest.Complete());
+        ex.Message.ShouldContain("no tasks");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_CompletingWithIncompleteTasks()
+    {
+        // Given
+        Quest quest = CreateQuestWithTasks(3);
+        quest.Tasks[0].MoveToInProgress();
+        quest.Tasks[0].MarkAsDone();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => quest.Complete());
+        ex.Message.ShouldContain("not all tasks are done");
+    }
+
     private static Quest CreateQuest()
     {
         return Quest.Create(

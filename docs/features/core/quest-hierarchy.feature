@@ -40,7 +40,7 @@ Feature: Quest Hierarchy
       When I complete the task "Write abstract"
       Then the quest progress should be 20%
 
-    @wip
+    @done
     Scenario: Complete a quest
       Given I have a quest "Prepare conference talk" with 5 tasks
       And 4 tasks are completed
@@ -50,7 +50,7 @@ Feature: Quest Hierarchy
       And I should receive quest completion bonus XP
       And a celebration animation should be displayed
 
-    @wip
+    @done
     Scenario: View quest details
       Given I have a quest "Prepare conference talk" with 5 tasks
       And 3 tasks are completed
@@ -61,7 +61,7 @@ Feature: Quest Hierarchy
       And I should see the total XP earned so far
       And I should see the estimated remaining effort
 
-    @wip
+    @done
     Scenario: Move a task between quests
       Given I have a quest "Work tasks" containing the task "Update docs"
       And I have a quest "Side project" with 2 tasks
@@ -69,14 +69,14 @@ Feature: Quest Hierarchy
       Then "Work tasks" should no longer contain "Update docs"
       And "Side project" should contain 3 tasks
 
-    @wip
+    @done
     Scenario: Remove a task from a quest without deleting it
       Given I have a quest "Sprint work" containing the task "Fix CSS bug"
       When I unassign the task "Fix CSS bug" from the quest
       Then the task should appear in my inbox
       And the quest progress should be recalculated
 
-    @wip
+    @done
     Scenario: Delete a quest
       Given I have a quest "Abandoned project" containing 3 tasks
       When I delete the quest "Abandoned project"
@@ -127,7 +127,7 @@ Feature: Quest Hierarchy
       When I view the epic progress
       Then the epic progress should be 37.5%
 
-    @wip
+    @done
     Scenario: Complete an epic
       Given I have an epic "Launch MVP" with 4 quests
       And 3 quests are completed
@@ -136,7 +136,7 @@ Feature: Quest Hierarchy
       And I should receive epic completion bonus XP
       And a milestone event should appear on my journey timeline
 
-    @wip
+    @done
     Scenario: Delete an epic
       Given I have an epic "Abandoned initiative" containing 3 quests
       When I delete the epic "Abandoned initiative"
@@ -144,7 +144,7 @@ Feature: Quest Hierarchy
       Then the epic should be removed from my epic list
       And the 3 quests should remain intact but no longer belong to any epic
 
-    @wip
+    @done
     Scenario: Remove a quest from an epic
       Given I have an epic "Launch MVP" with 4 quests
       When I remove the quest "Beta testing" from the epic

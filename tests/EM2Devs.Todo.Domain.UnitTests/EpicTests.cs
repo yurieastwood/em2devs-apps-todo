@@ -249,6 +249,135 @@ public sealed class EpicTests
         epic.Progress.ShouldBe(50m);
     }
 
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_RemoveQuest_When_QuestIsAssigned()
+    {
+        // Given
+        Epic epic = CreateEpic();
+        Quest quest = Quest.Create(new QuestTitle("Removable"), "Test");
+        epic.AddQuest(quest);
+
+        // When
+        epic.RemoveQuest(quest.Id);
+
+        // Then
+        epic.Quests.ShouldBeEmpty();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_RemovingUnassignedQuest()
+    {
+        // Given
+        Epic epic = CreateEpic();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(
+            () => epic.RemoveQuest(new QuestId(Guid.NewGuid())));
+        ex.Message.ShouldContain("not assigned");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_RemovingNullQuestId()
+    {
+        // Given
+        Epic epic = CreateEpic();
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => epic.RemoveQuest(null!));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_RecalculateProgress_When_QuestRemoved()
+    {
+        // Given — 2 quests, one 100% and one 0%. Remove 0% → 100%
+        Epic epic = CreateEpic();
+        Quest doneQuest = CreateQuestWithCompletedTasks(2, 2);
+        Quest emptyQuest = Quest.Create(new QuestTitle("Empty"), "No tasks");
+        epic.AddQuest(doneQuest);
+        epic.AddQuest(emptyQuest);
+        epic.Progress.ShouldBe(50m);
+
+        // When
+        epic.RemoveQuest(emptyQuest.Id);
+
+        // Then
+        epic.Progress.ShouldBe(100m);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Complete_When_AllQuestsAreDone()
+    {
+        // Given
+        Epic epic = CreateEpic();
+        Quest quest = CreateQuestWithCompletedTasks(2, 2);
+        epic.AddQuest(quest);
+
+        // When / Then — should not throw
+        Should.NotThrow(() => epic.Complete());
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_SetIsCompleted_When_EpicCompleted()
+    {
+        // Given
+        Epic epic = CreateEpic();
+        Quest quest = CreateQuestWithCompletedTasks(1, 1);
+        epic.AddQuest(quest);
+
+        // When
+        epic.Complete();
+
+        // Then
+        epic.IsCompleted.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_CompletingAlreadyCompletedEpic()
+    {
+        // Given
+        Epic epic = CreateEpic();
+        Quest quest = CreateQuestWithCompletedTasks(1, 1);
+        epic.AddQuest(quest);
+        epic.Complete();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => epic.Complete());
+        ex.Message.ShouldContain("already completed");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_CompletingWithNoQuests()
+    {
+        // Given
+        Epic epic = CreateEpic();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => epic.Complete());
+        ex.Message.ShouldContain("no quests");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_CompletingWithIncompleteQuests()
+    {
+        // Given
+        Epic epic = CreateEpic();
+        Quest quest = CreateQuestWithCompletedTasks(3, 1);
+        epic.AddQuest(quest);
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => epic.Complete());
+        ex.Message.ShouldContain("not all quests are done");
+    }
+
     private static Epic CreateEpic()
     {
         return Epic.Create(

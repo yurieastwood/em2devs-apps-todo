@@ -17,6 +17,9 @@
 <nav>
 	<div class="nav-links">
 		<a href={resolve('/')} class:active={page.url.pathname === '/'}>Tasks</a>
+		<a href={resolve('/quests')} class:active={page.url.pathname.startsWith('/quests')}
+			>Quests</a
+		>
 		<a href={resolve('/dashboard')} class:active={page.url.pathname === '/dashboard'}
 			>Dashboard</a
 		>

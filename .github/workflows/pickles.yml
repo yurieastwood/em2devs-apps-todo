@@ -25,7 +25,7 @@ jobs:
             6.0.x
             9.0.x
       - name: Install Pickles
-        run: dotnet tool install Pickles.CommandLine --tool-path ./tools
+        run: dotnet tool install Pickles.CommandLine --version 4.0.3 --tool-path ./tools
       - name: "Preprocess feature files (strip Rule keyword unsupported by Pickles)"
         run: |
           mkdir -p .pickles/features
@@ -40,6 +40,7 @@ jobs:
           rm -rf _pages
           mkdir -p _pages/features
           cp -R .pickles/out/. _pages/features/
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=/features/"></head><body><a href="/features/">BDD Living Documentation</a></body></html>' > _pages/index.html
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

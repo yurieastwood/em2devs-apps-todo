@@ -26,8 +26,15 @@ jobs:
             9.0.x
       - name: Install Pickles
         run: dotnet tool install Pickles.CommandLine --tool-path ./tools
+      - name: "Preprocess feature files (strip Rule keyword unsupported by Pickles)"
+        run: |
+          mkdir -p .pickles/features
+          cp -R docs/features/. .pickles/features/
+          find .pickles/features -name '*.feature' -exec sed -i '/^[[:space:]]*Rule:/d' {} +
       - name: Generate living documentation
-        run: ./tools/pickles --feature-directory=docs/features --output-directory=.pickles/out --documentation-format=dhtml
+        run: |
+          ./tools/pickles --feature-directory=.pickles/features --output-directory=.pickles/out --documentation-format=dhtml || true
+          test -f .pickles/out/Index.html || (echo "Pickles failed to generate any output" && exit 1)
       - name: Stage Pages content under /features
         run: |
           rm -rf _pages

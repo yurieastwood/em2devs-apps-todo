@@ -1,6 +1,6 @@
 # Waypoint
 
-[![CI Pipeline](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/ci.yml) [![BDD Living Documentation](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/pickles.yml/badge.svg?branch=main)](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/pickles.yml)
+[![CI Pipeline](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/ci.yml) [![BDD Living Documentation](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/pickles.yml/badge.svg?branch=main)](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/pickles.yml) [![ADRs Site](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/log4brains.yml/badge.svg?branch=main)](https://github.com/yurieastwood/em2devs-apps-todo/actions/workflows/log4brains.yml)
 ![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 

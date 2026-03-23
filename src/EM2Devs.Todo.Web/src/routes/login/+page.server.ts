@@ -8,8 +8,9 @@ function getBaseUrl(): string {
 }
 
 export const actions: Actions = {
-	default: async ({ fetch }) => {
+	default: async ({ fetch, cookies }) => {
 		await demoLogin(fetch, getBaseUrl());
+		cookies.set('demo-user', 'true', { path: '/', httpOnly: true, sameSite: 'lax' });
 		throw redirect(303, '/');
 	}
 };

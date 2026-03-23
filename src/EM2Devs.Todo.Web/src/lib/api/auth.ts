@@ -21,7 +21,10 @@ export async function demoLogin(
 
 export async function logout(fetch: typeof globalThis.fetch, baseUrl: string): Promise<void> {
 	const url = new URL('/api/auth/logout', baseUrl);
-	await fetch(url, { method: 'POST' });
+	const response = await fetch(url, { method: 'POST' });
+	if (!response.ok) {
+		throw new Error(`Logout failed with status ${response.status}`);
+	}
 }
 
 export async function getMe(

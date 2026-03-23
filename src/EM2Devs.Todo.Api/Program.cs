@@ -92,7 +92,10 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 app.UseExceptionHandler();
-app.UseMiddleware<DemoAuthMiddleware>();
+if (app.Environment.IsDevelopment())
+{
+    app.UseMiddleware<DemoAuthMiddleware>();
+}
 app.MapDefaultEndpoints();
 if (allowedOrigins.Length > 0)
 {

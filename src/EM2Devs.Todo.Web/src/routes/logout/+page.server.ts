@@ -8,8 +8,9 @@ function getBaseUrl(): string {
 }
 
 export const actions: Actions = {
-	default: async ({ fetch }) => {
+	default: async ({ fetch, cookies }) => {
 		await logout(fetch, getBaseUrl());
+		cookies.delete('demo-user', { path: '/' });
 		throw redirect(303, '/login');
 	}
 };

@@ -11,7 +11,8 @@ describe('getProfile', () => {
 			level: 3,
 			xpToNextLevel: 50,
 			currentStreak: 5,
-			longestStreak: 12
+			longestStreak: 12,
+			lastXpBreakdown: null
 		};
 
 		const mockFetch = vi.fn().mockResolvedValue({
@@ -43,6 +44,34 @@ describe('getProfile', () => {
 		}) as unknown as typeof fetch;
 
 		await expect(getProfile(mockFetch, BASE)).rejects.toThrow(ApiError);
+	});
+
+	it('returns profile with XP breakdown when present', async () => {
+		const expected: PlayerProfile = {
+			totalXp: 180,
+			level: 3,
+			xpToNextLevel: 20,
+			currentStreak: 7,
+			longestStreak: 14,
+			lastXpBreakdown: {
+				baseXp: 30,
+				deadlineModifier: 1.2,
+				streakMultiplier: 1.14,
+				finalXp: 41
+			}
+		};
+
+		const mockFetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve(expected),
+			headers: new Headers({ 'content-type': 'application/json' })
+		}) as unknown as typeof fetch;
+
+		const result = await getProfile(mockFetch, BASE);
+
+		expect(result.lastXpBreakdown).not.toBeNull();
+		expect(result.lastXpBreakdown!.baseXp).toBe(30);
+		expect(result.lastXpBreakdown!.finalXp).toBe(41);
 	});
 
 	it('throws ApiError on non-JSON error response', async () => {

@@ -1,0 +1,51 @@
+name: BDD Living Documentation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build BDD Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            6.0.x
+            9.0.x
+      - name: Install Pickles
+        run: dotnet tool install Pickles.CommandLine --tool-path ./tools
+      - name: Generate living documentation
+        run: ./tools/pickles --feature-directory=docs/features --output-directory=.pickles/out --documentation-format=dhtml
+      - name: Stage Pages content under /features
+        run: |
+          rm -rf _pages
+          mkdir -p _pages/features
+          cp -R .pickles/out/. _pages/features/
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _pages
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

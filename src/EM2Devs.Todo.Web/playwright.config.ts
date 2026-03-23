@@ -8,22 +8,13 @@ export default defineConfig({
 		baseURL: 'http://localhost:5173',
 		trace: 'on-first-retry'
 	},
-	webServer: [
-		{
-			command:
-				'dotnet run --project ../../src/EM2Devs.Todo.AppHost --urls http://localhost:5001',
-			port: 5001,
-			timeout: 60_000,
-			reuseExistingServer: true
-		},
-		{
-			command: 'npm run dev',
-			port: 5173,
-			timeout: 15_000,
-			reuseExistingServer: true,
-			env: {
-				API_BASE_URL: 'http://localhost:5001'
-			}
+	webServer: {
+		command: 'npm run dev',
+		port: 5173,
+		timeout: 15_000,
+		reuseExistingServer: true,
+		env: {
+			API_BASE_URL: 'http://localhost:5001'
 		}
-	]
+	}
 });

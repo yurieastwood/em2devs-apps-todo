@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsDemoUser } from './helpers';
+import { loginAsDemoUser, createTask, advanceTaskStatus, deleteAllTasks } from './helpers';
 
 test.describe('Progression dashboard', () => {
 	test.beforeEach(async ({ page }) => {
@@ -25,17 +25,9 @@ test.describe('Progression dashboard', () => {
 
 		// Create and complete a task
 		await page.getByTestId('nav-tasks').click();
-		await page.getByTestId('task-title-input').fill('E2E XP test task');
-		await page.getByTestId('add-task-button').click();
-		await page.getByTestId('task-title').filter({ hasText: 'E2E XP test task' }).waitFor();
-
-		const taskItem = page.getByTestId('task-item').filter({ hasText: 'E2E XP test task' });
-		// Todo → InProgress
-		await taskItem.getByTestId('task-advance-button').click();
-		await expect(taskItem.getByTestId('task-status')).toHaveText('InProgress');
-		// InProgress → Done
-		await taskItem.getByTestId('task-advance-button').click();
-		await expect(taskItem.getByTestId('task-status')).toHaveText('Done');
+		await createTask(page, 'E2E XP test task');
+		await advanceTaskStatus(page, 'E2E XP test task', 'InProgress');
+		await advanceTaskStatus(page, 'E2E XP test task', 'Done');
 
 		// Check XP increased
 		await page.getByTestId('nav-dashboard').click();
@@ -46,6 +38,6 @@ test.describe('Progression dashboard', () => {
 
 		// Clean up
 		await page.getByTestId('nav-tasks').click();
-		await taskItem.getByTestId('task-delete-button').click();
+		await deleteAllTasks(page);
 	});
 });

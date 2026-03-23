@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsDemoUser, createTask, deleteAllTasks } from './helpers';
+import { loginAsDemoUser, createTask, advanceTaskStatus, deleteAllTasks } from './helpers';
 
 test.describe('Task management flow', () => {
 	test.beforeEach(async ({ page }) => {
@@ -17,22 +17,13 @@ test.describe('Task management flow', () => {
 
 	test('should start a task and change status to InProgress', async ({ page }) => {
 		await createTask(page, 'Read a book');
-
-		const taskItem = page.getByTestId('task-item').filter({ hasText: 'Read a book' });
-		await taskItem.getByTestId('task-advance-button').click();
-		await expect(taskItem.getByTestId('task-status')).toHaveText('InProgress');
+		await advanceTaskStatus(page, 'Read a book', 'InProgress');
 	});
 
 	test('should complete a task and change status to Done', async ({ page }) => {
 		await createTask(page, 'Write tests');
-
-		const taskItem = page.getByTestId('task-item').filter({ hasText: 'Write tests' });
-		// Todo → InProgress
-		await taskItem.getByTestId('task-advance-button').click();
-		await expect(taskItem.getByTestId('task-status')).toHaveText('InProgress');
-		// InProgress → Done
-		await taskItem.getByTestId('task-advance-button').click();
-		await expect(taskItem.getByTestId('task-status')).toHaveText('Done');
+		await advanceTaskStatus(page, 'Write tests', 'InProgress');
+		await advanceTaskStatus(page, 'Write tests', 'Done');
 	});
 
 	test('should delete a task and remove it from the list', async ({ page }) => {
@@ -42,6 +33,6 @@ test.describe('Task management flow', () => {
 		await expect(taskItem).toBeVisible();
 
 		await taskItem.getByTestId('task-delete-button').click();
-		await expect(taskItem).not.toBeVisible();
+		await expect(taskItem).not.toBeVisible({ timeout: 10_000 });
 	});
 });

@@ -13,6 +13,14 @@
 			? Math.round((profile.totalXp / (profile.totalXp + profile.xpToNextLevel)) * 100)
 			: 0
 	);
+
+	let breakdown = $derived(profile?.lastXpBreakdown ?? null);
+
+	function formatModifier(value: number): string {
+		if (value === 1.0) return 'none';
+		if (value > 1.0) return `+${Math.round((value - 1) * 100)}%`;
+		return `${Math.round((value - 1) * 100)}%`;
+	}
 </script>
 
 <svelte:head>
@@ -65,6 +73,44 @@
 			{/if}
 		</section>
 
+		{#if breakdown}
+			<section class="breakdown-section">
+				<h2>Last XP Earned</h2>
+				<div class="breakdown-card">
+					<div class="breakdown-row">
+						<span class="breakdown-label">Base XP</span>
+						<span class="breakdown-value">{breakdown.baseXp}</span>
+					</div>
+					<div class="breakdown-row">
+						<span class="breakdown-label">Deadline</span>
+						<span
+							class="breakdown-value"
+							data-modifier={breakdown.deadlineModifier > 1
+								? 'bonus'
+								: breakdown.deadlineModifier < 1
+									? 'penalty'
+									: 'none'}
+						>
+							{formatModifier(breakdown.deadlineModifier)}
+						</span>
+					</div>
+					<div class="breakdown-row">
+						<span class="breakdown-label">Streak</span>
+						<span
+							class="breakdown-value"
+							data-modifier={breakdown.streakMultiplier > 1 ? 'bonus' : 'none'}
+						>
+							{formatModifier(breakdown.streakMultiplier)}
+						</span>
+					</div>
+					<div class="breakdown-row breakdown-total">
+						<span class="breakdown-label">Total</span>
+						<span class="breakdown-value">+{breakdown.finalXp} XP</span>
+					</div>
+				</div>
+			</section>
+		{/if}
+
 		<section class="streaks-section">
 			<div class="streak-card">
 				<span class="streak-value">{profile.currentStreak}</span>
@@ -90,6 +136,12 @@
 
 	h1 {
 		margin-bottom: 1.5rem;
+	}
+
+	h2 {
+		font-size: 1rem;
+		margin-bottom: 0.75rem;
+		color: #374151;
 	}
 
 	.error {
@@ -207,6 +259,44 @@
 		color: #6b7280;
 		font-size: 0.875rem;
 		margin-top: 0.5rem;
+	}
+
+	.breakdown-section {
+		margin-bottom: 2rem;
+	}
+
+	.breakdown-card {
+		border: 1px solid #e5e7eb;
+		border-radius: 0.5rem;
+		overflow: hidden;
+	}
+
+	.breakdown-row {
+		display: flex;
+		justify-content: space-between;
+		padding: 0.5rem 1rem;
+		border-bottom: 1px solid #f3f4f6;
+	}
+
+	.breakdown-row:last-child {
+		border-bottom: none;
+	}
+
+	.breakdown-total {
+		background: #f9fafb;
+		font-weight: 600;
+	}
+
+	.breakdown-label {
+		color: #6b7280;
+	}
+
+	.breakdown-value[data-modifier='bonus'] {
+		color: #059669;
+	}
+
+	.breakdown-value[data-modifier='penalty'] {
+		color: #dc2626;
 	}
 
 	.streaks-section {

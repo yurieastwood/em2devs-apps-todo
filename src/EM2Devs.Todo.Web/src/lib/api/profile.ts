@@ -1,11 +1,19 @@
 import { handleResponse } from './tasks';
 
+export interface XpBreakdown {
+	baseXp: number;
+	deadlineModifier: number;
+	streakMultiplier: number;
+	finalXp: number;
+}
+
 export interface PlayerProfile {
 	totalXp: number;
 	level: number;
 	xpToNextLevel: number;
 	currentStreak: number;
 	longestStreak: number;
+	lastXpBreakdown: XpBreakdown | null;
 }
 
 export async function getProfile(

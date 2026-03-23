@@ -62,12 +62,7 @@ public static class XpCalculator
 
     private static double CalculateStreakMultiplier(int currentStreakDays)
     {
-        if (currentStreakDays <= 0)
-        {
-            return BaseStreakMultiplier;
-        }
-
-        int cappedDays = Math.Min(currentStreakDays, MaxStreakBonusDays);
-        return BaseStreakMultiplier + (cappedDays * StreakBonusPerDay);
+        int effectiveDays = Math.Clamp(currentStreakDays, 0, MaxStreakBonusDays);
+        return BaseStreakMultiplier + (effectiveDays * StreakBonusPerDay);
     }
 }

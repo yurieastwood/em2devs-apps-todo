@@ -12,6 +12,7 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 {
     private readonly object _lock = new();
     private Level _level = Level.StartingLevel();
+    private XpBreakdownReadModel? _lastBreakdown;
 
     public Task<PlayerProfile> GetProfileAsync(CancellationToken ct = default)
     {
@@ -22,17 +23,19 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
                 Level: _level.Value,
                 XpToNextLevel: _level.XpToNextLevel(),
                 CurrentStreak: 0,
-                LongestStreak: 0));
+                LongestStreak: 0,
+                LastXpBreakdown: _lastBreakdown));
         }
     }
 
-    public Task AwardXpAsync(ExperiencePoints xp, CancellationToken ct = default)
+    public Task AwardXpAsync(ExperiencePoints xp, XpBreakdownReadModel? breakdown = null, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(xp);
 
         lock (_lock)
         {
             _level = _level.AddXp(xp);
+            _lastBreakdown = breakdown;
         }
 
         return Task.CompletedTask;

@@ -9,4 +9,14 @@ public sealed record PlayerProfile(
     int Level,
     int XpToNextLevel,
     int CurrentStreak,
-    int LongestStreak);
+    int LongestStreak,
+    XpBreakdownReadModel? LastXpBreakdown = null);
+
+/// <summary>
+/// Read model for the last XP breakdown awarded.
+/// </summary>
+public sealed record XpBreakdownReadModel(
+    int BaseXp,
+    double DeadlineModifier,
+    double StreakMultiplier,
+    int FinalXp);

@@ -91,4 +91,29 @@ public sealed class UpdateTaskStatusCommandHandlerTests
         result.IsError.ShouldBeTrue();
         result.Match(_ => null!, e => e).ShouldBeOfType<ConflictError>();
     }
+
+    [Fact]
+    [Trait("Category", "Application")]
+    public async Task Should_PublishEventWithDifficultyAndDeadline_When_TaskCompleted()
+    {
+        // Given — task with Hard difficulty and a deadline
+        DateTimeOffset deadline = DateTimeOffset.UtcNow.AddDays(3);
+        TodoTask task = TodoTask.Create(new TaskTitle("Hard task"), TaskDifficulty.Hard, deadline);
+        task.MoveToInProgress();
+        _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>())
+            .Returns(task);
+
+        UpdateTaskStatusCommand command = new(task.Id.Value, "Done");
+
+        // When
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Then
+        await _mediator.Received(1).Publish(
+            Arg.Is<Application.Events.TaskCompletedEvent>(e =>
+                e.Difficulty == TaskDifficulty.Hard &&
+                e.Deadline == deadline &&
+                e.CompletedAt != null),
+            Arg.Any<CancellationToken>());
+    }
 }

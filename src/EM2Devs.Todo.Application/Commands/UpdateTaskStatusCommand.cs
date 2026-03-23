@@ -65,7 +65,9 @@ public sealed class UpdateTaskStatusCommandHandler : IRequestHandler<UpdateTaskS
 
         if (targetStatus == TaskStatus.Done)
         {
-            await _mediator.Publish(new TaskCompletedEvent(task.Id, task.Title), ct).ConfigureAwait(false);
+            await _mediator.Publish(
+                new TaskCompletedEvent(task.Id, task.Title, task.Difficulty, task.DueDate, task.CompletedAt),
+                ct).ConfigureAwait(false);
         }
 
         return task;

@@ -72,6 +72,11 @@ public sealed record TaskTitle
             throw new Exceptions.DomainException("Task title cannot be empty.");
         }
 
+        if (value.Any(c => char.IsControl(c)))
+        {
+            throw new Exceptions.DomainException("Task title cannot contain control characters.");
+        }
+
         if (new System.Globalization.StringInfo(value).LengthInTextElements > 200)
         {
             throw new Exceptions.DomainException("Task title cannot exceed 200 characters.");

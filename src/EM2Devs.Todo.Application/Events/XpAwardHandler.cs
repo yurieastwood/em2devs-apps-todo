@@ -35,7 +35,10 @@ public sealed class XpAwardHandler : INotificationHandler<TaskCompletedEvent>
 
         int previousLevel = profile.Level;
 
-        await _profileRepository.AwardXpAsync(breakdown.ToExperiencePoints(), ct).ConfigureAwait(false);
+        XpBreakdownReadModel breakdownModel = new(
+            breakdown.BaseXp, breakdown.DeadlineModifier, breakdown.StreakMultiplier, breakdown.FinalXp);
+
+        await _profileRepository.AwardXpAsync(breakdown.ToExperiencePoints(), breakdownModel, ct).ConfigureAwait(false);
 
         PlayerProfile updatedProfile = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);
 

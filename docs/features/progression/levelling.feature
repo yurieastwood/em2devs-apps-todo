@@ -79,7 +79,7 @@ Feature: Levelling System
       Then they should see my level badge showing "Level 12"
       And the badge style should reflect my level tier
 
-    @done
+    @wip
     Scenario: Level milestones are celebrated
       Given I am about to reach level 10
       When I earn enough XP to reach level 10

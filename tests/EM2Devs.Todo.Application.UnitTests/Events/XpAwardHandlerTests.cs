@@ -40,6 +40,7 @@ public sealed class XpAwardHandlerTests
         // Then
         await _profileRepo.Received(1).AwardXpAsync(
             Arg.Is<ExperiencePoints>(xp => xp.Value > 0),
+            Arg.Any<XpBreakdownReadModel?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -61,6 +62,7 @@ public sealed class XpAwardHandlerTests
         // Then — Normal difficulty base XP (30) should be awarded
         await _profileRepo.Received(1).AwardXpAsync(
             Arg.Is<ExperiencePoints>(xp => xp.Value == 30),
+            Arg.Any<XpBreakdownReadModel?>(),
             Arg.Any<CancellationToken>());
     }
 

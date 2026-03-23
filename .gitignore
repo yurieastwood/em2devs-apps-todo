@@ -88,3 +88,7 @@ TestResults/
 TestResults/
 StrykerOutput/
 node_modules/
+
+# Pickles
+.pickles/
+tools/

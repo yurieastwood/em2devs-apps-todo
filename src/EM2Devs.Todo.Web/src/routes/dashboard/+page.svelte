@@ -6,6 +6,8 @@
 	let profile = $derived(data.profile);
 	let error = $derived(data.error);
 
+	let isMaxLevel = $derived(profile !== null && profile.xpToNextLevel === 0);
+
 	let progressPercent = $derived(
 		profile && profile.totalXp + profile.xpToNextLevel > 0
 			? Math.round((profile.totalXp / (profile.totalXp + profile.xpToNextLevel)) * 100)
@@ -39,20 +41,28 @@
 		<section class="xp-section">
 			<div class="progress-header">
 				<span class="xp-total">{profile.totalXp.toLocaleString()} XP</span>
-				<span class="xp-next"
-					>{profile.xpToNextLevel.toLocaleString()} XP to next level</span
+				{#if isMaxLevel}
+					<span class="xp-next">Max Level</span>
+				{:else}
+					<span class="xp-next"
+						>{profile.xpToNextLevel.toLocaleString()} XP to next level</span
+					>
+				{/if}
+			</div>
+			{#if !isMaxLevel}
+				<div
+					class="progress-bar"
+					role="progressbar"
+					aria-valuenow={progressPercent}
+					aria-valuemin={0}
+					aria-valuemax={100}
 				>
-			</div>
-			<div
-				class="progress-bar"
-				role="progressbar"
-				aria-valuenow={progressPercent}
-				aria-valuemin={0}
-				aria-valuemax={100}
-			>
-				<div class="progress-fill" style:width="{progressPercent}%"></div>
-			</div>
-			<p class="progress-label">{progressPercent}% to Level {profile.level + 1}</p>
+					<div class="progress-fill" style:width="{progressPercent}%"></div>
+				</div>
+				<p class="progress-label">{progressPercent}% to Level {profile.level + 1}</p>
+			{:else}
+				<p class="progress-label">You've reached the highest level!</p>
+			{/if}
 		</section>
 
 		<section class="streaks-section">

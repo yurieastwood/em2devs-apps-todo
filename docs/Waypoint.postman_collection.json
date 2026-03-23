@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Waypoint API",
-    "description": "Postman collection for validating the Waypoint PoC API.\n\nRun requests in order — the collection uses variables captured from previous responses.",
+    "description": "Postman collection for validating the Waypoint PoC API.\n\nRun requests in order — the collection uses variables captured from previous responses.\n\nOrder: Auth → Tasks → Status Transitions → Filtering → Quests → Epics → Profile → Deletion → Validation → API Versioning",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -19,9 +19,115 @@
       "key": "taskId2",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "questId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "epicId",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
+    {
+      "name": "0. Auth",
+      "item": [
+        {
+          "name": "0.1 Demo login",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/demo-login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const auth = pm.response.json();",
+                  "pm.test('Has userId', () => pm.expect(auth.userId).to.be.a('string'));",
+                  "pm.test('Has displayName', () => pm.expect(auth.displayName).to.be.a('string'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0.2 Get current user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const auth = pm.response.json();",
+                  "pm.test('Has userId', () => pm.expect(auth.userId).to.be.a('string'));",
+                  "pm.test('Has displayName', () => pm.expect(auth.displayName).to.be.a('string'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0.3 Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/logout"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0.4 Get current user after logout (401)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/auth/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0.5 Re-login for remaining tests",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/demo-login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
     {
       "name": "1. Task CRUD",
       "item": [
@@ -340,10 +446,352 @@
       ]
     },
     {
-      "name": "4. Profile / Progression",
+      "name": "4. Quests",
       "item": [
         {
-          "name": "4.1 Get player profile",
+          "name": "4.1 List quests (empty)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/quests"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.2 Create quest",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/quests",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Complete onboarding\", \"description\": \"Finish all onboarding tasks\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const quest = pm.response.json();",
+                  "pm.test('Has id', () => pm.expect(quest.id).to.be.a('string'));",
+                  "pm.test('Title matches', () => pm.expect(quest.title).to.eql('Complete onboarding'));",
+                  "pm.test('Progress is 0', () => pm.expect(quest.progress).to.eql(0));",
+                  "pm.test('Not completed', () => pm.expect(quest.isCompleted).to.be.false);",
+                  "pm.collectionVariables.set('questId', quest.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.3 Get quest by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/quests/{{questId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Correct quest', () => pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('questId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.4 Add task to quest",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/quests/{{questId}}/tasks",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"taskId\": \"{{taskId2}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const quest = pm.response.json();",
+                  "pm.test('Quest has task', () => pm.expect(quest.tasks.length).to.be.at.least(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.5 Remove task from quest",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/quests/{{questId}}/tasks/{{taskId2}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Task removed', () => pm.expect(pm.response.json().tasks.length).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.6 Complete quest",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/quests/{{questId}}/complete"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Quest completed', () => pm.expect(pm.response.json().isCompleted).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4.7 Delete quest",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/quests/{{questId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Epics",
+      "item": [
+        {
+          "name": "5.1 List epics (empty)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/epics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.2 Create quest for epic",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/quests",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Epic sub-quest\", \"description\": \"Quest to assign to epic\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('questId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.3 Create epic",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/epics",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Launch MVP\", \"description\": \"Complete all MVP milestones\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "const epic = pm.response.json();",
+                  "pm.test('Has id', () => pm.expect(epic.id).to.be.a('string'));",
+                  "pm.test('Title matches', () => pm.expect(epic.title).to.eql('Launch MVP'));",
+                  "pm.test('Progress is 0', () => pm.expect(epic.progress).to.eql(0));",
+                  "pm.test('Not completed', () => pm.expect(epic.isCompleted).to.be.false);",
+                  "pm.collectionVariables.set('epicId', epic.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.4 Get epic by ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/epics/{{epicId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Correct epic', () => pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('epicId')));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.5 Assign quest to epic",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/epics/{{epicId}}/quests",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"questId\": \"{{questId}}\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "const epic = pm.response.json();",
+                  "pm.test('Epic has quest', () => pm.expect(epic.quests.length).to.be.at.least(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.6 Remove quest from epic",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/epics/{{epicId}}/quests/{{questId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Quest removed', () => pm.expect(pm.response.json().quests.length).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.7 Complete epic",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/epics/{{epicId}}/complete"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Epic completed', () => pm.expect(pm.response.json().isCompleted).to.be.true);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.8 Delete epic",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/epics/{{epicId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5.9 Cleanup quest",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/quests/{{questId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Profile / Progression",
+      "item": [
+        {
+          "name": "6.1 Get player profile",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/profile"
@@ -369,10 +817,10 @@
       ]
     },
     {
-      "name": "5. Deletion",
+      "name": "7. Deletion",
       "item": [
         {
-          "name": "5.1 Delete task",
+          "name": "7.1 Delete task",
           "request": {
             "method": "DELETE",
             "url": "{{baseUrl}}/api/tasks/{{taskId2}}"
@@ -389,7 +837,7 @@
           ]
         },
         {
-          "name": "5.2 Verify deleted task returns 404",
+          "name": "7.2 Verify deleted task returns 404",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/tasks/{{taskId2}}"
@@ -406,7 +854,7 @@
           ]
         },
         {
-          "name": "5.3 Delete nonexistent task (404)",
+          "name": "7.3 Delete nonexistent task (404)",
           "request": {
             "method": "DELETE",
             "url": "{{baseUrl}}/api/tasks/00000000-0000-0000-0000-000000000000"
@@ -425,10 +873,10 @@
       ]
     },
     {
-      "name": "6. Validation / Edge Cases",
+      "name": "8. Validation / Edge Cases",
       "item": [
         {
-          "name": "6.1 Create task with empty title (400)",
+          "name": "8.1 Create task with empty title (400)",
           "request": {
             "method": "POST",
             "url": "{{baseUrl}}/api/tasks",
@@ -452,7 +900,7 @@
           ]
         },
         {
-          "name": "6.2 Create task with unknown property (400)",
+          "name": "8.2 Create task with unknown property (400)",
           "request": {
             "method": "POST",
             "url": "{{baseUrl}}/api/tasks",
@@ -476,7 +924,7 @@
           ]
         },
         {
-          "name": "6.3 Create task with title exceeding 200 chars (400)",
+          "name": "8.3 Create task with title exceeding 200 chars (400)",
           "request": {
             "method": "POST",
             "url": "{{baseUrl}}/api/tasks",
@@ -500,7 +948,7 @@
           ]
         },
         {
-          "name": "6.4 Update status of nonexistent task (404)",
+          "name": "8.4 Update status of nonexistent task (404)",
           "request": {
             "method": "PATCH",
             "url": "{{baseUrl}}/api/tasks/00000000-0000-0000-0000-000000000000/status",
@@ -518,6 +966,83 @@
               "script": {
                 "exec": [
                   "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "9. API Versioning",
+      "item": [
+        {
+          "name": "9.1 List tasks via v1 route",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/tasks"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9.2 Get profile via v1 route",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/profile"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Has totalXp', () => pm.expect(pm.response.json().totalXp).to.be.a('number'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9.3 List quests via v1 route",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/quests"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9.4 List epics via v1 route",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/epics"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Response is an array', () => pm.expect(pm.response.json()).to.be.an('array'));"
                 ]
               }
             }

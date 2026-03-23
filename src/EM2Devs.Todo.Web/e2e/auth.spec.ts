@@ -11,16 +11,17 @@ test.describe('Demo auth flow', () => {
 		await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
 	});
 
-	test('should redirect to login when session cookie is cleared', async ({ page, context }) => {
+	test('should allow re-login after cookies are cleared', async ({ page, context }) => {
 		await loginAsDemoUser(page);
 
-		// Clear the demo-user cookie to simulate logout
+		// Clear cookies to simulate session expiry
 		await context.clearCookies();
-		await page.goto('/');
 
-		// Without the cookie, the layout returns user: null
-		// Verify the login page is accessible and functional
+		// Re-login should work
 		await page.goto('/login');
 		await expect(page.getByTestId('demo-login-button')).toBeVisible();
+		await page.getByTestId('demo-login-button').click();
+		await page.waitForURL('/');
+		await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
 	});
 });

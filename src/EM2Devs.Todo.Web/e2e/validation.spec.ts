@@ -6,7 +6,7 @@ test.describe('Validation error flow', () => {
 		await loginAsDemoUser(page);
 	});
 
-	test('should show error when creating a task with empty title', async ({ page }) => {
+	test('should disable add button when title is empty', async ({ page }) => {
 		const addButton = page.getByTestId('add-task-button');
 		await expect(addButton).toBeDisabled();
 	});

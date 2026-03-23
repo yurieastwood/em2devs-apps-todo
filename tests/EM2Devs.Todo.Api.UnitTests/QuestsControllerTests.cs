@@ -128,5 +128,5 @@ public sealed class QuestsControllerTests : IDisposable
     }
 
     private sealed record QuestTaskDto(Guid Id, string Title, string Status);
-    private sealed record QuestDto(Guid Id, string Title, string Description, DateOnly? DueDate, int Progress, List<QuestTaskDto> Tasks);
+    private sealed record QuestDto(Guid Id, string Title, string Description, DateOnly? DueDate, int Progress, bool IsCompleted, List<QuestTaskDto> Tasks);
 }

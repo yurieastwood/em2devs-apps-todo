@@ -82,6 +82,7 @@ public sealed class EpicsController : ControllerBase
             epic.Description,
             epic.TargetDate,
             epic.Progress,
+            epic.IsCompleted,
             epic.Quests.Select(q => new EpicQuestResponse(q.Id.Value, q.Title.Value, q.Progress)).ToList());
 }
 
@@ -89,4 +90,4 @@ public sealed record CreateEpicRequest(string Title, string Description, DateOnl
 public sealed record AssignQuestRequest(Guid QuestId);
 public sealed record EpicQuestResponse(Guid Id, string Title, int Progress);
 public sealed record EpicResponse(
-    Guid Id, string Title, string Description, DateOnly? TargetDate, decimal Progress, List<EpicQuestResponse> Quests);
+    Guid Id, string Title, string Description, DateOnly? TargetDate, decimal Progress, bool IsCompleted, List<EpicQuestResponse> Quests);

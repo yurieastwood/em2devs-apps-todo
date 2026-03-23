@@ -82,6 +82,7 @@ public sealed class QuestsController : ControllerBase
             quest.Description,
             quest.DueDate,
             quest.Progress,
+            quest.IsCompleted,
             quest.Tasks.Select(t => new QuestTaskResponse(t.Id.Value, t.Title.Value, t.Status.ToString())).ToList());
 }
 
@@ -89,4 +90,4 @@ public sealed record CreateQuestRequest(string Title, string Description, DateOn
 public sealed record AddTaskToQuestRequest(Guid TaskId);
 public sealed record QuestTaskResponse(Guid Id, string Title, string Status);
 public sealed record QuestResponse(
-    Guid Id, string Title, string Description, DateOnly? DueDate, int Progress, List<QuestTaskResponse> Tasks);
+    Guid Id, string Title, string Description, DateOnly? DueDate, int Progress, bool IsCompleted, List<QuestTaskResponse> Tasks);

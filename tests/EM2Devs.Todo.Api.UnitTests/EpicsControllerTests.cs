@@ -126,5 +126,5 @@ public sealed class EpicsControllerTests : IDisposable
     }
 
     private sealed record EpicQuestDto(Guid Id, string Title, int Progress);
-    private sealed record EpicDto(Guid Id, string Title, string Description, DateOnly? TargetDate, decimal Progress, List<EpicQuestDto> Quests);
+    private sealed record EpicDto(Guid Id, string Title, string Description, DateOnly? TargetDate, decimal Progress, bool IsCompleted, List<EpicQuestDto> Quests);
 }

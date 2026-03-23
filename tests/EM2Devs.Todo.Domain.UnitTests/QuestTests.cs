@@ -313,6 +313,37 @@ public sealed class QuestTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_SetIsCompleted_When_QuestCompleted()
+    {
+        // Given
+        Quest quest = CreateQuestWithTasks(1);
+        quest.Tasks[0].MoveToInProgress();
+        quest.Tasks[0].MarkAsDone();
+
+        // When
+        quest.Complete();
+
+        // Then
+        quest.IsCompleted.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_CompletingAlreadyCompletedQuest()
+    {
+        // Given
+        Quest quest = CreateQuestWithTasks(1);
+        quest.Tasks[0].MoveToInProgress();
+        quest.Tasks[0].MarkAsDone();
+        quest.Complete();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => quest.Complete());
+        ex.Message.ShouldContain("already completed");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_ThrowDomainException_When_CompletingWithNoTasks()
     {
         // Given

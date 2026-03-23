@@ -11,6 +11,7 @@ public sealed class Quest
     public QuestTitle Title { get; private set; }
     public string Description { get; private set; }
     public DateOnly? DueDate { get; private set; }
+    public bool IsCompleted { get; private set; }
     public IReadOnlyList<TodoTask> Tasks => _tasks.AsReadOnly();
 
     public int Progress
@@ -67,6 +68,11 @@ public sealed class Quest
 
     public void Complete()
     {
+        if (IsCompleted)
+        {
+            throw new DomainException("Quest is already completed.");
+        }
+
         if (_tasks.Count == 0)
         {
             throw new DomainException("Cannot complete a quest with no tasks.");
@@ -76,5 +82,7 @@ public sealed class Quest
         {
             throw new DomainException("Cannot complete a quest when not all tasks are done.");
         }
+
+        IsCompleted = true;
     }
 }

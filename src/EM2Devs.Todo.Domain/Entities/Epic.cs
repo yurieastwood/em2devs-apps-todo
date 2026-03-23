@@ -11,6 +11,7 @@ public sealed class Epic
     public EpicTitle Title { get; private set; }
     public string Description { get; private set; }
     public DateOnly? TargetDate { get; private set; }
+    public bool IsCompleted { get; private set; }
     public IReadOnlyList<Quest> Quests => _quests.AsReadOnly();
 
     public decimal Progress
@@ -67,6 +68,11 @@ public sealed class Epic
 
     public void Complete()
     {
+        if (IsCompleted)
+        {
+            throw new DomainException("Epic is already completed.");
+        }
+
         if (_quests.Count == 0)
         {
             throw new DomainException("Cannot complete an epic with no quests.");
@@ -76,5 +82,7 @@ public sealed class Epic
         {
             throw new DomainException("Cannot complete an epic when not all quests are done.");
         }
+
+        IsCompleted = true;
     }
 }

@@ -323,6 +323,37 @@ public sealed class EpicTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_SetIsCompleted_When_EpicCompleted()
+    {
+        // Given
+        Epic epic = CreateEpic();
+        Quest quest = CreateQuestWithCompletedTasks(1, 1);
+        epic.AddQuest(quest);
+
+        // When
+        epic.Complete();
+
+        // Then
+        epic.IsCompleted.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_CompletingAlreadyCompletedEpic()
+    {
+        // Given
+        Epic epic = CreateEpic();
+        Quest quest = CreateQuestWithCompletedTasks(1, 1);
+        epic.AddQuest(quest);
+        epic.Complete();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => epic.Complete());
+        ex.Message.ShouldContain("already completed");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_ThrowDomainException_When_CompletingWithNoQuests()
     {
         // Given

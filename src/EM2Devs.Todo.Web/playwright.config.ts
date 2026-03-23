@@ -11,7 +11,7 @@ export default defineConfig({
 	webServer: {
 		command: 'npm run dev',
 		port: 5173,
-		timeout: 15_000,
+		timeout: 30_000,
 		reuseExistingServer: true,
 		env: {
 			API_BASE_URL: 'http://localhost:5001'

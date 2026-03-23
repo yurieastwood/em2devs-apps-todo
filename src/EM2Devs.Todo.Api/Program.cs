@@ -31,15 +31,6 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.AddNpgsqlDbContext<TodoDbContext>("tododb");
     builder.Services.AddScoped<ITaskRepository, PostgresTaskRepository>();
 
-    bool isNonProduction = builder.Environment.IsDevelopment()
-        || string.Equals(builder.Environment.EnvironmentName, "Testing", StringComparison.OrdinalIgnoreCase);
-    bool autoMigrateRequested = string.Equals(
-        Environment.GetEnvironmentVariable("AUTO_MIGRATE"), "true", StringComparison.OrdinalIgnoreCase);
-
-    if (isNonProduction && autoMigrateRequested)
-    {
-        builder.Services.AddHostedService<MigrationHostedService>();
-    }
 }
 else
 {
@@ -122,6 +113,16 @@ builder.Services.AddControllers()
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+bool isNonProduction = app.Environment.IsDevelopment()
+    || string.Equals(app.Environment.EnvironmentName, "Testing", StringComparison.OrdinalIgnoreCase);
+bool autoMigrateRequested = string.Equals(
+    Environment.GetEnvironmentVariable("AUTO_MIGRATE"), "true", StringComparison.OrdinalIgnoreCase);
+
+if (!string.IsNullOrEmpty(connectionString) && isNonProduction && autoMigrateRequested)
+{
+    await app.ApplyMigrationsAsync().ConfigureAwait(false);
+}
 
 app.UseExceptionHandler();
 if (app.Environment.IsDevelopment())

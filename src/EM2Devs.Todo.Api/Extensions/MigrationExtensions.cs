@@ -3,17 +3,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EM2Devs.Todo.Api.Extensions;
 
-internal sealed partial class MigrationHostedService(
-    IServiceProvider serviceProvider,
-    ILogger<MigrationHostedService> logger) : BackgroundService
+internal static partial class MigrationExtensions
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public static async Task ApplyMigrationsAsync(this WebApplication app)
     {
-        using var scope = serviceProvider.CreateScope();
+        using var scope = app.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<TodoDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<TodoDbContext>>();
 
         LogApplyingMigrations(logger);
-        await dbContext.Database.MigrateAsync(stoppingToken).ConfigureAwait(false);
+        await dbContext.Database.MigrateAsync().ConfigureAwait(false);
         LogMigrationsApplied(logger);
     }
 

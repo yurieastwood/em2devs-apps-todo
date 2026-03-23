@@ -79,7 +79,7 @@
 				<div class="breakdown-card">
 					<div class="breakdown-row">
 						<span class="breakdown-label">Base XP</span>
-						<span class="breakdown-value">{breakdown.baseXp}</span>
+						<span class="breakdown-value">{breakdown.baseXp.toLocaleString()}</span>
 					</div>
 					<div class="breakdown-row">
 						<span class="breakdown-label">Deadline</span>
@@ -105,7 +105,8 @@
 					</div>
 					<div class="breakdown-row breakdown-total">
 						<span class="breakdown-label">Total</span>
-						<span class="breakdown-value">+{breakdown.finalXp} XP</span>
+						<span class="breakdown-value">+{breakdown.finalXp.toLocaleString()} XP</span
+						>
 					</div>
 				</div>
 			</section>
@@ -297,6 +298,10 @@
 
 	.breakdown-value[data-modifier='penalty'] {
 		color: #dc2626;
+	}
+
+	.breakdown-value[data-modifier='none'] {
+		color: #9ca3af;
 	}
 
 	.streaks-section {

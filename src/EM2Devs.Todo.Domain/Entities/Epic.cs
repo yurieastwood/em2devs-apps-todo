@@ -11,6 +11,7 @@ public sealed class Epic
     public EpicTitle Title { get; private set; }
     public string Description { get; private set; }
     public DateOnly? TargetDate { get; private set; }
+    public bool IsCompleted { get; private set; }
     public IReadOnlyList<Quest> Quests => _quests.AsReadOnly();
 
     public decimal Progress
@@ -50,5 +51,38 @@ public sealed class Epic
         }
 
         _quests.Add(quest);
+    }
+
+    public void RemoveQuest(QuestId questId)
+    {
+        ArgumentNullException.ThrowIfNull(questId);
+
+        Quest? quest = _quests.FirstOrDefault(q => q.Id == questId);
+        if (quest is null)
+        {
+            throw new DomainException($"Quest with id '{questId.Value}' is not assigned to this epic.");
+        }
+
+        _quests.Remove(quest);
+    }
+
+    public void Complete()
+    {
+        if (IsCompleted)
+        {
+            throw new DomainException("Epic is already completed.");
+        }
+
+        if (_quests.Count == 0)
+        {
+            throw new DomainException("Cannot complete an epic with no quests.");
+        }
+
+        if (Progress < 100m)
+        {
+            throw new DomainException("Cannot complete an epic when not all quests are done.");
+        }
+
+        IsCompleted = true;
     }
 }

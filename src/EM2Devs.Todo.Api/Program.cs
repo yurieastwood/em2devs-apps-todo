@@ -8,6 +8,7 @@ using EM2Devs.Todo.Application.Queries;
 using EM2Devs.Todo.Application.Validators;
 using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
+using EM2Devs.Todo.Infrastructure.Auth;
 using EM2Devs.Todo.Infrastructure.Persistence;
 using EM2Devs.Todo.ServiceDefaults;
 using EM2Devs.Todo.Api.Middleware;
@@ -35,6 +36,9 @@ else
 }
 
 builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
+
+builder.Services.AddScoped<DemoCurrentUser>();
+builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<DemoCurrentUser>());
 
 builder.Services.AddScoped<IMediator, Mediator>();
 
@@ -88,6 +92,10 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 app.UseExceptionHandler();
+if (app.Environment.IsDevelopment())
+{
+    app.UseMiddleware<DemoAuthMiddleware>();
+}
 app.MapDefaultEndpoints();
 if (allowedOrigins.Length > 0)
 {

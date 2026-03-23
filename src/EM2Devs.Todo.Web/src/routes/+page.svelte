@@ -11,6 +11,7 @@
 	let creating = $state(false);
 	let actionInFlight = $state<string | null>(null);
 	let notification = $state<string | null>(null);
+	let onboardingDismissed = $state(false);
 
 	let createError = $derived(
 		form?.action === 'create' && form?.error ? String(form.error) : null
@@ -90,6 +91,42 @@
 
 	{#if loadError}
 		<p class="error" role="alert">{loadError}</p>
+	{:else if tasks.length === 0 && !onboardingDismissed}
+		<div class="onboarding">
+			<h2>Create your first task</h2>
+			<p>Get started by adding something you need to do today.</p>
+			<form
+				method="POST"
+				action="?/create"
+				use:enhance={() => {
+					creating = true;
+					return async ({ update, result }) => {
+						try {
+							await update();
+						} finally {
+							creating = false;
+							if (result.type === 'success') newTitle = '';
+						}
+					};
+				}}
+				class="onboarding-form"
+			>
+				<input
+					type="text"
+					name="title"
+					bind:value={newTitle}
+					placeholder="e.g. Buy groceries"
+					disabled={creating}
+					maxlength={200}
+				/>
+				<button type="submit" disabled={creating || !newTitle.trim()}>
+					{creating ? 'Creating...' : 'Create Task'}
+				</button>
+			</form>
+			<button type="button" class="btn-skip" onclick={() => (onboardingDismissed = true)}>
+				Skip for now
+			</button>
+		</div>
 	{:else if tasks.length === 0}
 		<p class="empty">No tasks yet. Create your first task to get started!</p>
 	{:else}
@@ -341,5 +378,64 @@
 	.btn-delete:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.onboarding {
+		text-align: center;
+		padding: 2rem;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.5rem;
+		margin-top: 1rem;
+	}
+
+	.onboarding h2 {
+		margin-bottom: 0.5rem;
+	}
+
+	.onboarding p {
+		color: #6b7280;
+		margin-bottom: 1.5rem;
+	}
+
+	.onboarding-form {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.onboarding-form input {
+		flex: 1;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #d1d5db;
+		border-radius: 0.25rem;
+		font-size: 1rem;
+	}
+
+	.onboarding-form button {
+		padding: 0.5rem 1rem;
+		background: #2563eb;
+		color: white;
+		border: none;
+		border-radius: 0.25rem;
+		cursor: pointer;
+		font-weight: 500;
+	}
+
+	.onboarding-form button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.btn-skip {
+		background: none;
+		border: none;
+		color: #6b7280;
+		cursor: pointer;
+		font-size: 0.875rem;
+		text-decoration: underline;
+	}
+
+	.btn-skip:hover {
+		color: #374151;
 	}
 </style>

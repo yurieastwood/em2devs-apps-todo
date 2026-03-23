@@ -38,7 +38,7 @@ Feature: Levelling System
       And level 5 should be reachable by completing 10 Normal tasks per day for 5 days
       And level 50 should require at least 30 days of sustained high-difficulty completions
 
-    @wip
+    @done
     Scenario: Level up unlocks new features progressively
       Given I am level 2
       When I reach level 3

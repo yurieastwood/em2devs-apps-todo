@@ -23,28 +23,28 @@ Feature: Experience Points
         | Hard       | 40     | 80     |
         | Epic       | 80     | 150    |
 
-    @wip
+    @done
     Scenario: XP bonus for completing a task before the deadline
       Given I have a task due in 3 days with difficulty "Normal"
       When I complete the task 2 days before the deadline
       Then I should receive the base XP for the difficulty
       And I should receive an early completion bonus
 
-    @wip
+    @done
     Scenario: Reduced XP for completing a task after the deadline
       Given I have a task that was due yesterday with difficulty "Normal"
       When I complete the task 1 day late
       Then I should receive reduced XP compared to on-time completion
       And the XP should still be greater than zero
 
-    @wip
+    @done
     Scenario: XP is never negative
       Given I have a task that is 30 days overdue
       When I complete the task
       Then I should receive a minimum positive XP amount
       And no XP should be deducted from my total
 
-    @wip
+    @done
     Scenario: Consistency multiplier for daily streaks
       Given I have completed at least one task each day for 7 consecutive days
       When I complete a task today
@@ -61,7 +61,7 @@ Feature: Experience Points
 
   Rule: Users see transparent XP breakdowns for every completion
 
-    @wip
+    @done
     Scenario: View XP breakdown after task completion
       Given I have just completed a task "Write unit tests" with difficulty "Hard"
       When I view the XP award details
@@ -113,7 +113,7 @@ Feature: Experience Points
       Then I should see a suggestion to adjust the difficulty to "Easy" or "Trivial"
       And I should see an explanation of why the adjustment is recommended
 
-    @wip
+    @done
     Scenario: XP awarded with default difficulty when none is set
       Given I have a task with no difficulty set
       When I complete the task on time

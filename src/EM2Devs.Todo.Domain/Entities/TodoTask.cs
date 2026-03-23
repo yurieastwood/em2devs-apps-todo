@@ -9,17 +9,22 @@ public sealed class TodoTask
     public TaskTitle Title { get; private set; }
     public TaskStatus Status { get; private set; }
     public bool IsBossTask { get; private set; }
+    public TaskDifficulty Difficulty { get; private set; }
+    public DateTimeOffset? DueDate { get; private set; }
+    public DateTimeOffset? CompletedAt { get; private set; }
 
-    private TodoTask(TaskId id, TaskTitle title)
+    private TodoTask(TaskId id, TaskTitle title, TaskDifficulty difficulty, DateTimeOffset? dueDate)
     {
         Id = id;
         Title = title;
         Status = TaskStatus.Todo;
+        Difficulty = difficulty;
+        DueDate = dueDate;
     }
 
-    public static TodoTask Create(TaskTitle title)
+    public static TodoTask Create(TaskTitle title, TaskDifficulty difficulty = TaskDifficulty.Normal, DateTimeOffset? dueDate = null)
     {
-        return new TodoTask(TaskId.New(), title);
+        return new TodoTask(TaskId.New(), title, difficulty, dueDate);
     }
 
     public void MoveToInProgress()
@@ -40,6 +45,7 @@ public sealed class TodoTask
         }
 
         Status = TaskStatus.Done;
+        CompletedAt = DateTimeOffset.UtcNow;
     }
 
     public void PromoteToBossTask()

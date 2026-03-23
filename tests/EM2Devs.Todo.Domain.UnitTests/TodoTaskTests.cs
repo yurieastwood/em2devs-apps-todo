@@ -255,4 +255,14 @@ public sealed class TodoTaskTests
         var ex = Should.Throw<DomainException>(() => task.PromoteToBossTask());
         ex.Message.ShouldContain("Cannot promote");
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_TitleContainsMixedControlCharacters()
+    {
+        // Given — title with valid chars mixed with a control char
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => new TaskTitle("Hello\x02World"));
+        ex.Message.ShouldContain("control characters");
+    }
 }

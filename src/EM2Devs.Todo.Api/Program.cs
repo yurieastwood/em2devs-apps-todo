@@ -12,6 +12,7 @@ using EM2Devs.Todo.Infrastructure.Auth;
 using EM2Devs.Todo.Infrastructure.Persistence;
 using EM2Devs.Todo.ServiceDefaults;
 using EM2Devs.Todo.Api.Middleware;
+using EM2Devs.Todo.Api.Extensions;
 using Asp.Versioning;
 using FluentValidation;
 
@@ -29,6 +30,7 @@ if (!string.IsNullOrEmpty(connectionString))
 {
     builder.AddNpgsqlDbContext<TodoDbContext>("tododb");
     builder.Services.AddScoped<ITaskRepository, PostgresTaskRepository>();
+
 }
 else
 {
@@ -111,6 +113,16 @@ builder.Services.AddControllers()
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+bool isNonProduction = app.Environment.IsDevelopment()
+    || string.Equals(app.Environment.EnvironmentName, "Testing", StringComparison.OrdinalIgnoreCase);
+bool autoMigrateRequested = string.Equals(
+    Environment.GetEnvironmentVariable("AUTO_MIGRATE"), "true", StringComparison.OrdinalIgnoreCase);
+
+if (!string.IsNullOrEmpty(connectionString) && isNonProduction && autoMigrateRequested)
+{
+    await app.ApplyMigrationsAsync().ConfigureAwait(false);
+}
 
 app.UseExceptionHandler();
 if (app.Environment.IsDevelopment())

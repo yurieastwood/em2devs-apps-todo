@@ -11,7 +11,9 @@
 		<h1>Welcome to Waypoint</h1>
 		<p>Your personal task management companion.</p>
 		<form method="POST" use:enhance>
-			<button type="submit" class="btn-demo">Sign in as Demo User</button>
+			<button type="submit" class="btn-demo" data-testid="demo-login-button"
+				>Sign in as Demo User</button
+			>
 		</form>
 	</div>
 </main>

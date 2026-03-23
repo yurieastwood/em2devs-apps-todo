@@ -94,6 +94,80 @@ jobs:
       - run: npm ci
       - run: npm run test
 
+  e2e-tests:
+    name: "E2E|Playwright Tests"
+    needs: [gate-1-compile, frontend-test]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: tododb
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: src/EM2Devs.Todo.Web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/EM2Devs.Todo.Web/.nvmrc
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Apply database migrations
+        working-directory: .
+        run: |
+          dotnet tool restore
+          dotnet ef database update --project src/EM2Devs.Todo.Infrastructure --startup-project src/EM2Devs.Todo.Api
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__tododb: "Host=localhost;Port=5432;Database=tododb;Username=postgres;Password=postgres"
+      - name: Start API
+        working-directory: .
+        run: |
+          nohup dotnet run --project src/EM2Devs.Todo.Api \
+            --urls "http://localhost:5001" > /tmp/api.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:5001/api/tasks > /dev/null 2>&1 && break || sleep 1
+          done
+          curl -sf http://localhost:5001/api/tasks > /dev/null || (cat /tmp/api.log && exit 1)
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__tododb: "Host=localhost;Port=5432;Database=tododb;Username=postgres;Password=postgres"
+      - run: npx playwright test
+        env:
+          API_BASE_URL: http://localhost:5001
+      - name: Show API logs on failure
+        if: failure()
+        working-directory: .
+        run: cat /tmp/api.log || true
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: src/EM2Devs.Todo.Web/test-results/
+          retention-days: 7
+
   gate-1-compile:
     name: "G1|Compiler / Type System"
     runs-on: ubuntu-latest

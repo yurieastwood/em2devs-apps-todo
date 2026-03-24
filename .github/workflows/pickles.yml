@@ -33,7 +33,7 @@ jobs:
           find .pickles/features -name '*.feature' -exec sed -i '/^[[:space:]]*Rule:/d' {} +
       - name: Generate living documentation
         run: |
-          ./tools/pickles --feature-directory=.pickles/features --output-directory=.pickles/out --documentation-format=dhtml || true
+          ./tools/pickles --feature-directory=.pickles/features --output-directory=.pickles/out --documentation-format=html || true
           test -f .pickles/out/Index.html || (echo "Pickles failed to generate any output" && exit 1)
       - name: Stage Pages content under /features
         run: |

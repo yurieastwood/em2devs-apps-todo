@@ -3,20 +3,18 @@ name: BDD Living Documentation
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
+  contents: write
 
 jobs:
-  build:
-    name: Build BDD Documentation
+  build-and-deploy:
+    name: Build and Deploy BDD Documentation
     runs-on: ubuntu-latest
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -35,25 +33,17 @@ jobs:
         run: |
           ./tools/pickles --feature-directory=.pickles/features --output-directory=.pickles/out --documentation-format=dhtml || true
           test -f .pickles/out/Index.html || (echo "Pickles failed to generate any output" && exit 1)
-      - name: Stage Pages content under /features
-        run: |
-          rm -rf _pages
-          mkdir -p _pages/features
-          cp -R .pickles/out/. _pages/features/
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=features/"></head><body><a href="features/">BDD Living Documentation</a></body></html>' > _pages/index.html
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+          mv .pickles/out/Index.html .pickles/out/index.html
+      - name: Deploy features to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
         with:
-          path: _pages
-
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .pickles/out
+          destination_dir: features
+          keep_files: true
+      - name: Deploy landing page to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/pages
+          keep_files: true

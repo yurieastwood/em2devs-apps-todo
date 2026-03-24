@@ -3,6 +3,9 @@ name: BDD Living Documentation
 on:
   push:
     branches: [main]
+    paths:
+      - 'docs/features/**'
+      - '.github/workflows/pickles.yml'
   workflow_dispatch:
 
 permissions:
@@ -40,10 +43,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .pickles/out
           destination_dir: features
-          keep_files: true
-      - name: Deploy landing page to GitHub Pages
-        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs/pages
           keep_files: true

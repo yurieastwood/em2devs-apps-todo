@@ -1,0 +1,7 @@
+project:
+  name: Waypoint
+  tz: UTC
+  adrFolder: ./docs/decisions
+  repository:
+    url: https://github.com/yurieastwood/em2devs-apps-todo
+    provider: github

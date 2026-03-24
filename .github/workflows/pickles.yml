@@ -3,6 +3,8 @@ name: BDD Living Documentation
 on:
   push:
     branches: [main]
+    paths:
+      - 'docs/features/**'
   workflow_dispatch:
 
 permissions:

@@ -1,0 +1,28 @@
+name: Documentation Landing Page
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/pages/**'
+      - '.github/workflows/landing-page.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Deploy Landing Page
+    runs-on: ubuntu-latest
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy landing page to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/pages
+          keep_files: true

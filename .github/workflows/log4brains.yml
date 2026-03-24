@@ -3,6 +3,9 @@ name: ADRs Site
 on:
   push:
     branches: [main]
+    paths:
+      - 'docs/decisions/**'
+      - '.log4brains.yml'
   workflow_dispatch:
 
 permissions:

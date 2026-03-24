@@ -33,13 +33,14 @@ jobs:
           find .pickles/features -name '*.feature' -exec sed -i '/^[[:space:]]*Rule:/d' {} +
       - name: Generate living documentation
         run: |
-          ./tools/pickles --feature-directory=.pickles/features --output-directory=.pickles/out --documentation-format=html || true
+          ./tools/pickles --feature-directory=.pickles/features --output-directory=.pickles/out --documentation-format=dhtml || true
           test -f .pickles/out/Index.html || (echo "Pickles failed to generate any output" && exit 1)
       - name: Stage Pages content under /features
         run: |
           rm -rf _pages
           mkdir -p _pages/features
           cp -R .pickles/out/. _pages/features/
+          mv _pages/features/Index.html _pages/features/index.html
           echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=features/"></head><body><a href="features/">BDD Living Documentation</a></body></html>' > _pages/index.html
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

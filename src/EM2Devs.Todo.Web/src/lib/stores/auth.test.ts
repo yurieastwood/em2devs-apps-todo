@@ -1,8 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { get } from 'svelte/store';
 import { currentUser } from './auth';
 
 describe('auth store', () => {
+	beforeEach(() => {
+		currentUser.set(null);
+	});
 	it('Should_BeNull_When_NoUserLoggedIn', () => {
 		expect(get(currentUser)).toBeNull();
 	});

@@ -1,7 +1,14 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const isLoginPage = event.url.pathname === '/login';
+	const routeId = event.route.id;
+
+	// Bypass for asset requests and internal SvelteKit routes (no route.id)
+	if (routeId === null) {
+		return resolve(event);
+	}
+
+	const isLoginPage = routeId === '/login';
 	const hasCookie = event.cookies.get('demo-user');
 
 	if (!hasCookie && !isLoginPage) {

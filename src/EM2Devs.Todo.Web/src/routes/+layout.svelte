@@ -14,31 +14,31 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<nav>
-	<div class="nav-links">
-		<a href={resolve('/')} class:active={page.url.pathname === '/'} data-testid="nav-tasks"
-			>Tasks</a
-		>
-		<a
-			href={resolve('/quests')}
-			class:active={page.url.pathname.startsWith('/quests')}
-			data-testid="nav-quests">Quests</a
-		>
-		<a
-			href={resolve('/dashboard')}
-			class:active={page.url.pathname === '/dashboard'}
-			data-testid="nav-dashboard">Dashboard</a
-		>
-	</div>
-	{#if user}
+{#if user}
+	<nav>
+		<div class="nav-links">
+			<a href={resolve('/')} class:active={page.url.pathname === '/'} data-testid="nav-tasks"
+				>Tasks</a
+			>
+			<a
+				href={resolve('/quests')}
+				class:active={page.url.pathname.startsWith('/quests')}
+				data-testid="nav-quests">Quests</a
+			>
+			<a
+				href={resolve('/dashboard')}
+				class:active={page.url.pathname === '/dashboard'}
+				data-testid="nav-dashboard">Dashboard</a
+			>
+		</div>
 		<div class="nav-user">
-			<span class="user-name">{user.displayName}</span>
+			<span class="user-name" data-testid="user-display-name">{user.displayName}</span>
 			<form method="POST" action="/logout" use:enhance>
 				<button type="submit" class="btn-logout" data-testid="logout-button">Logout</button>
 			</form>
 		</div>
-	{/if}
-</nav>
+	</nav>
+{/if}
 
 {@render children()}
 

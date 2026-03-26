@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 </script>
 
 <svelte:head>
@@ -10,7 +11,15 @@
 	<div class="login-card">
 		<h1>Welcome to Waypoint</h1>
 		<p>Your personal task management companion.</p>
-		<form method="POST" use:enhance>
+		<form
+			method="POST"
+			use:enhance={() => {
+				return async ({ update }) => {
+					await invalidateAll();
+					await update();
+				};
+			}}
+		>
 			<button type="submit" class="btn-demo" data-testid="login-button"
 				>Sign in as Demo User</button
 			>

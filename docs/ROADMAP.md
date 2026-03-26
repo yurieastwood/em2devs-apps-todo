@@ -54,43 +54,49 @@ A user can create tasks, complete them, earn XP, and see their level — backed 
 
 Authentication, a basic frontend, and the core gamification loop (tasks → XP → levels → streaks) working as a real application.
 
-### 2.1 Authentication
+### 2.1 Authentication — `wip` (PR #50, #65)
 
-- [ ] Auth0 integration with social logins (per ADR-007)
-- [ ] JWT validation middleware
-- [ ] User entity and repository
-- [ ] Protected API endpoints (require authentication)
+- [x] Demo auth stub with ICurrentUser abstraction (PR #50)
+- [x] Route guards, conditional nav, login redirect (PR #65)
+- [ ] Auth0 integration with social logins (per ADR-007) — deferred, demo stub in place
+- [ ] JWT validation middleware — deferred
+- [ ] User entity and repository — deferred
+- [ ] Protected API endpoints (require authentication) — deferred (demo mode, no enforcement)
 
-### 2.2 Frontend — SvelteKit Scaffold
+### 2.2 Frontend — SvelteKit Scaffold — `done` (PR #41)
 
-- [ ] SvelteKit project setup (per ADR-002)
-- [ ] Svelte 5 runes + stores + SvelteKit load functions (per ADR-013)
-- [ ] Auth0 login/logout flow
-- [ ] API client layer
+- [x] SvelteKit project setup (per ADR-002) (PR #41)
+- [x] Svelte 5 runes + stores + SvelteKit load functions (per ADR-013) (PR #41)
+- [x] API client layer (PR #41)
+- [ ] Auth0 login/logout flow — deferred (demo login in place)
 
-### 2.3 Frontend — Task Management
+### 2.3 Frontend — Task Management — `wip` (PR #47)
 
-- [ ] Task list screen (create, filter, sort)
-- [ ] Task detail/edit screen
-- [ ] Task completion flow with XP animation
-- [ ] Task deletion with confirmation
+- [x] Task list screen with create (PR #47)
+- [x] Task completion flow (PR #47)
+- [x] Task deletion (PR #47)
+- [ ] Task detail/edit screen — not started
+- [ ] Filter, sort — not started
+- [ ] XP animation on completion — not started
 
-### 2.4 Frontend — Progression Dashboard
+### 2.4 Frontend — Progression Dashboard — `done` (PR #51, #55)
 
-- [ ] XP bar and level display
-- [ ] Streak counter and history
-- [ ] Achievement notifications
+- [x] XP bar and level display (PR #51)
+- [x] Streak counter (PR #51)
+- [x] XP breakdown display (PR #55)
+- [ ] Achievement notifications — not started
+- [ ] Streak history — not started
 
 ### 2.5 Caching
 
 - [ ] Redis caching for read-heavy endpoints (per ADR-008)
 - [ ] Cache invalidation on writes
 
-### 2.6 Quest Management
+### 2.6 Quest Management — `done` (PR #52)
 
-- [ ] Quest API endpoints (CRUD, add/remove tasks, progress)
-- [ ] Frontend: quest list and detail screens
-- [ ] Epic API endpoints and frontend
+- [x] Quest API endpoints (CRUD, add/remove tasks, progress) (PR #52)
+- [x] Frontend: quest list and detail screens (PR #52)
+- [x] Epic API endpoints and frontend (PR #52)
 
 ### 2.7 Background Jobs
 
@@ -104,27 +110,32 @@ Authentication, a basic frontend, and the core gamification loop (tasks → XP �
 - [ ] SignalR hub for notifications (per ADR-004)
 - [ ] Frontend: real-time notification display
 
-### 2.9 Error Handling + Security
+### 2.9 Error Handling + Security — `wip` (PR #37, #45, #46)
 
-- [ ] Result pattern + Problem Details RFC 9457 (per ADR-018)
-- [ ] API versioning /api/v1/ prefix (per ADR-017)
-- [ ] CORS, rate limiting, HTTPS, security headers (per ADR-021)
+- [x] Result pattern + Problem Details RFC 9457 (per ADR-018) (PR #45)
+- [x] API versioning /api/v1/ prefix (per ADR-017) (PR #46)
+- [x] CORS (per ADR-021) (PR #37)
+- [ ] Rate limiting — not started
+- [ ] HTTPS enforcement — not started
+- [ ] Security headers — not started
 
-### 2.10 E2E Testing
+### 2.10 E2E Testing — `done` (PR #53)
 
-- [ ] Playwright test setup (per ADR-014)
-- [ ] E2E tests for task management flow
-- [ ] E2E tests for login/logout
+- [x] Playwright test setup (per ADR-014) (PR #53)
+- [x] E2E tests for task management flow (PR #53)
+- [x] E2E tests for login/logout (PR #53)
 
 ### MVP Exit Criteria
 
 - [ ] User can sign in with Google/GitHub via Auth0
-- [ ] Full task and quest management via the frontend
-- [ ] XP, level, and streak visible on progression dashboard
+- [x] Basic task create/complete/delete via the frontend
+- [x] Quest management via the frontend
+- [ ] Full task management (edit, filter, sort) via the frontend
+- [x] XP, level, and streak visible on progression dashboard
 - [ ] Real-time notifications on achievements
-- [ ] PostgreSQL + Redis via Aspire
+- [x] PostgreSQL + Redis via Aspire
 - [ ] Security baseline met (ADR-021)
-- [ ] All 7 gates + E2E tests pass
+- [x] All 7 gates + E2E tests pass
 
 ---
 

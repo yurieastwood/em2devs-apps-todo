@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Waypoint API",
-    "description": "Postman collection for validating the Waypoint PoC API.\n\nRun requests in order — the collection uses variables captured from previous responses.\n\nOrder: Auth → Tasks → Status Transitions → Filtering → Quests → Epics → Profile → Deletion → Validation → API Versioning",
+    "description": "Postman collection for validating the Waypoint PoC API.\n\nRun requests in order \u2014 the collection uses variables captured from previous responses.\n\nOrder: Auth \u2192 Tasks \u2192 Status Transitions \u2192 Filtering \u2192 Quests \u2192 Epics \u2192 Profile \u2192 Deletion \u2192 Validation \u2192 API Versioning",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -39,7 +39,13 @@
           "name": "0.1 Demo login",
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/auth/demo-login"
+            "url": "{{baseUrl}}/api/auth/demo-login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ]
           },
           "event": [
             {
@@ -79,7 +85,13 @@
           "name": "0.3 Logout",
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/auth/logout"
+            "url": "{{baseUrl}}/api/auth/logout",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ]
           },
           "event": [
             {
@@ -113,7 +125,13 @@
           "name": "0.5 Re-login for remaining tests",
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/auth/demo-login"
+            "url": "{{baseUrl}}/api/auth/demo-login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ]
           },
           "event": [
             {
@@ -155,7 +173,10 @@
             "method": "POST",
             "url": "{{baseUrl}}/api/tasks",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -172,7 +193,8 @@
                   "pm.test('Has id', () => pm.expect(task.id).to.be.a('string'));",
                   "pm.test('Title matches', () => pm.expect(task.title).to.eql('Write architecture tests'));",
                   "pm.test('Status is Todo', () => pm.expect(task.status).to.eql('Todo'));",
-                  "pm.collectionVariables.set('taskId', task.id);"
+                  "pm.collectionVariables.set('taskId', task.id);",
+                  "pm.test('Location header present', () => pm.expect(pm.response.headers.has('Location')).to.be.true);"
                 ]
               }
             }
@@ -184,7 +206,10 @@
             "method": "POST",
             "url": "{{baseUrl}}/api/tasks",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -197,7 +222,8 @@
               "script": {
                 "exec": [
                   "pm.test('Status is 201', () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set('taskId2', pm.response.json().id);"
+                  "pm.collectionVariables.set('taskId2', pm.response.json().id);",
+                  "pm.test('Location header present', () => pm.expect(pm.response.headers.has('Location')).to.be.true);"
                 ]
               }
             }
@@ -252,7 +278,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "const problem = pm.response.json();pm.test('Problem Details format', () => { pm.expect(problem).to.have.property('type'); pm.expect(problem).to.have.property('title'); pm.expect(problem).to.have.property('status');});"
                 ]
               }
             }
@@ -264,12 +291,15 @@
       "name": "2. Status Transitions",
       "item": [
         {
-          "name": "2.1 Transition Todo → InProgress",
+          "name": "2.1 Transition Todo \u2192 InProgress",
           "request": {
             "method": "PATCH",
             "url": "{{baseUrl}}/api/tasks/{{taskId}}/status",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -289,12 +319,15 @@
           ]
         },
         {
-          "name": "2.2 Transition InProgress → Done",
+          "name": "2.2 Transition InProgress \u2192 Done",
           "request": {
             "method": "PATCH",
             "url": "{{baseUrl}}/api/tasks/{{taskId}}/status",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -314,12 +347,15 @@
           ]
         },
         {
-          "name": "2.3 Invalid transition Todo → Done (conflict)",
+          "name": "2.3 Invalid transition Todo \u2192 Done (conflict)",
           "request": {
             "method": "PATCH",
             "url": "{{baseUrl}}/api/tasks/{{taskId2}}/status",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -331,7 +367,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status is 409 (conflict)', () => pm.response.to.have.status(409));"
+                  "pm.test('Status is 409 (conflict)', () => pm.response.to.have.status(409));",
+                  "const problem = pm.response.json();pm.test('Problem Details format', () => { pm.expect(problem).to.have.property('type'); pm.expect(problem).to.have.property('title'); pm.expect(problem).to.have.property('status');});"
                 ]
               }
             }
@@ -343,7 +380,10 @@
             "method": "PATCH",
             "url": "{{baseUrl}}/api/tasks/{{taskId2}}/status",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -355,7 +395,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status is 409 (already in status)', () => pm.response.to.have.status(409));"
+                  "pm.test('Status is 409 (already in status)', () => pm.response.to.have.status(409));",
+                  "const problem = pm.response.json();pm.test('Problem Details format', () => { pm.expect(problem).to.have.property('type'); pm.expect(problem).to.have.property('title'); pm.expect(problem).to.have.property('status');});"
                 ]
               }
             }
@@ -367,7 +408,10 @@
             "method": "PATCH",
             "url": "{{baseUrl}}/api/tasks/{{taskId2}}/status",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -379,7 +423,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status is 400', () => pm.response.to.have.status(400));"
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "const problem = pm.response.json();pm.test('Problem Details format', () => { pm.expect(problem).to.have.property('type'); pm.expect(problem).to.have.property('title'); pm.expect(problem).to.have.property('status');});"
                 ]
               }
             }
@@ -396,10 +441,18 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/tasks?status=Done",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "tasks"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tasks"
+              ],
               "query": [
-                { "key": "status", "value": "Done" }
+                {
+                  "key": "status",
+                  "value": "Done"
+                }
               ]
             }
           },
@@ -423,10 +476,18 @@
             "method": "GET",
             "url": {
               "raw": "{{baseUrl}}/api/tasks?status=Todo",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "tasks"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "tasks"
+              ],
               "query": [
-                { "key": "status", "value": "Todo" }
+                {
+                  "key": "status",
+                  "value": "Todo"
+                }
               ]
             }
           },
@@ -472,7 +533,10 @@
             "method": "POST",
             "url": "{{baseUrl}}/api/quests",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -490,7 +554,8 @@
                   "pm.test('Title matches', () => pm.expect(quest.title).to.eql('Complete onboarding'));",
                   "pm.test('Progress is 0', () => pm.expect(quest.progress).to.eql(0));",
                   "pm.test('Not completed', () => pm.expect(quest.isCompleted).to.be.false);",
-                  "pm.collectionVariables.set('questId', quest.id);"
+                  "pm.collectionVariables.set('questId', quest.id);",
+                  "pm.test('Location header present', () => pm.expect(pm.response.headers.has('Location')).to.be.true);"
                 ]
               }
             }
@@ -520,7 +585,10 @@
             "method": "POST",
             "url": "{{baseUrl}}/api/quests/{{questId}}/tasks",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -541,12 +609,15 @@
           ]
         },
         {
-          "name": "4.5 Complete quest task (Todo → InProgress → Done)",
+          "name": "4.5 Complete quest task (Todo \u2192 InProgress \u2192 Done)",
           "request": {
             "method": "PATCH",
             "url": "{{baseUrl}}/api/tasks/{{taskId2}}/status",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -565,12 +636,15 @@
           ]
         },
         {
-          "name": "4.6 Complete quest task (InProgress → Done)",
+          "name": "4.6 Complete quest task (InProgress \u2192 Done)",
           "request": {
             "method": "PATCH",
             "url": "{{baseUrl}}/api/tasks/{{taskId2}}/status",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -671,7 +745,10 @@
             "method": "POST",
             "url": "{{baseUrl}}/api/quests",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -684,7 +761,8 @@
               "script": {
                 "exec": [
                   "pm.test('Status is 201', () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set('questId', pm.response.json().id);"
+                  "pm.collectionVariables.set('questId', pm.response.json().id);",
+                  "pm.test('Location header present', () => pm.expect(pm.response.headers.has('Location')).to.be.true);"
                 ]
               }
             }
@@ -696,7 +774,10 @@
             "method": "POST",
             "url": "{{baseUrl}}/api/epics",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -714,7 +795,8 @@
                   "pm.test('Title matches', () => pm.expect(epic.title).to.eql('Launch MVP'));",
                   "pm.test('Progress is 0', () => pm.expect(epic.progress).to.eql(0));",
                   "pm.test('Not completed', () => pm.expect(epic.isCompleted).to.be.false);",
-                  "pm.collectionVariables.set('epicId', epic.id);"
+                  "pm.collectionVariables.set('epicId', epic.id);",
+                  "pm.test('Location header present', () => pm.expect(pm.response.headers.has('Location')).to.be.true);"
                 ]
               }
             }
@@ -744,7 +826,10 @@
             "method": "POST",
             "url": "{{baseUrl}}/api/epics/{{epicId}}/quests",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -914,7 +999,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "const problem = pm.response.json();pm.test('Problem Details format', () => { pm.expect(problem).to.have.property('type'); pm.expect(problem).to.have.property('title'); pm.expect(problem).to.have.property('status');});"
                 ]
               }
             }
@@ -931,7 +1017,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "const problem = pm.response.json();pm.test('Problem Details format', () => { pm.expect(problem).to.have.property('type'); pm.expect(problem).to.have.property('title'); pm.expect(problem).to.have.property('status');});"
                 ]
               }
             }
@@ -948,7 +1035,10 @@
             "method": "POST",
             "url": "{{baseUrl}}/api/tasks",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -960,7 +1050,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status is 400', () => pm.response.to.have.status(400));"
+                  "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+                  "const problem = pm.response.json();pm.test('Problem Details format', () => { pm.expect(problem).to.have.property('type'); pm.expect(problem).to.have.property('title'); pm.expect(problem).to.have.property('status');});"
                 ]
               }
             }
@@ -972,7 +1063,10 @@
             "method": "POST",
             "url": "{{baseUrl}}/api/tasks",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -984,7 +1078,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status is 400 (rejects unknown properties)', () => pm.response.to.have.status(400));"
+                  "pm.test('Status is 400 (rejects unknown properties)', () => pm.response.to.have.status(400));",
+                  "const problem = pm.response.json();pm.test('Problem Details format', () => { pm.expect(problem).to.have.property('type'); pm.expect(problem).to.have.property('title'); pm.expect(problem).to.have.property('status');});"
                 ]
               }
             }
@@ -996,7 +1091,10 @@
             "method": "POST",
             "url": "{{baseUrl}}/api/tasks",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1008,7 +1106,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status is 400 (title too long)', () => pm.response.to.have.status(400));"
+                  "pm.test('Status is 400 (title too long)', () => pm.response.to.have.status(400));",
+                  "const problem = pm.response.json();pm.test('Problem Details format', () => { pm.expect(problem).to.have.property('type'); pm.expect(problem).to.have.property('title'); pm.expect(problem).to.have.property('status');});"
                 ]
               }
             }
@@ -1020,7 +1119,10 @@
             "method": "PATCH",
             "url": "{{baseUrl}}/api/tasks/00000000-0000-0000-0000-000000000000/status",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -1032,7 +1134,8 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status is 404', () => pm.response.to.have.status(404));"
+                  "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+                  "const problem = pm.response.json();pm.test('Problem Details format', () => { pm.expect(problem).to.have.property('type'); pm.expect(problem).to.have.property('title'); pm.expect(problem).to.have.property('status');});"
                 ]
               }
             }

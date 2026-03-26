@@ -1,10 +1,6 @@
-import { env } from '$env/dynamic/private';
 import { getMe } from '$lib/api/auth';
+import { getBaseUrl } from '$lib/server/config';
 import type { LayoutServerLoad } from './$types';
-
-function getBaseUrl(): string {
-	return env.API_BASE_URL ?? 'http://localhost:5001';
-}
 
 export const load: LayoutServerLoad = async ({ fetch, cookies }) => {
 	const hasCookie = cookies.get('demo-user');
@@ -12,6 +8,12 @@ export const load: LayoutServerLoad = async ({ fetch, cookies }) => {
 		return { user: null };
 	}
 
-	const user = await getMe(fetch, getBaseUrl());
+	const apiFetch: typeof fetch = (input, init) => {
+		const headers = new Headers(init?.headers);
+		headers.set('Cookie', `demo-user=${hasCookie}`);
+		return fetch(input, { ...init, headers });
+	};
+
+	const user = await getMe(apiFetch, getBaseUrl());
 	return { user };
 };

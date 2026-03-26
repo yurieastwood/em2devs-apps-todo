@@ -10,7 +10,7 @@ export const load: LayoutServerLoad = async ({ fetch, cookies }) => {
 
 	const apiFetch: typeof fetch = (input, init) => {
 		const headers = new Headers(init?.headers);
-		headers.set('Cookie', `demo-user=${hasCookie}`);
+		headers.set('X-Demo-User', 'true');
 		return fetch(input, { ...init, headers });
 	};
 

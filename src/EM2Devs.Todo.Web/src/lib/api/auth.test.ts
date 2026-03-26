@@ -32,7 +32,7 @@ describe('demoLogin', () => {
 	it('Should_CallPostEndpoint_When_LoginCalled', async () => {
 		const fetchMock = mockOk({ userId: '1', displayName: 'Demo User' });
 		await demoLogin(fetchMock, BASE);
-		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/auth/demo-login`), {
+		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/auth/login`), {
 			method: 'POST'
 		});
 	});

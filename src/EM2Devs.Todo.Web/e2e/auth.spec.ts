@@ -6,7 +6,7 @@ test.describe('Demo auth flow', () => {
 		await page.goto('/login');
 		await expect(page.getByRole('heading', { name: 'Welcome to Waypoint' })).toBeVisible();
 
-		await page.getByTestId('demo-login-button').click();
+		await page.getByTestId('login-button').click();
 		await page.waitForURL('/');
 		await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
 	});
@@ -19,8 +19,8 @@ test.describe('Demo auth flow', () => {
 
 		// Re-login should work
 		await page.goto('/login');
-		await expect(page.getByTestId('demo-login-button')).toBeVisible();
-		await page.getByTestId('demo-login-button').click();
+		await expect(page.getByTestId('login-button')).toBeVisible();
+		await page.getByTestId('login-button').click();
 		await page.waitForURL('/');
 		await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
 	});

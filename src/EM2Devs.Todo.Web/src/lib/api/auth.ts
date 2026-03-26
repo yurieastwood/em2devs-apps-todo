@@ -14,7 +14,7 @@ export async function demoLogin(
 	fetch: typeof globalThis.fetch,
 	baseUrl: string
 ): Promise<AuthUser> {
-	const url = new URL('/api/auth/demo-login', baseUrl);
+	const url = new URL('/api/auth/login', baseUrl);
 	const response = await fetch(url, { method: 'POST' });
 	return handleAuthResponse(response);
 }

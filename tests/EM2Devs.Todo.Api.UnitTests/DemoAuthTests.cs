@@ -27,7 +27,7 @@ public sealed class DemoAuthTests : IDisposable
     public async Task Should_ReturnDemoUser_When_DemoLoginCalled()
     {
         // When
-        HttpResponseMessage response = await _client.PostAsync("/api/auth/demo-login", null);
+        HttpResponseMessage response = await _client.PostAsync("/api/auth/login", null);
 
         // Then
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
@@ -40,7 +40,7 @@ public sealed class DemoAuthTests : IDisposable
     public async Task Should_SetCookie_When_DemoLoginCalled()
     {
         // When
-        HttpResponseMessage response = await _client.PostAsync("/api/auth/demo-login", null);
+        HttpResponseMessage response = await _client.PostAsync("/api/auth/login", null);
 
         // Then
         response.Headers.TryGetValues("Set-Cookie", out System.Collections.Generic.IEnumerable<string>? cookies).ShouldBeTrue();
@@ -62,7 +62,7 @@ public sealed class DemoAuthTests : IDisposable
     public async Task Should_ReturnCurrentUser_When_LoggedIn()
     {
         // Given
-        await _client.PostAsync("/api/auth/demo-login", null);
+        await _client.PostAsync("/api/auth/login", null);
 
         // When
         HttpResponseMessage response = await _client.GetAsync("/api/auth/me");
@@ -77,7 +77,7 @@ public sealed class DemoAuthTests : IDisposable
     public async Task Should_ReturnUnauthorized_When_LoggedOut()
     {
         // Given
-        await _client.PostAsync("/api/auth/demo-login", null);
+        await _client.PostAsync("/api/auth/login", null);
         await _client.PostAsync("/api/auth/logout", null);
 
         // When

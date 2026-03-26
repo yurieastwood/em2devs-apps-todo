@@ -1,6 +1,6 @@
 import { env } from '$env/dynamic/private';
 import { redirect } from '@sveltejs/kit';
-import { demoLogin } from '$lib/api/auth';
+import { login } from '$lib/api/auth';
 import type { Actions } from './$types';
 
 function getBaseUrl(): string {
@@ -9,7 +9,7 @@ function getBaseUrl(): string {
 
 export const actions: Actions = {
 	default: async ({ fetch, cookies }) => {
-		await demoLogin(fetch, getBaseUrl());
+		await login(fetch, getBaseUrl());
 		cookies.set('demo-user', 'true', { path: '/', httpOnly: true, sameSite: 'lax' });
 		throw redirect(303, '/');
 	}

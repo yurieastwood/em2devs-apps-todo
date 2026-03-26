@@ -16,7 +16,7 @@ public sealed class AuthController : ControllerBase
     public AuthController(ICurrentUser currentUser) => _currentUser = currentUser;
 
     [HttpPost("login")]
-    public IActionResult DemoLogin()
+    public IActionResult Login()
     {
         Response.Cookies.Append(DemoAuthMiddleware.CookieName, "true", new CookieOptions
         {

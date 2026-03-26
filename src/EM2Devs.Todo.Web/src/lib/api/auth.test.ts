@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { demoLogin, logout, getMe, type AuthUser } from './auth';
+import { login, logout, getMe, type AuthUser } from './auth';
 
 const BASE = 'http://localhost:5001';
 
@@ -19,20 +19,20 @@ function mockStatus(status: number) {
 	}) as unknown as typeof fetch;
 }
 
-describe('demoLogin', () => {
+describe('login', () => {
 	it('Should_ReturnDemoUser_When_LoginSucceeds', async () => {
 		const user: AuthUser = {
 			userId: '00000000-0000-0000-0000-000000000001',
 			displayName: 'Demo User'
 		};
-		const result = await demoLogin(mockOk(user), BASE);
+		const result = await login(mockOk(user), BASE);
 		expect(result).toEqual(user);
 	});
 
 	it('Should_CallPostEndpoint_When_LoginCalled', async () => {
 		const fetchMock = mockOk({ userId: '1', displayName: 'Demo User' });
-		await demoLogin(fetchMock, BASE);
-		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/auth/demo-login`), {
+		await login(fetchMock, BASE);
+		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/auth/login`), {
 			method: 'POST'
 		});
 	});

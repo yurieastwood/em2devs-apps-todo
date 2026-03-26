@@ -10,11 +10,8 @@ async function handleAuthResponse(response: Response): Promise<AuthUser> {
 	throw new Error(`Auth request failed with status ${response.status}`);
 }
 
-export async function demoLogin(
-	fetch: typeof globalThis.fetch,
-	baseUrl: string
-): Promise<AuthUser> {
-	const url = new URL('/api/auth/demo-login', baseUrl);
+export async function login(fetch: typeof globalThis.fetch, baseUrl: string): Promise<AuthUser> {
+	const url = new URL('/api/auth/login', baseUrl);
 	const response = await fetch(url, { method: 'POST' });
 	return handleAuthResponse(response);
 }

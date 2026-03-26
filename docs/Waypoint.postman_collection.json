@@ -36,10 +36,10 @@
       "name": "0. Auth",
       "item": [
         {
-          "name": "0.1 Demo login",
+          "name": "0.1 Login",
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/auth/demo-login",
+            "url": "{{baseUrl}}/api/auth/login",
             "header": [
               {
                 "key": "Content-Type",
@@ -125,7 +125,7 @@
           "name": "0.5 Re-login for remaining tests",
           "request": {
             "method": "POST",
-            "url": "{{baseUrl}}/api/auth/demo-login",
+            "url": "{{baseUrl}}/api/auth/login",
             "header": [
               {
                 "key": "Content-Type",

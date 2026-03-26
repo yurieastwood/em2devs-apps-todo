@@ -2,7 +2,7 @@ import { expect, type Page } from '@playwright/test';
 
 export async function loginAsDemoUser(page: Page) {
 	await page.goto('/login');
-	await page.getByTestId('demo-login-button').click();
+	await page.getByTestId('login-button').click();
 	await page.waitForURL('/');
 	await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
 }

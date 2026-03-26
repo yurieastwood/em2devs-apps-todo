@@ -128,7 +128,9 @@ Authentication, a basic frontend, and the core gamification loop (tasks â†’ XP â
 ### MVP Exit Criteria
 
 - [ ] User can sign in with Google/GitHub via Auth0
-- [x] Full task and quest management via the frontend
+- [x] Basic task create/complete/delete via the frontend
+- [x] Quest management via the frontend
+- [ ] Full task management (edit, filter, sort) via the frontend
 - [x] XP, level, and streak visible on progression dashboard
 - [ ] Real-time notifications on achievements
 - [x] PostgreSQL + Redis via Aspire

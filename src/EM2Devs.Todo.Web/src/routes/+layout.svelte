@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import favicon from '$lib/assets/favicon.svg';
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
@@ -33,7 +34,16 @@
 		</div>
 		<div class="nav-user">
 			<span class="user-name" data-testid="user-display-name">{user.displayName}</span>
-			<form method="POST" action="/logout" use:enhance>
+			<form
+				method="POST"
+				action="/logout"
+				use:enhance={() => {
+					return async ({ update }) => {
+						await invalidateAll();
+						await update();
+					};
+				}}
+			>
 				<button type="submit" class="btn-logout" data-testid="logout-button">Logout</button>
 			</form>
 		</div>

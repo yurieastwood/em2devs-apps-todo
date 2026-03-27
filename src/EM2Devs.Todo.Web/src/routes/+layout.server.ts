@@ -14,6 +14,10 @@ export const load: LayoutServerLoad = async ({ fetch, cookies }) => {
 		return fetch(input, { ...init, headers });
 	};
 
-	const user = await getMe(apiFetch, getBaseUrl());
-	return { user };
+	try {
+		const user = await getMe(apiFetch, getBaseUrl());
+		return { user };
+	} catch {
+		return { user: null };
+	}
 };

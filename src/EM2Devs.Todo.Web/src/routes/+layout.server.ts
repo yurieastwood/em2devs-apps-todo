@@ -17,7 +17,8 @@ export const load: LayoutServerLoad = async ({ fetch, cookies }) => {
 	try {
 		const user = await getMe(apiFetch, getBaseUrl());
 		return { user };
-	} catch {
+	} catch (error) {
+		console.error('Failed to load authenticated user:', error);
 		return { user: null };
 	}
 };

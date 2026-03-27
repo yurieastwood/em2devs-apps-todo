@@ -3,7 +3,6 @@
 	import { resolve } from '$app/paths';
 	import favicon from '$lib/assets/favicon.svg';
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
@@ -39,8 +38,7 @@
 				action="/logout"
 				use:enhance={() => {
 					return async ({ update }) => {
-						await invalidateAll();
-						await update();
+						await update({ invalidateAll: true });
 					};
 				}}
 			>

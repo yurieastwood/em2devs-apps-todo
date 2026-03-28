@@ -1,15 +1,10 @@
 import { test, expect } from '@playwright/test';
+import { loginAsDemoUser, logoutUser } from './helpers';
 
 test.describe('Auth navigation bar', () => {
-	test.beforeEach(async ({ page }) => {
-		// Start from login page
-		await page.goto('/login');
-	});
-
 	test('should show nav bar after login', async ({ page }) => {
-		// When — login
-		await page.getByTestId('login-button').click();
-		await page.waitForURL('/');
+		// When
+		await loginAsDemoUser(page);
 
 		// Then — nav bar is visible with all links
 		await expect(page.getByTestId('nav-tasks')).toBeVisible();
@@ -21,13 +16,10 @@ test.describe('Auth navigation bar', () => {
 
 	test('should hide nav bar after logout', async ({ page }) => {
 		// Given — logged in
-		await page.getByTestId('login-button').click();
-		await page.waitForURL('/');
-		await expect(page.getByTestId('nav-tasks')).toBeVisible();
+		await loginAsDemoUser(page);
 
-		// When — logout
-		await page.getByTestId('logout-button').click();
-		await page.waitForURL('/login');
+		// When
+		await logoutUser(page);
 
 		// Then — nav bar is not visible
 		await expect(page.getByTestId('nav-tasks')).not.toBeVisible();
@@ -37,9 +29,7 @@ test.describe('Auth navigation bar', () => {
 
 	test('should persist nav bar after page refresh while logged in', async ({ page }) => {
 		// Given — logged in
-		await page.getByTestId('login-button').click();
-		await page.waitForURL('/');
-		await expect(page.getByTestId('nav-tasks')).toBeVisible();
+		await loginAsDemoUser(page);
 
 		// When — refresh the page
 		await page.reload();
@@ -55,9 +45,7 @@ test.describe('Auth navigation bar', () => {
 		context
 	}) => {
 		// Given — logged in
-		await page.getByTestId('login-button').click();
-		await page.waitForURL('/');
-		await expect(page.getByTestId('nav-tasks')).toBeVisible();
+		await loginAsDemoUser(page);
 
 		// When — clear cookies and navigate
 		await context.clearCookies();
@@ -69,9 +57,8 @@ test.describe('Auth navigation bar', () => {
 	});
 
 	test('should display user name in nav bar', async ({ page }) => {
-		// When — login
-		await page.getByTestId('login-button').click();
-		await page.waitForURL('/');
+		// When
+		await loginAsDemoUser(page);
 
 		// Then — user display name is shown
 		const displayName = page.getByTestId('user-display-name');

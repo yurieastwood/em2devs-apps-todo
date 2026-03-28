@@ -74,6 +74,8 @@ builder.Services.AddTransient<IRequestHandler<ListEpicsQuery, Result<IReadOnlyLi
 
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.XpAwardHandler>();
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskStatusChangedEvent>,
+    EM2Devs.Todo.Application.Events.QuestProgressHandler>();
 
 // FluentValidation + pipeline behavior (ADR-018)
 builder.Services.AddValidatorsFromAssemblyContaining<CreateTaskCommandValidator>();

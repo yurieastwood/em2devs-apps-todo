@@ -28,7 +28,7 @@ public sealed class QuestProgressHandlerTests
         Quest quest = Quest.Create(new QuestTitle("Test quest"), "desc");
         quest.AddTask(task);
 
-        _questRepo.GetAllAsync(Arg.Any<CancellationToken>())
+        _questRepo.GetByTaskIdAsync(task.Id, Arg.Any<CancellationToken>())
             .Returns(new List<Quest> { quest }.AsReadOnly());
 
         TaskStatusChangedEvent evt = new(task.Id, TaskStatus.InProgress);
@@ -45,12 +45,12 @@ public sealed class QuestProgressHandlerTests
     public async Task Should_NotSaveQuest_When_TaskNotInAnyQuest()
     {
         // Given
-        Quest quest = Quest.Create(new QuestTitle("Empty quest"), "desc");
+        TaskId orphanTaskId = new(Guid.NewGuid());
 
-        _questRepo.GetAllAsync(Arg.Any<CancellationToken>())
-            .Returns(new List<Quest> { quest }.AsReadOnly());
+        _questRepo.GetByTaskIdAsync(orphanTaskId, Arg.Any<CancellationToken>())
+            .Returns(new List<Quest>().AsReadOnly());
 
-        TaskStatusChangedEvent evt = new(new TaskId(Guid.NewGuid()), TaskStatus.Done);
+        TaskStatusChangedEvent evt = new(orphanTaskId, TaskStatus.Done);
 
         // When
         await _handler.Handle(evt, CancellationToken.None);

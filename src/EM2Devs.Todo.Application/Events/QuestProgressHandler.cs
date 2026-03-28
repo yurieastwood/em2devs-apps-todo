@@ -21,14 +21,12 @@ public sealed class QuestProgressHandler : INotificationHandler<TaskStatusChange
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        IReadOnlyList<Quest> quests = await _questRepository.GetAllAsync(ct).ConfigureAwait(false);
+        IReadOnlyList<Quest> affectedQuests = await _questRepository
+            .GetByTaskIdAsync(notification.TaskId, ct).ConfigureAwait(false);
 
-        foreach (Quest quest in quests)
+        foreach (Quest quest in affectedQuests)
         {
-            if (quest.Tasks.Any(t => t.Id == notification.TaskId))
-            {
-                await _questRepository.SaveAsync(quest, ct).ConfigureAwait(false);
-            }
+            await _questRepository.SaveAsync(quest, ct).ConfigureAwait(false);
         }
     }
 }

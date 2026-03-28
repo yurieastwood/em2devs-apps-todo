@@ -8,6 +8,8 @@ export const load: LayoutServerLoad = async ({ fetch, cookies }) => {
 		return { user: null };
 	}
 
+	const baseUrl = getBaseUrl();
+
 	const apiFetch: typeof fetch = (input, init) => {
 		const headers = new Headers(init?.headers);
 		headers.set('X-Demo-User', 'true');
@@ -15,10 +17,10 @@ export const load: LayoutServerLoad = async ({ fetch, cookies }) => {
 	};
 
 	try {
-		const user = await getMe(apiFetch, getBaseUrl());
+		const user = await getMe(apiFetch, baseUrl);
 		return { user };
 	} catch (error) {
-		console.error('[layout] getMe failed for URL:', getBaseUrl(), error);
+		console.error('[layout] getMe failed for URL:', baseUrl, error);
 		return { user: null };
 	}
 };

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
 </script>
 
 <svelte:head>
@@ -15,8 +14,7 @@
 			method="POST"
 			use:enhance={() => {
 				return async ({ update }) => {
-					await invalidateAll();
-					await update();
+					await update({ invalidateAll: true });
 				};
 			}}
 		>

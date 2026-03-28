@@ -7,6 +7,11 @@ export async function loginAsDemoUser(page: Page) {
 	await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
 }
 
+export async function logoutUser(page: Page) {
+	await page.getByTestId('logout-button').click();
+	await page.waitForURL('/login');
+}
+
 export async function createTask(page: Page, title: string) {
 	await page.getByTestId('task-title-input').fill(title);
 	await page.getByTestId('add-task-button').click();

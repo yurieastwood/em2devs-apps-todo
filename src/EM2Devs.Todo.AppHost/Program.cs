@@ -17,6 +17,7 @@ var api = builder.AddProject<Projects.EM2Devs_Todo_Api>("api")
 builder.AddNpmApp("web", "../EM2Devs.Todo.Web", "dev")
     .WithNpmPackageInstallation()
     .WithHttpEndpoint(port: 5173, env: "PORT")
+    .WithEnvironment("NODE_ENV", builder.Environment.EnvironmentName.ToLowerInvariant())
     .WithEnvironment("API_BASE_URL", api.GetEndpoint("http"))
     .WithReference(api)
     .WaitFor(api);

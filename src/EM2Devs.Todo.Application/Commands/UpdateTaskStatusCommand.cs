@@ -63,6 +63,8 @@ public sealed class UpdateTaskStatusCommandHandler : IRequestHandler<UpdateTaskS
 
         await _repository.SaveAsync(task, ct).ConfigureAwait(false);
 
+        await _mediator.Publish(new TaskStatusChangedEvent(task.Id, targetStatus), ct).ConfigureAwait(false);
+
         if (targetStatus == TaskStatus.Done)
         {
             await _mediator.Publish(

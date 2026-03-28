@@ -22,6 +22,16 @@ public sealed class InMemoryQuestRepository : IQuestRepository
         return Task.FromResult(quests);
     }
 
+    public Task<IReadOnlyList<Quest>> GetByTaskIdAsync(TaskId taskId, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(taskId);
+        IReadOnlyList<Quest> quests = _store.Values
+            .Where(q => q.Tasks.Any(t => t.Id == taskId))
+            .ToList()
+            .AsReadOnly();
+        return Task.FromResult(quests);
+    }
+
     public Task SaveAsync(Quest quest, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(quest);

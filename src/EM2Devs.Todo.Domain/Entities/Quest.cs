@@ -53,6 +53,19 @@ public sealed class Quest
         _tasks.Add(task);
     }
 
+    public void ReplaceTask(TodoTask updatedTask)
+    {
+        ArgumentNullException.ThrowIfNull(updatedTask);
+
+        int index = _tasks.FindIndex(t => t.Id == updatedTask.Id);
+        if (index < 0)
+        {
+            throw new DomainException($"Task with id '{updatedTask.Id.Value}' is not assigned to this quest.");
+        }
+
+        _tasks[index] = updatedTask;
+    }
+
     public void RemoveTask(TaskId taskId)
     {
         ArgumentNullException.ThrowIfNull(taskId);

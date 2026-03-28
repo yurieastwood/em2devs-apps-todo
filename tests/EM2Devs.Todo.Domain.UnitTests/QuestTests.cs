@@ -386,4 +386,46 @@ public sealed class QuestTests
 
         return quest;
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReplaceTask_When_TaskExistsInQuest()
+    {
+        // Given — quest with one task (at index 0)
+        Quest quest = CreateQuest();
+        TodoTask task = TodoTask.Create(new TaskTitle("Original"));
+        quest.AddTask(task);
+        quest.Tasks[0].Status.ShouldBe(TaskStatus.Todo);
+
+        // When — replace with same task after status change
+        task.MoveToInProgress();
+        quest.ReplaceTask(task);
+
+        // Then
+        quest.Tasks[0].Status.ShouldBe(TaskStatus.InProgress);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_ReplacingTaskNotInQuest()
+    {
+        // Given
+        Quest quest = CreateQuest();
+        TodoTask orphan = TodoTask.Create(new TaskTitle("Not in quest"));
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => quest.ReplaceTask(orphan));
+        ex.Message.ShouldContain("is not assigned to this quest");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_ReplacingWithNull()
+    {
+        // Given
+        Quest quest = CreateQuest();
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => quest.ReplaceTask(null!));
+    }
 }

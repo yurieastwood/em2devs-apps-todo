@@ -9,6 +9,7 @@ test.describe('Demo auth flow', () => {
 		await page.getByTestId('login-button').click();
 		await page.waitForURL('/');
 		await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();
+		await expect(page.getByTestId('nav-tasks')).toBeVisible();
 	});
 
 	test('should allow re-login after cookies are cleared', async ({ page, context }) => {

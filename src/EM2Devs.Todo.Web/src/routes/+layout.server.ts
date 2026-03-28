@@ -10,7 +10,7 @@ export const load: LayoutServerLoad = async ({ fetch, cookies }) => {
 
 	const apiFetch: typeof fetch = (input, init) => {
 		const headers = new Headers(init?.headers);
-		headers.set('Cookie', `demo-user=${hasCookie}`);
+		headers.set('X-Demo-User', 'true');
 		return fetch(input, { ...init, headers });
 	};
 
@@ -18,7 +18,7 @@ export const load: LayoutServerLoad = async ({ fetch, cookies }) => {
 		const user = await getMe(apiFetch, getBaseUrl());
 		return { user };
 	} catch (error) {
-		console.error('Failed to load authenticated user:', error);
+		console.error('[layout] getMe failed for URL:', getBaseUrl(), error);
 		return { user: null };
 	}
 };

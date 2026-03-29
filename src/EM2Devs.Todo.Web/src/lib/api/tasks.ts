@@ -1,7 +1,19 @@
 export interface Task {
 	id: string;
 	title: string;
+	description: string | null;
 	status: 'Todo' | 'InProgress' | 'Done';
+	difficulty: string;
+	dueDate: string | null;
+	completedAt: string | null;
+}
+
+export interface UpdateTaskFields {
+	title?: string;
+	description?: string;
+	difficulty?: string;
+	dueDate?: string;
+	clearDueDate?: boolean;
 }
 
 export interface ProblemDetails {
@@ -77,6 +89,31 @@ export async function updateTaskStatus(
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ status })
 	});
+	return handleResponse<Task>(response);
+}
+
+export async function updateTask(
+	fetch: typeof globalThis.fetch,
+	baseUrl: string,
+	taskId: string,
+	fields: UpdateTaskFields
+): Promise<Task> {
+	const url = new URL(`/api/tasks/${taskId}`, baseUrl);
+	const response = await fetch(url, {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(fields)
+	});
+	return handleResponse<Task>(response);
+}
+
+export async function reopenTask(
+	fetch: typeof globalThis.fetch,
+	baseUrl: string,
+	taskId: string
+): Promise<Task> {
+	const url = new URL(`/api/tasks/${taskId}/reopen`, baseUrl);
+	const response = await fetch(url, { method: 'PATCH' });
 	return handleResponse<Task>(response);
 }
 

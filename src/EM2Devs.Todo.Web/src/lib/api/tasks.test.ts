@@ -24,8 +24,24 @@ const BASE = 'http://localhost:5001';
 describe('listTasks', () => {
 	it('returns tasks from the API', async () => {
 		const expected: Task[] = [
-			{ id: '1', title: 'Write tests', status: 'Todo' },
-			{ id: '2', title: 'Ship feature', status: 'InProgress' }
+			{
+				id: '1',
+				title: 'Write tests',
+				description: null,
+				status: 'Todo',
+				difficulty: 'Normal',
+				dueDate: null,
+				completedAt: null
+			},
+			{
+				id: '2',
+				title: 'Ship feature',
+				description: null,
+				status: 'InProgress',
+				difficulty: 'Normal',
+				dueDate: null,
+				completedAt: null
+			}
 		];
 
 		const result = await listTasks(mockOk(expected), BASE);
@@ -46,7 +62,15 @@ describe('listTasks', () => {
 
 describe('createTask', () => {
 	it('creates a task and returns it', async () => {
-		const created: Task = { id: '1', title: 'New task', status: 'Todo' };
+		const created: Task = {
+			id: '1',
+			title: 'New task',
+			description: null,
+			status: 'Todo',
+			difficulty: 'Normal',
+			dueDate: null,
+			completedAt: null
+		};
 		const fetchMock = mockOk(created);
 
 		const result = await createTask(fetchMock, BASE, 'New task');
@@ -80,7 +104,15 @@ describe('createTask', () => {
 
 describe('updateTaskStatus', () => {
 	it('updates task status and returns updated task', async () => {
-		const updated: Task = { id: '1', title: 'My task', status: 'InProgress' };
+		const updated: Task = {
+			id: '1',
+			title: 'My task',
+			description: null,
+			status: 'InProgress',
+			difficulty: 'Normal',
+			dueDate: null,
+			completedAt: null
+		};
 		const fetchMock = mockOk(updated);
 
 		const result = await updateTaskStatus(fetchMock, BASE, '1', 'InProgress');

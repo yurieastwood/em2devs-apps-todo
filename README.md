@@ -100,7 +100,7 @@ The Aspire dashboard is available at the URL printed in the console (e.g., `http
 
 ### Applying Database Migrations
 
-Migrations are not applied automatically at startup (see [ADR-020](docs/decisions/20260305-020-db-migrations.md)). After starting the AppHost for the first time, apply them manually:
+Migrations are applied automatically at startup when `AUTO_MIGRATE=true` is set by the AppHost (see [ADR-020](docs/decisions/20260305-020-db-migrations.md)). To apply them manually instead:
 
 1. Open the Aspire dashboard and find the **postgres** resource to get the connection details (host, port, password)
 2. Restore local tools and apply the migration:

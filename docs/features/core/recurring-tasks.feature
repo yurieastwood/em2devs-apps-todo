@@ -9,7 +9,7 @@ Feature: Recurring Tasks and Quest Chains
 
   Rule: Recurring tasks regenerate on a defined schedule
 
-    @wip
+    @done
     Scenario: Create a daily recurring task
       When I create a recurring task with the following details:
         | Field      | Value                |
@@ -19,7 +19,7 @@ Feature: Recurring Tasks and Quest Chains
       Then the task should appear in my Today view each day at 08:30
       And each instance should be a separate completable task
 
-    @wip
+    @done
     Scenario: Create a weekly recurring task
       When I create a recurring task with the following details:
         | Field      | Value              |
@@ -28,7 +28,7 @@ Feature: Recurring Tasks and Quest Chains
       Then the task should appear every Sunday
       And completing one instance should not affect future instances
 
-    @wip
+    @done
     Scenario: Create a monthly recurring task
       When I create a recurring task with the following details:
         | Field      | Value                      |
@@ -46,7 +46,7 @@ Feature: Recurring Tasks and Quest Chains
       Then the task should appear every Friday until 2026-06-30
       And no instances should be generated after the end date
 
-    @wip
+    @done
     Scenario: Complete a recurring task instance
       Given I have a daily recurring task "Morning standup prep"
       And today's instance is open
@@ -65,7 +65,7 @@ Feature: Recurring Tasks and Quest Chains
       And I should receive XP with an overdue penalty applied
       And my streak should be broken
 
-    @wip
+    @done
     Scenario: Skip a recurring task instance
       Given I have a daily recurring task "Morning standup prep"
       And today's instance is open
@@ -75,7 +75,7 @@ Feature: Recurring Tasks and Quest Chains
       And the streak counter should freeze at its current value
       And the skip should appear in my recurring task history
 
-    @wip
+    @done
     Scenario: Pause a recurring task
       Given I have a weekly recurring task "Team retrospective"
       When I pause the recurring task
@@ -83,14 +83,14 @@ Feature: Recurring Tasks and Quest Chains
       And existing uncompleted instances should remain
       And the task should show a "Paused" status
 
-    @wip
+    @done
     Scenario: Resume a paused recurring task
       Given I have a paused recurring task "Team retrospective"
       When I resume the recurring task
       Then new instances should begin generating again
       And the streak counter should resume from where it was paused
 
-    @wip
+    @done
     Scenario: Edit all future instances of a recurring task
       Given I have a daily recurring task "Check email" at 09:00
       When I edit the recurring task time to 08:00
@@ -98,7 +98,7 @@ Feature: Recurring Tasks and Quest Chains
       Then all future instances should be scheduled at 08:00
       And past instances should remain unchanged
 
-    @wip
+    @done
     Scenario: Delete a recurring task
       Given I have a weekly recurring task "Water plants"
       When I delete the recurring task
@@ -107,7 +107,7 @@ Feature: Recurring Tasks and Quest Chains
       And completed past instances should remain in my history
       And the XP earned from past instances should be retained
 
-    @wip
+    @done
     Scenario: Handle overlapping recurring task instances
       Given I have a daily recurring task "Morning standup prep"
       And yesterday's instance is still open

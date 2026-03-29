@@ -91,4 +91,88 @@ public sealed class RecurringTaskTests
         // Then
         first.Id.ShouldNotBe(second.Id);
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_BeActiveByDefault_When_Created()
+    {
+        // When
+        RecurringTask recurring = RecurringTask.Create(
+            new TaskTitle("Active task"), RecurrencePattern.Daily);
+
+        // Then
+        recurring.IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_BecomeInactive_When_Paused()
+    {
+        // Given
+        RecurringTask recurring = RecurringTask.Create(
+            new TaskTitle("Pausable"), RecurrencePattern.Daily);
+
+        // When
+        recurring.Pause();
+
+        // Then
+        recurring.IsActive.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_BecomeActive_When_Resumed()
+    {
+        // Given
+        RecurringTask recurring = RecurringTask.Create(
+            new TaskTitle("Resumable"), RecurrencePattern.Daily);
+        recurring.Pause();
+
+        // When
+        recurring.Resume();
+
+        // Then
+        recurring.IsActive.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_PausingAlreadyPaused()
+    {
+        // Given
+        RecurringTask recurring = RecurringTask.Create(
+            new TaskTitle("Already paused"), RecurrencePattern.Daily);
+        recurring.Pause();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => recurring.Pause());
+        ex.Message.ShouldContain("already paused");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_ResumingAlreadyActive()
+    {
+        // Given
+        RecurringTask recurring = RecurringTask.Create(
+            new TaskTitle("Already active"), RecurrencePattern.Daily);
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => recurring.Resume());
+        ex.Message.ShouldContain("already active");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_GeneratingFromPausedTask()
+    {
+        // Given
+        RecurringTask recurring = RecurringTask.Create(
+            new TaskTitle("Paused gen"), RecurrencePattern.Daily);
+        recurring.Pause();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => recurring.GenerateNextInstance());
+        ex.Message.ShouldContain("paused");
+    }
 }

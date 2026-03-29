@@ -31,6 +31,11 @@
 				data-testid="nav-epics">Epics</a
 			>
 			<a
+				href={resolve('/recurring')}
+				class:active={page.url.pathname === '/recurring'}
+				data-testid="nav-recurring">Recurring</a
+			>
+			<a
 				href={resolve('/dashboard')}
 				class:active={page.url.pathname === '/dashboard'}
 				data-testid="nav-dashboard">Dashboard</a

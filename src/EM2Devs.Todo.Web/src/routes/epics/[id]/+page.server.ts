@@ -11,6 +11,12 @@ import { ApiError } from '$lib/api/tasks';
 import { getBaseUrl } from '$lib/server/config';
 import type { Actions, PageServerLoad } from './$types';
 
+function failFromError(e: unknown, fallbackMessage: string, action: string) {
+	const status = e instanceof ApiError ? (e.problem.status ?? 500) : 500;
+	const message = e instanceof ApiError ? e.problem.detail : fallbackMessage;
+	return fail(status, { action, error: message });
+}
+
 export const load: PageServerLoad = async ({ fetch, params }) => {
 	let epic;
 	try {
@@ -46,8 +52,7 @@ export const actions: Actions = {
 			await assignQuestToEpic(fetch, getBaseUrl(), params.id, questId);
 			return { action: 'assignQuest', success: true };
 		} catch (e) {
-			const message = e instanceof ApiError ? e.problem.detail : 'Failed to assign quest';
-			return fail(500, { action: 'assignQuest', error: message });
+			return failFromError(e, 'Failed to assign quest', 'assignQuest');
 		}
 	},
 
@@ -55,12 +60,15 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const questId = formData.get('questId')?.toString() ?? '';
 
+		if (!questId) {
+			return fail(400, { action: 'removeQuest', error: 'Quest ID is required.' });
+		}
+
 		try {
 			await removeQuestFromEpic(fetch, getBaseUrl(), params.id, questId);
 			return { action: 'removeQuest', success: true };
 		} catch (e) {
-			const message = e instanceof ApiError ? e.problem.detail : 'Failed to remove quest';
-			return fail(500, { action: 'removeQuest', error: message });
+			return failFromError(e, 'Failed to remove quest', 'removeQuest');
 		}
 	},
 
@@ -69,8 +77,7 @@ export const actions: Actions = {
 			await completeEpic(fetch, getBaseUrl(), params.id);
 			return { action: 'complete', success: true };
 		} catch (e) {
-			const message = e instanceof ApiError ? e.problem.detail : 'Failed to complete epic';
-			return fail(409, { action: 'complete', error: message });
+			return failFromError(e, 'Failed to complete epic', 'complete');
 		}
 	},
 
@@ -78,8 +85,7 @@ export const actions: Actions = {
 		try {
 			await deleteEpic(fetch, getBaseUrl(), params.id);
 		} catch (e) {
-			const message = e instanceof ApiError ? e.problem.detail : 'Failed to delete epic';
-			return fail(500, { action: 'delete', error: message });
+			return failFromError(e, 'Failed to delete epic', 'delete');
 		}
 		throw redirect(303, '/epics');
 	}

@@ -9,6 +9,7 @@
 
 	let actionInFlight = $state<string | null>(null);
 	let notification = $state<string | null>(null);
+	let selectedQuestId = $state('');
 
 	let actionError = $derived(form?.error ? String(form.error) : null);
 
@@ -64,17 +65,22 @@
 				action="?/assignQuest"
 				use:enhance={() => {
 					actionInFlight = 'assign';
-					return async ({ update }) => {
+					return async ({ update, result }) => {
 						try {
 							await update();
 						} finally {
 							actionInFlight = null;
+							if (result.type === 'success') selectedQuestId = '';
 						}
 					};
 				}}
 				class="assign-form"
 			>
-				<select name="questId" disabled={actionInFlight === 'assign'}>
+				<select
+					name="questId"
+					bind:value={selectedQuestId}
+					disabled={actionInFlight === 'assign'}
+				>
 					<option value="">Select a quest to assign...</option>
 					{#each availableQuests as quest (quest.id)}
 						<option value={quest.id}>{quest.title} ({quest.progress}%)</option>
@@ -82,7 +88,7 @@
 				</select>
 				<button
 					type="submit"
-					disabled={actionInFlight === 'assign'}
+					disabled={actionInFlight === 'assign' || !selectedQuestId}
 					data-testid="assign-quest-button"
 				>
 					{actionInFlight === 'assign' ? 'Assigning...' : 'Assign'}

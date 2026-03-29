@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { ApiError } from './tasks';
 import {
 	listEpics,
 	createEpic,
@@ -110,5 +111,51 @@ describe('deleteEpic', () => {
 		expect(fetch).toHaveBeenCalledWith(new URL('http://localhost:5001/api/epics/1'), {
 			method: 'DELETE'
 		});
+	});
+});
+
+describe('error handling', () => {
+	const problemDetails = {
+		type: 'https://tools.ietf.org/html/rfc9110#section-15.5.5',
+		title: 'Not Found',
+		status: 404,
+		detail: 'Epic not found'
+	};
+
+	function mockErrorFetch() {
+		return vi.fn().mockResolvedValue({
+			ok: false,
+			status: 404,
+			headers: new Headers({ 'content-type': 'application/problem+json' }),
+			json: () => Promise.resolve(problemDetails)
+		});
+	}
+
+	it('throws ApiError on failed listEpics', async () => {
+		const fetch = mockErrorFetch();
+		await expect(listEpics(fetch as unknown as typeof globalThis.fetch, BASE)).rejects.toThrow(
+			ApiError
+		);
+	});
+
+	it('throws ApiError on failed getEpic', async () => {
+		const fetch = mockErrorFetch();
+		await expect(
+			getEpic(fetch as unknown as typeof globalThis.fetch, BASE, '1')
+		).rejects.toThrow(ApiError);
+	});
+
+	it('throws ApiError on failed createEpic', async () => {
+		const fetch = mockErrorFetch();
+		await expect(
+			createEpic(fetch as unknown as typeof globalThis.fetch, BASE, 'title', 'desc')
+		).rejects.toThrow(ApiError);
+	});
+
+	it('throws ApiError on failed deleteEpic', async () => {
+		const fetch = mockErrorFetch();
+		await expect(
+			deleteEpic(fetch as unknown as typeof globalThis.fetch, BASE, '1')
+		).rejects.toThrow(ApiError);
 	});
 });

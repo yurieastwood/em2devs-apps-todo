@@ -56,7 +56,8 @@ public sealed class UpdateTaskCommandHandler : IRequestHandler<UpdateTaskCommand
 
         if (request.Difficulty is not null)
         {
-            if (!Enum.TryParse<TaskDifficulty>(request.Difficulty, out TaskDifficulty difficulty))
+            if (!Enum.TryParse<TaskDifficulty>(request.Difficulty, out TaskDifficulty difficulty) ||
+                !Enum.IsDefined(difficulty))
             {
                 return new ValidationError($"Invalid difficulty '{request.Difficulty}'.");
             }

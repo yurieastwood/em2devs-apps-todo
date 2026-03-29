@@ -41,6 +41,7 @@ builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRep
 // TODO: Add conditional Postgres/InMemory registration (like ITaskRepository) when persistence is implemented
 builder.Services.AddSingleton<IQuestRepository, InMemoryQuestRepository>();
 builder.Services.AddSingleton<IEpicRepository, InMemoryEpicRepository>();
+builder.Services.AddSingleton<IRecurringTaskRepository, InMemoryRecurringTaskRepository>();
 
 builder.Services.AddScoped<DemoCurrentUser>();
 builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<DemoCurrentUser>());
@@ -73,6 +74,15 @@ builder.Services.AddTransient<IRequestHandler<CompleteEpicCommand, Result<Epic>>
 builder.Services.AddTransient<IRequestHandler<DeleteEpicCommand, Result<bool>>, DeleteEpicCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<GetEpicQuery, Result<Epic>>, GetEpicQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<ListEpicsQuery, Result<IReadOnlyList<Epic>>>, ListEpicsQueryHandler>();
+
+// Recurring task CQRS handlers
+builder.Services.AddTransient<IRequestHandler<CreateRecurringTaskCommand, Result<RecurringTask>>, CreateRecurringTaskCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<GenerateInstancesCommand, Result<TodoTask>>, GenerateInstancesCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<PauseRecurringTaskCommand, Result<RecurringTask>>, PauseRecurringTaskCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<ResumeRecurringTaskCommand, Result<RecurringTask>>, ResumeRecurringTaskCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<DeleteRecurringTaskCommand, Result<bool>>, DeleteRecurringTaskCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<GetRecurringTaskQuery, Result<RecurringTask>>, GetRecurringTaskQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<ListRecurringTasksQuery, Result<IReadOnlyList<RecurringTask>>>, ListRecurringTasksQueryHandler>();
 
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.XpAwardHandler>();

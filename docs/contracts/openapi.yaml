@@ -330,13 +330,16 @@ components:
       properties:
         title:
           type: string
+          nullable: true
           minLength: 1
           maxLength: 200
           pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
         description:
           type: string
+          nullable: true
         difficulty:
           type: string
+          nullable: true
           enum:
             - Trivial
             - Easy
@@ -346,6 +349,7 @@ components:
         dueDate:
           type: string
           format: date-time
+          nullable: true
         clearDueDate:
           type: boolean
     TaskResponse:

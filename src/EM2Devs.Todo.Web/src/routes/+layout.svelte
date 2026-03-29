@@ -26,6 +26,11 @@
 				data-testid="nav-quests">Quests</a
 			>
 			<a
+				href={resolve('/epics')}
+				class:active={page.url.pathname.startsWith('/epics')}
+				data-testid="nav-epics">Epics</a
+			>
+			<a
 				href={resolve('/dashboard')}
 				class:active={page.url.pathname === '/dashboard'}
 				data-testid="nav-dashboard">Dashboard</a

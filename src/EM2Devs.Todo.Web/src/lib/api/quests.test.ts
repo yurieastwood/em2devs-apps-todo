@@ -1,5 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
-import { listQuests, createQuest, getQuest, deleteQuest, type Quest } from './quests';
+import {
+	listQuests,
+	createQuest,
+	getQuest,
+	deleteQuest,
+	addTaskToQuest,
+	removeTaskFromQuest,
+	type Quest
+} from './quests';
 import { ApiError } from './tasks';
 
 const BASE = 'http://localhost:5001';
@@ -131,5 +139,75 @@ describe('deleteQuest', () => {
 		};
 
 		await expect(deleteQuest(mockError(404, problem), BASE, 'xyz')).rejects.toThrow(ApiError);
+	});
+});
+
+describe('addTaskToQuest', () => {
+	it('Should_ReturnUpdatedQuest_When_TaskAdded', async () => {
+		const quest: Quest = {
+			id: '1',
+			title: 'Quest',
+			description: 'Desc',
+			dueDate: null,
+			progress: 0,
+			tasks: [{ id: 't1', title: 'Added task', status: 'Todo' }]
+		};
+		const fetchMock = mockOk(quest);
+
+		const result = await addTaskToQuest(fetchMock, BASE, '1', 't1');
+
+		expect(result.tasks).toHaveLength(1);
+		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/quests/1/tasks`), {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ taskId: 't1' })
+		});
+	});
+
+	it('Should_ThrowApiError_When_TaskAlreadyAssigned', async () => {
+		const problem = {
+			type: 'https://tools.ietf.org/html/rfc9457',
+			title: 'Conflict',
+			status: 409,
+			detail: 'Task is already assigned'
+		};
+
+		await expect(addTaskToQuest(mockError(409, problem), BASE, '1', 't1')).rejects.toThrow(
+			ApiError
+		);
+	});
+});
+
+describe('removeTaskFromQuest', () => {
+	it('Should_ReturnUpdatedQuest_When_TaskRemoved', async () => {
+		const quest: Quest = {
+			id: '1',
+			title: 'Quest',
+			description: 'Desc',
+			dueDate: null,
+			progress: 0,
+			tasks: []
+		};
+		const fetchMock = mockOk(quest);
+
+		const result = await removeTaskFromQuest(fetchMock, BASE, '1', 't1');
+
+		expect(result.tasks).toHaveLength(0);
+		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/quests/1/tasks/t1`), {
+			method: 'DELETE'
+		});
+	});
+
+	it('Should_ThrowApiError_When_TaskNotAssigned', async () => {
+		const problem = {
+			type: 'https://tools.ietf.org/html/rfc9457',
+			title: 'Not found',
+			status: 404,
+			detail: 'Task not assigned to quest'
+		};
+
+		await expect(
+			removeTaskFromQuest(mockError(404, problem), BASE, '1', 'xyz')
+		).rejects.toThrow(ApiError);
 	});
 });

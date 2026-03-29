@@ -49,6 +49,32 @@ export async function getQuest(
 	return handleResponse<Quest>(response);
 }
 
+export async function addTaskToQuest(
+	fetch: typeof globalThis.fetch,
+	baseUrl: string,
+	questId: string,
+	taskId: string
+): Promise<Quest> {
+	const url = new URL(`/api/quests/${questId}/tasks`, baseUrl);
+	const response = await fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ taskId })
+	});
+	return handleResponse<Quest>(response);
+}
+
+export async function removeTaskFromQuest(
+	fetch: typeof globalThis.fetch,
+	baseUrl: string,
+	questId: string,
+	taskId: string
+): Promise<Quest> {
+	const url = new URL(`/api/quests/${questId}/tasks/${taskId}`, baseUrl);
+	const response = await fetch(url, { method: 'DELETE' });
+	return handleResponse<Quest>(response);
+}
+
 export async function deleteQuest(
 	fetch: typeof globalThis.fetch,
 	baseUrl: string,

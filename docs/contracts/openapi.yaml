@@ -78,6 +78,38 @@ paths:
           description: Invalid task ID format
         "404":
           description: Task not found
+    patch:
+      operationId: updateTask
+      summary: Update a task's fields
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskRequest"
+      responses:
+        "200":
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
+        "404":
+          description: Task not found
     delete:
       operationId: deleteTask
       summary: Delete a task by ID
@@ -133,6 +165,33 @@ paths:
           description: Invalid task ID format in path
         "409":
           description: Status transition conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /api/tasks/{taskId}/reopen:
+    patch:
+      operationId: reopenTask
+      summary: Re-open a completed task
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+            pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+      responses:
+        "200":
+          description: Task re-opened
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "404":
+          description: Task not found
+        "409":
+          description: Task is not completed
           content:
             application/problem+json:
               schema:
@@ -265,21 +324,71 @@ components:
         finalXp:
           type: integer
           minimum: 1
+    UpdateTaskRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 200
+          pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
+        description:
+          type: string
+          nullable: true
+        difficulty:
+          type: string
+          nullable: true
+          enum:
+            - Trivial
+            - Easy
+            - Normal
+            - Hard
+            - Epic
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+          pattern: "^[1-9]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-](0[0-9]|1[0-4]):\\d{2})$"
+        clearDueDate:
+          type: boolean
     TaskResponse:
       type: object
       required:
         - id
         - title
         - status
+        - difficulty
       properties:
         id:
           type: string
           format: uuid
         title:
           type: string
+        description:
+          type: string
+          nullable: true
         status:
           type: string
           enum:
             - Todo
             - InProgress
             - Done
+        difficulty:
+          type: string
+          enum:
+            - Trivial
+            - Easy
+            - Normal
+            - Hard
+            - Epic
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+          pattern: "^[1-9]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|[+-](0[0-9]|1[0-4]):\\d{2})$"
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true

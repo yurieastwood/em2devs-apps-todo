@@ -1,5 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
-import { listTasks, createTask, updateTaskStatus, deleteTask, ApiError, type Task } from './tasks';
+import {
+	listTasks,
+	createTask,
+	updateTaskStatus,
+	updateTask,
+	reopenTask,
+	deleteTask,
+	ApiError,
+	type Task
+} from './tasks';
 
 function mockOk<T>(data: T, contentType = 'application/json') {
 	return vi.fn().mockResolvedValue({
@@ -24,8 +33,24 @@ const BASE = 'http://localhost:5001';
 describe('listTasks', () => {
 	it('returns tasks from the API', async () => {
 		const expected: Task[] = [
-			{ id: '1', title: 'Write tests', status: 'Todo' },
-			{ id: '2', title: 'Ship feature', status: 'InProgress' }
+			{
+				id: '1',
+				title: 'Write tests',
+				description: null,
+				status: 'Todo',
+				difficulty: 'Normal',
+				dueDate: null,
+				completedAt: null
+			},
+			{
+				id: '2',
+				title: 'Ship feature',
+				description: null,
+				status: 'InProgress',
+				difficulty: 'Normal',
+				dueDate: null,
+				completedAt: null
+			}
 		];
 
 		const result = await listTasks(mockOk(expected), BASE);
@@ -46,7 +71,15 @@ describe('listTasks', () => {
 
 describe('createTask', () => {
 	it('creates a task and returns it', async () => {
-		const created: Task = { id: '1', title: 'New task', status: 'Todo' };
+		const created: Task = {
+			id: '1',
+			title: 'New task',
+			description: null,
+			status: 'Todo',
+			difficulty: 'Normal',
+			dueDate: null,
+			completedAt: null
+		};
 		const fetchMock = mockOk(created);
 
 		const result = await createTask(fetchMock, BASE, 'New task');
@@ -80,7 +113,15 @@ describe('createTask', () => {
 
 describe('updateTaskStatus', () => {
 	it('updates task status and returns updated task', async () => {
-		const updated: Task = { id: '1', title: 'My task', status: 'InProgress' };
+		const updated: Task = {
+			id: '1',
+			title: 'My task',
+			description: null,
+			status: 'InProgress',
+			difficulty: 'Normal',
+			dueDate: null,
+			completedAt: null
+		};
 		const fetchMock = mockOk(updated);
 
 		const result = await updateTaskStatus(fetchMock, BASE, '1', 'InProgress');
@@ -129,5 +170,78 @@ describe('deleteTask', () => {
 		};
 
 		await expect(deleteTask(mockError(404, problem), BASE, 'xyz')).rejects.toThrow(ApiError);
+	});
+});
+
+describe('updateTask', () => {
+	it('updates task fields and returns updated task', async () => {
+		const updated: Task = {
+			id: '1',
+			title: 'Updated',
+			description: 'New desc',
+			status: 'Todo',
+			difficulty: 'Hard',
+			dueDate: null,
+			completedAt: null
+		};
+		const fetchMock = mockOk(updated);
+
+		const result = await updateTask(fetchMock, BASE, '1', {
+			title: 'Updated',
+			description: 'New desc'
+		});
+
+		expect(result).toEqual(updated);
+		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/tasks/1`), {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ title: 'Updated', description: 'New desc' })
+		});
+	});
+
+	it('throws ApiError on not found', async () => {
+		const problem = {
+			type: 'https://tools.ietf.org/html/rfc9457',
+			title: 'Resource not found',
+			status: 404,
+			detail: 'Task not found'
+		};
+
+		await expect(
+			updateTask(mockError(404, problem), BASE, 'xyz', { title: 'X' })
+		).rejects.toThrow(ApiError);
+	});
+});
+
+describe('reopenTask', () => {
+	it('reopens a completed task', async () => {
+		const reopened: Task = {
+			id: '1',
+			title: 'Reopened',
+			description: null,
+			status: 'Todo',
+			difficulty: 'Normal',
+			dueDate: null,
+			completedAt: null
+		};
+		const fetchMock = mockOk(reopened);
+
+		const result = await reopenTask(fetchMock, BASE, '1');
+
+		expect(result).toEqual(reopened);
+		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/tasks/1/reopen`), {
+			method: 'PATCH'
+		});
+	});
+
+	it('throws ApiError on conflict', async () => {
+		const problem = {
+			type: 'https://tools.ietf.org/html/rfc9457',
+			title: 'Conflict',
+			status: 409,
+			detail: 'Task is not completed'
+		};
+
+		await expect(reopenTask(mockError(409, problem), BASE, '1')).rejects.toThrow(ApiError);
 	});
 });

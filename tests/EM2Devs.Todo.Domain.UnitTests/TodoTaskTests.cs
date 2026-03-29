@@ -265,4 +265,140 @@ public sealed class TodoTaskTests
         DomainException ex = Should.Throw<DomainException>(() => new TaskTitle("Hello\x02World"));
         ex.Message.ShouldContain("control characters");
     }
+
+    // --- Task editing ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UpdateTitle_When_NewTitleIsValid()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Old title"));
+
+        // When
+        task.UpdateTitle(new TaskTitle("New title"));
+
+        // Then
+        task.Title.Value.ShouldBe("New title");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_UpdatingTitleWithNull()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => task.UpdateTitle(null!));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UpdateDescription_When_DescriptionProvided()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        task.Description.ShouldBeNull();
+
+        // When
+        task.UpdateDescription("A useful description");
+
+        // Then
+        task.Description.ShouldBe("A useful description");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UpdateDifficulty_When_NewDifficultyProvided()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        task.Difficulty.ShouldBe(TaskDifficulty.Normal);
+
+        // When
+        task.UpdateDifficulty(TaskDifficulty.Hard);
+
+        // Then
+        task.Difficulty.ShouldBe(TaskDifficulty.Hard);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UpdateDueDate_When_NewDateProvided()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        task.DueDate.ShouldBeNull();
+
+        // When
+        DateTimeOffset newDate = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
+        task.UpdateDueDate(newDate);
+
+        // Then
+        task.DueDate.ShouldBe(newDate);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ClearDueDate_When_NullProvided()
+    {
+        // Given
+        DateTimeOffset dueDate = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
+        TodoTask task = TodoTask.Create(new TaskTitle("Test"), dueDate: dueDate);
+        task.DueDate.ShouldNotBeNull();
+
+        // When
+        task.UpdateDueDate(null);
+
+        // Then
+        task.DueDate.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReopenTask_When_TaskIsDone()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Completed task"));
+        task.MoveToInProgress();
+        task.MarkAsDone();
+        task.Status.ShouldBe(TaskStatus.Done);
+
+        // When
+        task.Reopen();
+
+        // Then
+        task.Status.ShouldBe(TaskStatus.Todo);
+        task.CompletedAt.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_ReopeningNonCompletedTask()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Not done"));
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => task.Reopen());
+        ex.Message.ShouldContain("Cannot reopen");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UpdateDescription_When_TaskIsCompleted()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Done task"));
+        task.MoveToInProgress();
+        task.MarkAsDone();
+
+        // When
+        task.UpdateDescription("Updated after completion");
+
+        // Then
+        task.Description.ShouldBe("Updated after completion");
+        task.Status.ShouldBe(TaskStatus.Done);
+    }
 }

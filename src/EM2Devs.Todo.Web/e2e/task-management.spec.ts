@@ -33,6 +33,7 @@ test.describe('Task management flow', () => {
 		await expect(taskItem).toBeVisible();
 
 		await taskItem.getByTestId('task-delete-button').click();
+		await taskItem.getByTestId('task-confirm-delete').click();
 		await expect(taskItem).not.toBeVisible({ timeout: 10_000 });
 	});
 });

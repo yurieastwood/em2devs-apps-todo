@@ -51,6 +51,8 @@ builder.Services.AddScoped<IMediator, Mediator>();
 // CQRS handlers (return Result<T> per ADR-018)
 builder.Services.AddTransient<IRequestHandler<CreateTaskCommand, Result<TodoTask>>, CreateTaskCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<UpdateTaskStatusCommand, Result<TodoTask>>, UpdateTaskStatusCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<UpdateTaskCommand, Result<TodoTask>>, UpdateTaskCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<ReopenTaskCommand, Result<TodoTask>>, ReopenTaskCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<DeleteTaskCommand, Result<bool>>, DeleteTaskCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<GetTaskQuery, Result<TodoTask>>, GetTaskQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<ListTasksQuery, Result<IReadOnlyList<TodoTask>>>, ListTasksQueryHandler>();

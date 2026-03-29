@@ -7,6 +7,7 @@ public sealed class TodoTask
 {
     public TaskId Id { get; }
     public TaskTitle Title { get; private set; }
+    public string? Description { get; private set; }
     public TaskStatus Status { get; private set; }
     public bool IsBossTask { get; private set; }
     public TaskDifficulty Difficulty { get; private set; }
@@ -46,6 +47,38 @@ public sealed class TodoTask
 
         Status = TaskStatus.Done;
         CompletedAt = DateTimeOffset.UtcNow;
+    }
+
+    public void Reopen()
+    {
+        if (Status != TaskStatus.Done)
+        {
+            throw new DomainException($"Cannot reopen a task that is not completed. Current status: {Status}.");
+        }
+
+        Status = TaskStatus.Todo;
+        CompletedAt = null;
+    }
+
+    public void UpdateTitle(TaskTitle newTitle)
+    {
+        ArgumentNullException.ThrowIfNull(newTitle);
+        Title = newTitle;
+    }
+
+    public void UpdateDescription(string? description)
+    {
+        Description = description;
+    }
+
+    public void UpdateDifficulty(TaskDifficulty difficulty)
+    {
+        Difficulty = difficulty;
+    }
+
+    public void UpdateDueDate(DateTimeOffset? dueDate)
+    {
+        DueDate = dueDate;
     }
 
     public void PromoteToBossTask()

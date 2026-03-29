@@ -77,7 +77,8 @@ public sealed class RecurringTasksController : ControllerBase
         Result<TodoTask> result = await _mediator
             .Send(new GenerateInstancesCommand(recurringTaskId), ct).ConfigureAwait(false);
         return result.ToHttpResult(task =>
-            Ok(new TaskResponse(task.Id.Value, task.Title.Value, task.Status.ToString())));
+            Ok(new TaskResponse(task.Id.Value, task.Title.Value, task.Description, task.Status.ToString(),
+                task.Difficulty.ToString(), task.DueDate, task.CompletedAt)));
     }
 
     private static RecurringTaskResponse MapToResponse(RecurringTask task) =>

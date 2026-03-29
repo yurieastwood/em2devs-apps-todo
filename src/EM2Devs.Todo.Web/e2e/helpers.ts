@@ -32,6 +32,7 @@ export async function deleteAllTasks(page: Page) {
 	let count = await page.getByTestId('task-delete-button').count();
 	while (count > 0) {
 		await page.getByTestId('task-delete-button').first().click();
+		await page.getByTestId('task-confirm-delete').click();
 		await expect(page.getByTestId('task-delete-button')).toHaveCount(count - 1, {
 			timeout: 10_000
 		});

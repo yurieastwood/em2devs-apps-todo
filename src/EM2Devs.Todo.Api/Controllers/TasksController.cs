@@ -46,6 +46,20 @@ public sealed class TasksController : ControllerBase
         return result.ToHttpResult(task => Ok(MapToResponse(task)));
     }
 
+    [HttpPatch("{taskId:guid}")]
+    public async Task<IActionResult> UpdateTask(
+        Guid taskId,
+        [FromBody] UpdateTaskRequest request,
+        CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        Result<TodoTask> result = await _mediator.Send(
+            new UpdateTaskCommand(taskId, request.Title, request.Description, request.Difficulty, request.DueDate, request.ClearDueDate),
+            ct).ConfigureAwait(false);
+        return result.ToHttpResult(task => Ok(MapToResponse(task)));
+    }
+
     [HttpPatch("{taskId:guid}/status")]
     public async Task<IActionResult> UpdateTaskStatus(
         Guid taskId,
@@ -59,6 +73,13 @@ public sealed class TasksController : ControllerBase
         return result.ToHttpResult(task => Ok(MapToResponse(task)));
     }
 
+    [HttpPatch("{taskId:guid}/reopen")]
+    public async Task<IActionResult> ReopenTask(Guid taskId, CancellationToken ct)
+    {
+        Result<TodoTask> result = await _mediator.Send(new ReopenTaskCommand(taskId), ct).ConfigureAwait(false);
+        return result.ToHttpResult(task => Ok(MapToResponse(task)));
+    }
+
     [HttpDelete("{taskId:guid}")]
     public async Task<IActionResult> DeleteTask(Guid taskId, CancellationToken ct)
     {
@@ -67,9 +88,18 @@ public sealed class TasksController : ControllerBase
     }
 
     private static TaskResponse MapToResponse(TodoTask task) =>
-        new(task.Id.Value, task.Title.Value, task.Status.ToString());
+        new(task.Id.Value, task.Title.Value, task.Description, task.Status.ToString(),
+            task.Difficulty.ToString(), task.DueDate, task.CompletedAt);
 }
 
 public sealed record CreateTaskRequest(string Title);
+public sealed record UpdateTaskRequest(
+    string? Title = null,
+    string? Description = null,
+    string? Difficulty = null,
+    DateTimeOffset? DueDate = null,
+    bool ClearDueDate = false);
 public sealed record UpdateTaskStatusRequest(string Status);
-public sealed record TaskResponse(Guid Id, string Title, string Status);
+public sealed record TaskResponse(
+    Guid Id, string Title, string? Description, string Status,
+    string Difficulty, DateTimeOffset? DueDate, DateTimeOffset? CompletedAt);

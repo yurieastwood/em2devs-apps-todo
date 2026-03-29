@@ -1,9 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import type { PageData } from './$types';
+	import type { ActionData, PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData | null } = $props();
 	let quest = $derived(data.quest);
+	let availableTasks = $derived(data.availableTasks);
+
+	let selectedTaskId = $state('');
+	let newTaskTitle = $state('');
+	let creating = $state(false);
+	let adding = $state(false);
+	let removingTaskId = $state<string | null>(null);
+
+	let actionError = $derived(form?.error ? String(form.error) : null);
 </script>
 
 <svelte:head>
@@ -22,18 +31,106 @@
 		</div>
 	</header>
 
+	{#if actionError}
+		<p class="error" role="alert">{actionError}</p>
+	{/if}
+
 	<section>
 		<h2>Tasks ({quest.tasks.length})</h2>
+
+		<form
+			method="POST"
+			action="?/createAndAddTask"
+			use:enhance={() => {
+				creating = true;
+				return async ({ update, result }) => {
+					try {
+						await update();
+					} finally {
+						creating = false;
+						if (result.type === 'success') newTaskTitle = '';
+					}
+				};
+			}}
+			class="add-task-form"
+		>
+			<input
+				type="text"
+				name="title"
+				bind:value={newTaskTitle}
+				placeholder="Create new task..."
+				disabled={creating}
+				maxlength={200}
+			/>
+			<button type="submit" disabled={creating || !newTaskTitle.trim()}>
+				{creating ? 'Creating...' : 'Create & Add'}
+			</button>
+		</form>
+
+		{#if availableTasks.length > 0}
+			<form
+				method="POST"
+				action="?/addTask"
+				use:enhance={() => {
+					adding = true;
+					return async ({ update, result }) => {
+						try {
+							await update();
+						} finally {
+							adding = false;
+							if (result.type === 'success') selectedTaskId = '';
+						}
+					};
+				}}
+				class="add-task-form"
+			>
+				<select name="taskId" bind:value={selectedTaskId} disabled={adding}>
+					<option value="">Select a task to add...</option>
+					{#each availableTasks as task (task.id)}
+						<option value={task.id}>{task.title} ({task.status})</option>
+					{/each}
+				</select>
+				<button type="submit" disabled={adding || !selectedTaskId}>
+					{adding ? 'Adding...' : 'Add'}
+				</button>
+			</form>
+		{/if}
+
 		{#if quest.tasks.length === 0}
 			<p class="empty">No tasks assigned to this quest yet.</p>
 		{:else}
 			<ul class="task-list">
 				{#each quest.tasks as task (task.id)}
 					<li class="task-item" data-status={task.status}>
-						<span class="task-title" class:done={task.status === 'Done'}
-							>{task.title}</span
+						<div class="task-info">
+							<span class="task-title" class:done={task.status === 'Done'}
+								>{task.title}</span
+							>
+							<span class="task-status" data-status={task.status}>{task.status}</span>
+						</div>
+						<form
+							method="POST"
+							action="?/removeTask"
+							use:enhance={() => {
+								removingTaskId = task.id;
+								return async ({ update }) => {
+									try {
+										await update();
+									} finally {
+										removingTaskId = null;
+									}
+								};
+							}}
 						>
-						<span class="task-status" data-status={task.status}>{task.status}</span>
+							<input type="hidden" name="taskId" value={task.id} />
+							<button
+								type="submit"
+								class="btn-remove"
+								disabled={removingTaskId === task.id}
+							>
+								{removingTaskId === task.id ? '...' : 'Remove'}
+							</button>
+						</form>
 					</li>
 				{/each}
 			</ul>
@@ -79,8 +176,46 @@
 		font-weight: 600;
 	}
 
+	.error {
+		color: #dc2626;
+		padding: 0.75rem 1rem;
+		border: 1px solid #fca5a5;
+		border-radius: 0.25rem;
+		background: #fef2f2;
+		margin-bottom: 1rem;
+	}
+
 	h2 {
 		margin-bottom: 1rem;
+	}
+
+	.add-task-form {
+		display: flex;
+		gap: 0.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.add-task-form select {
+		flex: 1;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #d1d5db;
+		border-radius: 0.25rem;
+		font-size: 0.875rem;
+	}
+
+	.add-task-form button {
+		padding: 0.5rem 1rem;
+		background: #2563eb;
+		color: white;
+		border: none;
+		border-radius: 0.25rem;
+		cursor: pointer;
+		font-weight: 500;
+	}
+
+	.add-task-form button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.empty {
@@ -105,6 +240,20 @@
 		border-radius: 0.25rem;
 	}
 
+	.task-info {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.task-title {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
 	.task-title.done {
 		text-decoration: line-through;
 		color: #9ca3af;
@@ -117,6 +266,7 @@
 		padding: 0.25rem 0.5rem;
 		border-radius: 0.25rem;
 		background: #e5e7eb;
+		flex-shrink: 0;
 	}
 
 	.task-status[data-status='Done'] {
@@ -127,6 +277,27 @@
 	.task-status[data-status='InProgress'] {
 		background: #dbeafe;
 		color: #1e40af;
+	}
+
+	.btn-remove {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid #d1d5db;
+		border-radius: 0.25rem;
+		background: white;
+		cursor: pointer;
+		font-size: 0.75rem;
+		flex-shrink: 0;
+	}
+
+	.btn-remove:hover {
+		background: #fef2f2;
+		border-color: #dc2626;
+		color: #dc2626;
+	}
+
+	.btn-remove:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	footer {

@@ -326,6 +326,7 @@ components:
           minimum: 1
     UpdateTaskRequest:
       type: object
+      additionalProperties: false
       properties:
         title:
           type: string

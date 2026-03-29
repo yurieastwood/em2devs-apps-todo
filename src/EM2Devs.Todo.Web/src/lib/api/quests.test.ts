@@ -152,9 +152,16 @@ describe('addTaskToQuest', () => {
 			progress: 0,
 			tasks: [{ id: 't1', title: 'Added task', status: 'Todo' }]
 		};
+		const fetchMock = mockOk(quest);
 
-		const result = await addTaskToQuest(mockOk(quest), BASE, '1', 't1');
+		const result = await addTaskToQuest(fetchMock, BASE, '1', 't1');
+
 		expect(result.tasks).toHaveLength(1);
+		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/quests/1/tasks`), {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ taskId: 't1' })
+		});
 	});
 
 	it('Should_ThrowApiError_When_TaskAlreadyAssigned', async () => {
@@ -181,9 +188,14 @@ describe('removeTaskFromQuest', () => {
 			progress: 0,
 			tasks: []
 		};
+		const fetchMock = mockOk(quest);
 
-		const result = await removeTaskFromQuest(mockOk(quest), BASE, '1', 't1');
+		const result = await removeTaskFromQuest(fetchMock, BASE, '1', 't1');
+
 		expect(result.tasks).toHaveLength(0);
+		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/quests/1/tasks/t1`), {
+			method: 'DELETE'
+		});
 	});
 
 	it('Should_ThrowApiError_When_TaskNotAssigned', async () => {

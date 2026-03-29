@@ -11,19 +11,23 @@ function failFromError(e: unknown, fallbackMessage: string, action: string) {
 }
 
 export const load: PageServerLoad = async ({ fetch, params }) => {
+	let quest;
 	try {
-		const [quest, allTasks] = await Promise.all([
-			getQuest(fetch, getBaseUrl(), params.id),
-			listTasks(fetch, getBaseUrl())
-		]);
-
-		const questTaskIds = new Set(quest.tasks.map((t) => t.id));
-		const availableTasks = allTasks.filter((t) => !questTaskIds.has(t.id));
-
-		return { quest, availableTasks };
+		quest = await getQuest(fetch, getBaseUrl(), params.id);
 	} catch {
 		throw error(404, 'Quest not found');
 	}
+
+	let availableTasks: { id: string; title: string; status: string }[];
+	try {
+		const allTasks = await listTasks(fetch, getBaseUrl());
+		const questTaskIds = new Set(quest.tasks.map((t) => t.id));
+		availableTasks = allTasks.filter((t) => !questTaskIds.has(t.id));
+	} catch {
+		availableTasks = [];
+	}
+
+	return { quest, availableTasks };
 };
 
 export const actions: Actions = {

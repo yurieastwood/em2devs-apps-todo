@@ -8,7 +8,9 @@
 
 	let selectedTaskId = $state('');
 	let newTaskTitle = $state('');
-	let actionInFlight = $state(false);
+	let creating = $state(false);
+	let adding = $state(false);
+	let removingTaskId = $state<string | null>(null);
 
 	let actionError = $derived(form?.error ? String(form.error) : null);
 </script>
@@ -40,12 +42,12 @@
 			method="POST"
 			action="?/createAndAddTask"
 			use:enhance={() => {
-				actionInFlight = true;
+				creating = true;
 				return async ({ update, result }) => {
 					try {
 						await update();
 					} finally {
-						actionInFlight = false;
+						creating = false;
 						if (result.type === 'success') newTaskTitle = '';
 					}
 				};
@@ -57,11 +59,11 @@
 				name="title"
 				bind:value={newTaskTitle}
 				placeholder="Create new task..."
-				disabled={actionInFlight}
+				disabled={creating}
 				maxlength={200}
 			/>
-			<button type="submit" disabled={actionInFlight || !newTaskTitle.trim()}>
-				{actionInFlight ? 'Creating...' : 'Create & Add'}
+			<button type="submit" disabled={creating || !newTaskTitle.trim()}>
+				{creating ? 'Creating...' : 'Create & Add'}
 			</button>
 		</form>
 
@@ -70,26 +72,26 @@
 				method="POST"
 				action="?/addTask"
 				use:enhance={() => {
-					actionInFlight = true;
+					adding = true;
 					return async ({ update, result }) => {
 						try {
 							await update();
 						} finally {
-							actionInFlight = false;
+							adding = false;
 							if (result.type === 'success') selectedTaskId = '';
 						}
 					};
 				}}
 				class="add-task-form"
 			>
-				<select name="taskId" bind:value={selectedTaskId} disabled={actionInFlight}>
+				<select name="taskId" bind:value={selectedTaskId} disabled={adding}>
 					<option value="">Select a task to add...</option>
 					{#each availableTasks as task (task.id)}
 						<option value={task.id}>{task.title} ({task.status})</option>
 					{/each}
 				</select>
-				<button type="submit" disabled={actionInFlight || !selectedTaskId}>
-					{actionInFlight ? 'Adding...' : 'Add'}
+				<button type="submit" disabled={adding || !selectedTaskId}>
+					{adding ? 'Adding...' : 'Add'}
 				</button>
 			</form>
 		{/if}
@@ -110,19 +112,23 @@
 							method="POST"
 							action="?/removeTask"
 							use:enhance={() => {
-								actionInFlight = true;
+								removingTaskId = task.id;
 								return async ({ update }) => {
 									try {
 										await update();
 									} finally {
-										actionInFlight = false;
+										removingTaskId = null;
 									}
 								};
 							}}
 						>
 							<input type="hidden" name="taskId" value={task.id} />
-							<button type="submit" class="btn-remove" disabled={actionInFlight}>
-								Remove
+							<button
+								type="submit"
+								class="btn-remove"
+								disabled={removingTaskId === task.id}
+							>
+								{removingTaskId === task.id ? '...' : 'Remove'}
 							</button>
 						</form>
 					</li>

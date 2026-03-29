@@ -284,6 +284,17 @@ public sealed class TodoTaskTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_UpdatingTitleWithNull()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => task.UpdateTitle(null!));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_UpdateDescription_When_DescriptionProvided()
     {
         // Given

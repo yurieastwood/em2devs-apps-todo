@@ -71,7 +71,13 @@ public sealed class UpdateTaskCommandHandler : IRequestHandler<UpdateTaskCommand
         }
         else if (request.DueDate.HasValue)
         {
-            task.UpdateDueDate(request.DueDate.Value);
+            DateTimeOffset dueDate = request.DueDate.Value;
+            if (dueDate.Offset < TimeSpan.FromHours(-14) || dueDate.Offset > TimeSpan.FromHours(14))
+            {
+                return new ValidationError("Due date has an invalid timezone offset.");
+            }
+
+            task.UpdateDueDate(dueDate);
         }
 
         await _repository.SaveAsync(task, ct).ConfigureAwait(false);

@@ -6,7 +6,7 @@ on:
     paths:
       - 'docs/decisions/**'
       - '.log4brains.yml'
-      - '.github/workflows/log4brains.yml'
+      - '.github/workflows/docs-adr.yml'
   workflow_dispatch:
 
 permissions:

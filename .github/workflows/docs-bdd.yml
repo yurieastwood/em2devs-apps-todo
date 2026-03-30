@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - 'docs/features/**'
-      - '.github/workflows/pickles.yml'
+      - '.github/workflows/docs-bdd.yml'
   workflow_dispatch:
 
 permissions:

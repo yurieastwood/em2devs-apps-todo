@@ -1,4 +1,4 @@
-name: ADRs Site
+name: ADR Docs
 
 on:
   push:

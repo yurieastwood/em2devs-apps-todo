@@ -86,6 +86,25 @@ public sealed class RecurringTasksController : ControllerBase
     [HttpPatch("{recurringTaskId:guid}/instances/{instanceId:guid}/skip")]
     public async Task<IActionResult> SkipInstance(Guid recurringTaskId, Guid instanceId, CancellationToken ct)
     {
+        Result<TodoTask> getResult = await _mediator
+            .Send(new Application.Queries.GetTaskQuery(instanceId), ct).ConfigureAwait(false);
+
+        IActionResult? ownershipError = getResult.Match<IActionResult?>(
+            task => task.SourceRecurringTaskId?.Value != recurringTaskId
+                ? NotFound(new { error = $"Instance '{instanceId}' does not belong to recurring task '{recurringTaskId}'." })
+                : null,
+            _ => null);
+
+        if (!getResult.IsSuccess)
+        {
+            return getResult.ToHttpResult(_ => Ok());
+        }
+
+        if (ownershipError is not null)
+        {
+            return ownershipError;
+        }
+
         Result<TodoTask> result = await _mediator
             .Send(new UpdateTaskStatusCommand(instanceId, "Skipped"), ct).ConfigureAwait(false);
         return result.ToHttpResult(task =>
@@ -107,10 +126,10 @@ public sealed class RecurringTasksController : ControllerBase
 
     [HttpPost("{recurringTaskId:guid}/generate")]
     public async Task<IActionResult> GenerateInstance(
-        Guid recurringTaskId, [FromBody] GenerateInstanceRequest? request, CancellationToken ct)
+        Guid recurringTaskId, [FromQuery] DateOnly? scheduledDate, CancellationToken ct)
     {
         Result<TodoTask> result = await _mediator
-            .Send(new GenerateInstancesCommand(recurringTaskId, request?.ScheduledDate), ct).ConfigureAwait(false);
+            .Send(new GenerateInstancesCommand(recurringTaskId, scheduledDate), ct).ConfigureAwait(false);
         return result.ToHttpResult(task =>
             Ok(new TaskInstanceResponse(task.Id.Value, task.Title.Value, task.Description, task.Status.ToString(),
                 task.Difficulty.ToString(), task.DueDate, task.CompletedAt, task.ScheduledDate,
@@ -124,7 +143,6 @@ public sealed class RecurringTasksController : ControllerBase
 public sealed record CreateRecurringTaskRequest(string Title, string Pattern);
 public sealed record UpdateRecurringTaskRequest(
     string? Title = null, string? Pattern = null, bool ApplyToFutureInstances = false);
-public sealed record GenerateInstanceRequest(DateOnly? ScheduledDate = null);
 public sealed record RecurringTaskResponse(Guid Id, string Title, string Pattern, bool IsActive);
 public sealed record TaskInstanceResponse(
     Guid Id, string Title, string? Description, string Status, string Difficulty,

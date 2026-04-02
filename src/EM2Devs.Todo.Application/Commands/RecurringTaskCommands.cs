@@ -220,11 +220,14 @@ public sealed class UpdateRecurringTaskCommandHandler
 
         await _recurringRepository.SaveAsync(recurring, ct).ConfigureAwait(false);
 
-        if (request.ApplyToFutureInstances)
+        if (request.ApplyToFutureInstances && request.Title is not null)
         {
             DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
             IReadOnlyList<TodoTask> instances = await _taskRepository
                 .GetByRecurringTaskIdAsync(recurring.Id, ct).ConfigureAwait(false);
+
+            TaskTitle newTitle = new TaskTitle(request.Title);
+            List<TodoTask> modified = [];
 
             foreach (TodoTask instance in instances)
             {
@@ -232,13 +235,14 @@ public sealed class UpdateRecurringTaskCommandHandler
                     && instance.ScheduledDate.Value >= today
                     && instance.Status == Domain.TaskStatus.Todo)
                 {
-                    if (request.Title is not null)
-                    {
-                        instance.UpdateTitle(new TaskTitle(request.Title));
-                    }
-
-                    await _taskRepository.SaveAsync(instance, ct).ConfigureAwait(false);
+                    instance.UpdateTitle(newTitle);
+                    modified.Add(instance);
                 }
+            }
+
+            foreach (TodoTask instance in modified)
+            {
+                await _taskRepository.SaveAsync(instance, ct).ConfigureAwait(false);
             }
         }
 

@@ -47,6 +47,18 @@ public sealed class RecurringTasksController : ControllerBase
         return result.ToHttpResult(task => Ok(MapToResponse(task)));
     }
 
+    [HttpPut("{recurringTaskId:guid}")]
+    public async Task<IActionResult> UpdateRecurringTask(
+        Guid recurringTaskId, [FromBody] UpdateRecurringTaskRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        Result<RecurringTask> result = await _mediator
+            .Send(new UpdateRecurringTaskCommand(recurringTaskId, request.Title, request.Pattern,
+                request.ApplyToFutureInstances), ct).ConfigureAwait(false);
+        return result.ToHttpResult(task => Ok(MapToResponse(task)));
+    }
+
     [HttpPatch("{recurringTaskId:guid}/pause")]
     public async Task<IActionResult> PauseRecurringTask(Guid recurringTaskId, CancellationToken ct)
     {
@@ -71,14 +83,38 @@ public sealed class RecurringTasksController : ControllerBase
         return result.ToHttpResult(_ => NoContent());
     }
 
-    [HttpPost("{recurringTaskId:guid}/generate")]
-    public async Task<IActionResult> GenerateInstance(Guid recurringTaskId, CancellationToken ct)
+    [HttpPatch("{recurringTaskId:guid}/instances/{instanceId:guid}/skip")]
+    public async Task<IActionResult> SkipInstance(Guid recurringTaskId, Guid instanceId, CancellationToken ct)
     {
         Result<TodoTask> result = await _mediator
-            .Send(new GenerateInstancesCommand(recurringTaskId), ct).ConfigureAwait(false);
+            .Send(new UpdateTaskStatusCommand(instanceId, "Skipped"), ct).ConfigureAwait(false);
         return result.ToHttpResult(task =>
-            Ok(new TaskResponse(task.Id.Value, task.Title.Value, task.Description, task.Status.ToString(),
-                task.Difficulty.ToString(), task.DueDate, task.CompletedAt)));
+            Ok(new TaskInstanceResponse(task.Id.Value, task.Title.Value, task.Description, task.Status.ToString(),
+                task.Difficulty.ToString(), task.DueDate, task.CompletedAt, task.ScheduledDate,
+                task.SourceRecurringTaskId?.Value)));
+    }
+
+    [HttpGet("{recurringTaskId:guid}/instances")]
+    public async Task<IActionResult> ListInstances(Guid recurringTaskId, CancellationToken ct)
+    {
+        Result<IReadOnlyList<TodoTask>> result = await _mediator
+            .Send(new ListRecurringTaskInstancesQuery(recurringTaskId), ct).ConfigureAwait(false);
+        return result.ToHttpResult(instances => Ok(instances.Select(t =>
+            new TaskInstanceResponse(t.Id.Value, t.Title.Value, t.Description, t.Status.ToString(),
+                t.Difficulty.ToString(), t.DueDate, t.CompletedAt, t.ScheduledDate,
+                t.SourceRecurringTaskId?.Value))));
+    }
+
+    [HttpPost("{recurringTaskId:guid}/generate")]
+    public async Task<IActionResult> GenerateInstance(
+        Guid recurringTaskId, [FromBody] GenerateInstanceRequest? request, CancellationToken ct)
+    {
+        Result<TodoTask> result = await _mediator
+            .Send(new GenerateInstancesCommand(recurringTaskId, request?.ScheduledDate), ct).ConfigureAwait(false);
+        return result.ToHttpResult(task =>
+            Ok(new TaskInstanceResponse(task.Id.Value, task.Title.Value, task.Description, task.Status.ToString(),
+                task.Difficulty.ToString(), task.DueDate, task.CompletedAt, task.ScheduledDate,
+                task.SourceRecurringTaskId?.Value)));
     }
 
     private static RecurringTaskResponse MapToResponse(RecurringTask task) =>
@@ -86,4 +122,11 @@ public sealed class RecurringTasksController : ControllerBase
 }
 
 public sealed record CreateRecurringTaskRequest(string Title, string Pattern);
+public sealed record UpdateRecurringTaskRequest(
+    string? Title = null, string? Pattern = null, bool ApplyToFutureInstances = false);
+public sealed record GenerateInstanceRequest(DateOnly? ScheduledDate = null);
 public sealed record RecurringTaskResponse(Guid Id, string Title, string Pattern, bool IsActive);
+public sealed record TaskInstanceResponse(
+    Guid Id, string Title, string? Description, string Status, string Difficulty,
+    DateTimeOffset? DueDate, DateTimeOffset? CompletedAt, DateOnly? ScheduledDate,
+    Guid? SourceRecurringTaskId);

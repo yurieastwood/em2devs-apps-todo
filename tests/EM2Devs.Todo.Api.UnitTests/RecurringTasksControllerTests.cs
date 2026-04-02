@@ -165,5 +165,164 @@ public sealed class RecurringTasksControllerTests : IDisposable
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
+    [Fact]
+    public async Task Should_ReturnInstances_When_ListingRecurringTaskInstances()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/recurring-tasks",
+            new { title = "Daily standup", pattern = "Daily" });
+        RecurringTaskDto? created = await createResponse.Content.ReadFromJsonAsync<RecurringTaskDto>();
+
+        await _client.PostAsJsonAsync($"/api/recurring-tasks/{created!.Id}/generate",
+            new { scheduledDate = "2026-04-01" });
+        await _client.PostAsJsonAsync($"/api/recurring-tasks/{created.Id}/generate",
+            new { scheduledDate = "2026-04-02" });
+
+        HttpResponseMessage response = await _client.GetAsync(
+            $"/api/recurring-tasks/{created.Id}/instances");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        List<TaskInstanceDto>? instances = await response.Content.ReadFromJsonAsync<List<TaskInstanceDto>>();
+        instances.ShouldNotBeNull();
+        instances.Count.ShouldBe(2);
+        instances.ShouldAllBe(i => i.SourceRecurringTaskId == created.Id);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotFound_When_ListingInstancesForNonExistentRecurringTask()
+    {
+        HttpResponseMessage response = await _client.GetAsync(
+            $"/api/recurring-tasks/{Guid.NewGuid()}/instances");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Should_IncludeScheduledDate_When_GeneratingInstance()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/recurring-tasks",
+            new { title = "Scheduled gen", pattern = "Daily" });
+        RecurringTaskDto? created = await createResponse.Content.ReadFromJsonAsync<RecurringTaskDto>();
+
+        HttpResponseMessage response = await _client.PostAsJsonAsync(
+            $"/api/recurring-tasks/{created!.Id}/generate",
+            new { scheduledDate = "2026-04-01" });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        TaskInstanceDto? instance = await response.Content.ReadFromJsonAsync<TaskInstanceDto>();
+        instance!.ScheduledDate.ShouldBe("2026-04-01");
+        instance.SourceRecurringTaskId.ShouldBe(created.Id);
+    }
+
+    [Fact]
+    public async Task Should_ReturnOk_When_UpdatingRecurringTask()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/recurring-tasks",
+            new { title = "Old title", pattern = "Daily" });
+        RecurringTaskDto? created = await createResponse.Content.ReadFromJsonAsync<RecurringTaskDto>();
+
+        HttpResponseMessage response = await _client.PutAsJsonAsync(
+            $"/api/recurring-tasks/{created!.Id}",
+            new { title = "New title", pattern = "Weekly", applyToFutureInstances = false });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        RecurringTaskDto? updated = await response.Content.ReadFromJsonAsync<RecurringTaskDto>();
+        updated!.Title.ShouldBe("New title");
+        updated.Pattern.ShouldBe("Weekly");
+    }
+
+    [Fact]
+    public async Task Should_UpdateFutureInstances_When_ApplyToFutureInstancesIsTrue()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/recurring-tasks",
+            new { title = "Old name", pattern = "Daily" });
+        RecurringTaskDto? created = await createResponse.Content.ReadFromJsonAsync<RecurringTaskDto>();
+
+        // Generate a future instance (tomorrow)
+        string tomorrow = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        await _client.PostAsJsonAsync($"/api/recurring-tasks/{created!.Id}/generate",
+            new { scheduledDate = tomorrow });
+
+        // Generate a past instance (yesterday) — should NOT be updated
+        string yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        await _client.PostAsJsonAsync($"/api/recurring-tasks/{created.Id}/generate",
+            new { scheduledDate = yesterday });
+
+        // Update with apply to future instances
+        await _client.PutAsJsonAsync($"/api/recurring-tasks/{created.Id}",
+            new { title = "New name", applyToFutureInstances = true });
+
+        // Verify instances
+        HttpResponseMessage instancesResponse = await _client.GetAsync(
+            $"/api/recurring-tasks/{created.Id}/instances");
+        List<TaskInstanceDto>? instances = await instancesResponse.Content
+            .ReadFromJsonAsync<List<TaskInstanceDto>>();
+
+        instances.ShouldNotBeNull();
+        instances.Count.ShouldBe(2);
+
+        var futureInstance = instances.First(i => i.ScheduledDate == tomorrow);
+        futureInstance.Title.ShouldBe("New name");
+
+        var pastInstance = instances.First(i => i.ScheduledDate == yesterday);
+        pastInstance.Title.ShouldBe("Old name");
+    }
+
+    [Fact]
+    public async Task Should_ReturnNotFound_When_UpdatingNonExistentRecurringTask()
+    {
+        HttpResponseMessage response = await _client.PutAsJsonAsync(
+            $"/api/recurring-tasks/{Guid.NewGuid()}",
+            new { title = "Doesn't exist" });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task Should_ReturnOk_When_SkippingOpenInstance()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/recurring-tasks",
+            new { title = "Skippable", pattern = "Daily" });
+        RecurringTaskDto? created = await createResponse.Content.ReadFromJsonAsync<RecurringTaskDto>();
+
+        HttpResponseMessage genResponse = await _client.PostAsJsonAsync(
+            $"/api/recurring-tasks/{created!.Id}/generate",
+            new { scheduledDate = "2026-04-01" });
+        TaskInstanceDto? instance = await genResponse.Content.ReadFromJsonAsync<TaskInstanceDto>();
+
+        HttpResponseMessage response = await _client.PatchAsync(
+            $"/api/recurring-tasks/{created.Id}/instances/{instance!.Id}/skip", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        TaskInstanceDto? skipped = await response.Content.ReadFromJsonAsync<TaskInstanceDto>();
+        skipped!.Status.ShouldBe("Skipped");
+    }
+
+    [Fact]
+    public async Task Should_ReturnConflict_When_SkippingCompletedInstance()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/recurring-tasks",
+            new { title = "Complete then skip", pattern = "Daily" });
+        RecurringTaskDto? created = await createResponse.Content.ReadFromJsonAsync<RecurringTaskDto>();
+
+        HttpResponseMessage genResponse = await _client.PostAsJsonAsync(
+            $"/api/recurring-tasks/{created!.Id}/generate",
+            new { scheduledDate = "2026-04-01" });
+        TaskInstanceDto? instance = await genResponse.Content.ReadFromJsonAsync<TaskInstanceDto>();
+
+        await _client.PatchAsJsonAsync($"/api/tasks/{instance!.Id}/status",
+            new { status = "InProgress" });
+        await _client.PatchAsJsonAsync($"/api/tasks/{instance.Id}/status",
+            new { status = "Done" });
+
+        HttpResponseMessage response = await _client.PatchAsync(
+            $"/api/recurring-tasks/{created.Id}/instances/{instance.Id}/skip", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
     private sealed record RecurringTaskDto(Guid Id, string Title, string Pattern, bool IsActive);
+    private sealed record TaskInstanceDto(
+        Guid Id, string Title, string? Description, string Status, string Difficulty,
+        DateTimeOffset? DueDate, DateTimeOffset? CompletedAt, string? ScheduledDate,
+        Guid? SourceRecurringTaskId);
 }

@@ -34,4 +34,14 @@ public sealed class InMemoryTaskRepository : ITaskRepository
         ArgumentNullException.ThrowIfNull(id);
         return Task.FromResult(_store.TryRemove(id.Value, out _));
     }
+
+    public Task<IReadOnlyList<TodoTask>> GetByRecurringTaskIdAsync(RecurringTaskId sourceId, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(sourceId);
+        IReadOnlyList<TodoTask> tasks = _store.Values
+            .Where(t => t.SourceRecurringTaskId == sourceId)
+            .ToList()
+            .AsReadOnly();
+        return Task.FromResult(tasks);
+    }
 }

@@ -4,5 +4,6 @@ public enum TaskStatus
 {
     Todo,
     InProgress,
-    Done
+    Done,
+    Skipped
 }

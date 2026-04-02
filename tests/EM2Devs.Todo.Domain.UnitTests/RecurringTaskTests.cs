@@ -341,6 +341,15 @@ public sealed class RecurringTaskTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_CreateFromRecurringCalledWithNullSourceId()
+    {
+        // When / Then
+        Should.Throw<ArgumentNullException>(() =>
+            TodoTask.CreateFromRecurring(new TaskTitle("Test"), null!, DateOnly.FromDateTime(DateTime.UtcNow)));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_ThrowArgumentNullException_When_RecurringTaskUpdateTitleCalledWithNull()
     {
         // Given

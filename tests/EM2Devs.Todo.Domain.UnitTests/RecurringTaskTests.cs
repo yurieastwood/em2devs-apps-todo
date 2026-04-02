@@ -272,6 +272,87 @@ public sealed class RecurringTaskTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_BeOverdue_When_ScheduledDateIsPastAndStatusIsTodo()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Overdue test"), RecurrencePattern.Daily);
+        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        TodoTask instance = recurring.GenerateNextInstance(yesterday);
+
+        // Then — status is Todo, scheduled date is past → overdue
+        instance.IsOverdue.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeOverdue_When_ScheduledDateIsToday()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Today test"), RecurrencePattern.Daily);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        TodoTask instance = recurring.GenerateNextInstance(today);
+
+        // Then — scheduled date is today, not past → not overdue
+        instance.IsOverdue.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeOverdue_When_ScheduledDateIsFuture()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Future test"), RecurrencePattern.Daily);
+        var tomorrow = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
+        TodoTask instance = recurring.GenerateNextInstance(tomorrow);
+
+        // Then
+        instance.IsOverdue.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeOverdue_When_TaskIsDone()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Done test"), RecurrencePattern.Daily);
+        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        TodoTask instance = recurring.GenerateNextInstance(yesterday);
+        instance.MoveToInProgress();
+        instance.MarkAsDone();
+
+        // Then — completed tasks are never overdue
+        instance.IsOverdue.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeOverdue_When_NoScheduledDate()
+    {
+        // Given — manually created task with no scheduled date
+        TodoTask task = TodoTask.Create(new TaskTitle("No schedule"));
+
+        // Then
+        task.IsOverdue.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_RecurringTaskUpdateTitleCalledWithNull()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Null check"), RecurrencePattern.Daily);
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => recurring.UpdateTitle(null!));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_UpdateTitle_When_UpdateTitleCalled()
     {
         // Given

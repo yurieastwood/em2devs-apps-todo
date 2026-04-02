@@ -389,4 +389,18 @@ public sealed class RecurringTaskTests
         // Then
         recurring.Pattern.ShouldBe(RecurrencePattern.Weekly);
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_UpdatePatternCalledWithInvalidValue()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Invalid pattern"), RecurrencePattern.Daily);
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(
+            () => recurring.UpdatePattern((RecurrencePattern)999));
+        ex.Message.ShouldContain("Invalid recurrence pattern");
+    }
 }

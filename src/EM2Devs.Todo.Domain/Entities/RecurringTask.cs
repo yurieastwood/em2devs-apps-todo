@@ -6,8 +6,8 @@ namespace EM2Devs.Todo.Domain.Entities;
 public sealed class RecurringTask
 {
     public RecurringTaskId Id { get; }
-    public TaskTitle Title { get; }
-    public RecurrencePattern Pattern { get; }
+    public TaskTitle Title { get; private set; }
+    public RecurrencePattern Pattern { get; private set; }
     public bool IsActive { get; private set; }
 
     private RecurringTask(RecurringTaskId id, TaskTitle title, RecurrencePattern pattern)
@@ -23,14 +23,14 @@ public sealed class RecurringTask
         return new RecurringTask(RecurringTaskId.New(), title, pattern);
     }
 
-    public TodoTask GenerateNextInstance()
+    public TodoTask GenerateNextInstance(DateOnly scheduledDate)
     {
         if (!IsActive)
         {
             throw new DomainException("Cannot generate instances for a paused recurring task.");
         }
 
-        return TodoTask.Create(Title);
+        return TodoTask.CreateFromRecurring(Title, Id, scheduledDate);
     }
 
     public void Pause()
@@ -51,5 +51,21 @@ public sealed class RecurringTask
         }
 
         IsActive = true;
+    }
+
+    public void UpdateTitle(TaskTitle newTitle)
+    {
+        ArgumentNullException.ThrowIfNull(newTitle);
+        Title = newTitle;
+    }
+
+    public void UpdatePattern(RecurrencePattern newPattern)
+    {
+        if (!Enum.IsDefined(newPattern))
+        {
+            throw new DomainException($"Invalid recurrence pattern: '{newPattern}'.");
+        }
+
+        Pattern = newPattern;
     }
 }

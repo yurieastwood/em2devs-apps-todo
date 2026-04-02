@@ -55,4 +55,13 @@ public sealed class PostgresTaskRepository : ITaskRepository
         await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
         return true;
     }
+
+    public async Task<IReadOnlyList<TodoTask>> GetByRecurringTaskIdAsync(RecurringTaskId sourceId, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(sourceId);
+        return await _dbContext.Tasks
+            .Where(t => t.SourceRecurringTaskId == sourceId)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+    }
 }

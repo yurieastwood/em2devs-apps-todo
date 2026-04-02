@@ -52,6 +52,9 @@ public sealed class UpdateTaskStatusCommandHandler : IRequestHandler<UpdateTaskS
                 case TaskStatus.Done:
                     task.MarkAsDone();
                     break;
+                case TaskStatus.Skipped:
+                    task.Skip();
+                    break;
                 default:
                     return new ConflictError($"Transition to '{targetStatus}' is not supported.");
             }

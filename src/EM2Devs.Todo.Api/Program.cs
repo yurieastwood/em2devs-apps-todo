@@ -78,11 +78,13 @@ builder.Services.AddTransient<IRequestHandler<ListEpicsQuery, Result<IReadOnlyLi
 // Recurring task CQRS handlers
 builder.Services.AddTransient<IRequestHandler<CreateRecurringTaskCommand, Result<RecurringTask>>, CreateRecurringTaskCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<GenerateInstancesCommand, Result<TodoTask>>, GenerateInstancesCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<UpdateRecurringTaskCommand, Result<RecurringTask>>, UpdateRecurringTaskCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<PauseRecurringTaskCommand, Result<RecurringTask>>, PauseRecurringTaskCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<ResumeRecurringTaskCommand, Result<RecurringTask>>, ResumeRecurringTaskCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<DeleteRecurringTaskCommand, Result<bool>>, DeleteRecurringTaskCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<GetRecurringTaskQuery, Result<RecurringTask>>, GetRecurringTaskQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<ListRecurringTasksQuery, Result<IReadOnlyList<RecurringTask>>>, ListRecurringTasksQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<ListRecurringTaskInstancesQuery, Result<IReadOnlyList<TodoTask>>>, ListRecurringTaskInstancesQueryHandler>();
 
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.XpAwardHandler>();

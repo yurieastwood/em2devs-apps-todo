@@ -33,5 +33,14 @@ public sealed class TodoTaskConfiguration : IEntityTypeConfiguration<TodoTask>
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
+
+        builder.Property(t => t.SourceRecurringTaskId)
+            .HasColumnName("source_recurring_task_id")
+            .HasConversion(
+                id => id != null ? id.Value : (Guid?)null,
+                value => value.HasValue ? new RecurringTaskId(value.Value) : null);
+
+        builder.Property(t => t.ScheduledDate)
+            .HasColumnName("scheduled_date");
     }
 }

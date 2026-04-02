@@ -66,13 +66,16 @@ public sealed class RecurringTaskTests
             RecurrencePattern.Daily);
 
         // When
-        var instance = recurring.GenerateNextInstance();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var instance = recurring.GenerateNextInstance(today);
 
         // Then
         instance.ShouldNotBeNull();
         instance.Title.Value.ShouldBe("Morning standup prep");
         instance.Status.ShouldBe(TaskStatus.Todo);
         instance.Id.Value.ShouldNotBe(Guid.Empty);
+        instance.SourceRecurringTaskId.ShouldBe(recurring.Id);
+        instance.ScheduledDate.ShouldBe(today);
     }
 
     [Fact]
@@ -85,8 +88,9 @@ public sealed class RecurringTaskTests
             RecurrencePattern.Daily);
 
         // When
-        var first = recurring.GenerateNextInstance();
-        var second = recurring.GenerateNextInstance();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var first = recurring.GenerateNextInstance(today);
+        var second = recurring.GenerateNextInstance(today.AddDays(1));
 
         // Then
         first.Id.ShouldNotBe(second.Id);
@@ -172,7 +176,231 @@ public sealed class RecurringTaskTests
         recurring.Pause();
 
         // When / Then
-        DomainException ex = Should.Throw<DomainException>(() => recurring.GenerateNextInstance());
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        DomainException ex = Should.Throw<DomainException>(() => recurring.GenerateNextInstance(today));
         ex.Message.ShouldContain("paused");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_SetDueDate_When_GeneratedFromRecurringTask()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Morning standup prep"), RecurrencePattern.Daily);
+        var scheduledDate = new DateOnly(2026, 4, 1);
+
+        // When
+        var instance = recurring.GenerateNextInstance(scheduledDate);
+
+        // Then
+        instance.DueDate.ShouldNotBeNull();
+        instance.DueDate!.Value.Date.ShouldBe(scheduledDate.ToDateTime(TimeOnly.MinValue));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotHaveRecurringSource_When_CreatedManually()
+    {
+        // When
+        var task = TodoTask.Create(new TaskTitle("Manual task"));
+
+        // Then
+        task.SourceRecurringTaskId.ShouldBeNull();
+        task.ScheduledDate.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_MarkAsSkipped_When_SkipCalled()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Skippable"), RecurrencePattern.Daily);
+        var instance = recurring.GenerateNextInstance(DateOnly.FromDateTime(DateTime.UtcNow));
+
+        // When
+        instance.Skip();
+
+        // Then
+        instance.Status.ShouldBe(TaskStatus.Skipped);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_SkippingCompletedTask()
+    {
+        // Given
+        var task = TodoTask.Create(new TaskTitle("Done task"));
+        task.MoveToInProgress();
+        task.MarkAsDone();
+
+        // When / Then
+        var ex = Should.Throw<DomainException>(() => task.Skip());
+        ex.Message.ShouldContain("Cannot skip a completed task");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_SkippingAlreadySkippedTask()
+    {
+        // Given
+        var task = TodoTask.Create(new TaskTitle("Skip twice"));
+        task.Skip();
+
+        // When / Then
+        var ex = Should.Throw<DomainException>(() => task.Skip());
+        ex.Message.ShouldContain("already skipped");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeOverdue_When_Skipped()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Overdue check"), RecurrencePattern.Daily);
+        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        var instance = recurring.GenerateNextInstance(yesterday);
+
+        // When
+        instance.Skip();
+
+        // Then
+        instance.IsOverdue.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_BeOverdue_When_ScheduledDateIsPastAndStatusIsTodo()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Overdue test"), RecurrencePattern.Daily);
+        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        TodoTask instance = recurring.GenerateNextInstance(yesterday);
+
+        // Then — status is Todo, scheduled date is past → overdue
+        instance.IsOverdue.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeOverdue_When_ScheduledDateIsToday()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Today test"), RecurrencePattern.Daily);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        TodoTask instance = recurring.GenerateNextInstance(today);
+
+        // Then — scheduled date is today, not past → not overdue
+        instance.IsOverdue.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeOverdue_When_ScheduledDateIsFuture()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Future test"), RecurrencePattern.Daily);
+        var tomorrow = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
+        TodoTask instance = recurring.GenerateNextInstance(tomorrow);
+
+        // Then
+        instance.IsOverdue.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeOverdue_When_TaskIsDone()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Done test"), RecurrencePattern.Daily);
+        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        TodoTask instance = recurring.GenerateNextInstance(yesterday);
+        instance.MoveToInProgress();
+        instance.MarkAsDone();
+
+        // Then — completed tasks are never overdue
+        instance.IsOverdue.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeOverdue_When_NoScheduledDate()
+    {
+        // Given — manually created task with no scheduled date
+        TodoTask task = TodoTask.Create(new TaskTitle("No schedule"));
+
+        // Then
+        task.IsOverdue.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_CreateFromRecurringCalledWithNullSourceId()
+    {
+        // When / Then
+        Should.Throw<ArgumentNullException>(() =>
+            TodoTask.CreateFromRecurring(new TaskTitle("Test"), null!, DateOnly.FromDateTime(DateTime.UtcNow)));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_RecurringTaskUpdateTitleCalledWithNull()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Null check"), RecurrencePattern.Daily);
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => recurring.UpdateTitle(null!));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UpdateTitle_When_UpdateTitleCalled()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Old title"), RecurrencePattern.Daily);
+
+        // When
+        recurring.UpdateTitle(new TaskTitle("New title"));
+
+        // Then
+        recurring.Title.Value.ShouldBe("New title");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UpdatePattern_When_UpdatePatternCalled()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Pattern change"), RecurrencePattern.Daily);
+
+        // When
+        recurring.UpdatePattern(RecurrencePattern.Weekly);
+
+        // Then
+        recurring.Pattern.ShouldBe(RecurrencePattern.Weekly);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_UpdatePatternCalledWithInvalidValue()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Invalid pattern"), RecurrencePattern.Daily);
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(
+            () => recurring.UpdatePattern((RecurrencePattern)999));
+        ex.Message.ShouldContain("Invalid recurrence pattern");
     }
 }

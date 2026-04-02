@@ -13,19 +13,38 @@ public sealed class TodoTask
     public TaskDifficulty Difficulty { get; private set; }
     public DateTimeOffset? DueDate { get; private set; }
     public DateTimeOffset? CompletedAt { get; private set; }
+    public RecurringTaskId? SourceRecurringTaskId { get; private set; }
+    public DateOnly? ScheduledDate { get; private set; }
 
-    private TodoTask(TaskId id, TaskTitle title, TaskDifficulty difficulty, DateTimeOffset? dueDate)
+    public bool IsOverdue => ScheduledDate.HasValue
+        && ScheduledDate.Value < DateOnly.FromDateTime(DateTime.UtcNow)
+        && Status != TaskStatus.Done
+        && Status != TaskStatus.Skipped;
+
+    private TodoTask(TaskId id, TaskTitle title, TaskDifficulty difficulty, DateTimeOffset? dueDate,
+        RecurringTaskId? sourceRecurringTaskId = null, DateOnly? scheduledDate = null)
     {
         Id = id;
         Title = title;
         Status = TaskStatus.Todo;
         Difficulty = difficulty;
         DueDate = dueDate;
+        SourceRecurringTaskId = sourceRecurringTaskId;
+        ScheduledDate = scheduledDate;
     }
 
     public static TodoTask Create(TaskTitle title, TaskDifficulty difficulty = TaskDifficulty.Normal, DateTimeOffset? dueDate = null)
     {
         return new TodoTask(TaskId.New(), title, difficulty, dueDate);
+    }
+
+    public static TodoTask CreateFromRecurring(TaskTitle title, RecurringTaskId sourceId, DateOnly scheduledDate,
+        TaskDifficulty difficulty = TaskDifficulty.Normal)
+    {
+        ArgumentNullException.ThrowIfNull(sourceId);
+        var dueDate = scheduledDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
+        return new TodoTask(TaskId.New(), title, difficulty, new DateTimeOffset(dueDate),
+            sourceId, scheduledDate);
     }
 
     public void MoveToInProgress()
@@ -94,5 +113,20 @@ public sealed class TodoTask
     public void DemoteFromBossTask()
     {
         IsBossTask = false;
+    }
+
+    public void Skip()
+    {
+        if (Status == TaskStatus.Done)
+        {
+            throw new DomainException("Cannot skip a completed task.");
+        }
+
+        if (Status == TaskStatus.Skipped)
+        {
+            throw new DomainException("Task is already skipped.");
+        }
+
+        Status = TaskStatus.Skipped;
     }
 }

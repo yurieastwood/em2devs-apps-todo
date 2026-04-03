@@ -241,6 +241,8 @@ jobs:
         run: pip install "schemathesis==4.11.2"
       - name: Build API
         run: dotnet build src/EM2Devs.Todo.Api --configuration Release
+      - name: Spec coverage check
+        run: bash scripts/check-openapi-coverage.sh docs/contracts/openapi.yaml src/EM2Devs.Todo.Api/EM2Devs.Todo.Api.json
       - name: Start API
         run: |
           nohup dotnet run --project src/EM2Devs.Todo.Api --configuration Release --no-build \

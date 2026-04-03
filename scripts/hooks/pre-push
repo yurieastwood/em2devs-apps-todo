@@ -50,6 +50,9 @@ npx --yes @stoplight/spectral-cli lint docs/contracts/openapi.yaml --ruleset .sp
 # Phase 2: dynamic — running implementation honors the spec
 API_PORT=15001
 dotnet build src/EM2Devs.Todo.Api --configuration Release --verbosity quiet || fail "API build failed"
+bash scripts/check-openapi-coverage.sh docs/contracts/openapi.yaml src/EM2Devs.Todo.Api/EM2Devs.Todo.Api.json \
+  && pass "All API endpoints documented in contract" \
+  || fail "Undocumented endpoints — update docs/contracts/openapi.yaml"
 dotnet run --project src/EM2Devs.Todo.Api --configuration Release --no-build \
   --urls "http://localhost:${API_PORT}" &>/dev/null &
 API_PID=$!

@@ -596,6 +596,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TaskInstanceResponse"
+        "400":
+          description: Invalid scheduled date
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
         "404":
           description: Recurring task not found
         "409":

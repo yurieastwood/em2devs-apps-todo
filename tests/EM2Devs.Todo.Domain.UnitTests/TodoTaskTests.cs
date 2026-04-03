@@ -366,6 +366,47 @@ public sealed class TodoTaskTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_DefaultToNoEstimatedTime_When_Created()
+    {
+        // When
+        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+
+        // Then
+        task.EstimatedTime.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_SetEstimatedTime_When_Updated()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Write report"));
+
+        // When
+        task.UpdateEstimatedTime(TimeEstimate.FromMinutes(120));
+
+        // Then
+        task.EstimatedTime.ShouldNotBeNull();
+        task.EstimatedTime!.Minutes.ShouldBe(120);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ClearEstimatedTime_When_SetToNull()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Write report"));
+        task.UpdateEstimatedTime(TimeEstimate.FromMinutes(60));
+
+        // When
+        task.UpdateEstimatedTime(null);
+
+        // Then
+        task.EstimatedTime.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_UpdateDueDate_When_NewDateProvided()
     {
         // Given

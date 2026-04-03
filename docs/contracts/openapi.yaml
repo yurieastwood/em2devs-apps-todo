@@ -354,6 +354,14 @@ components:
             - Medium
             - High
             - Critical
+        estimatedMinutes:
+          type: integer
+          nullable: true
+          minimum: 1
+          description: Estimated time to complete the task, in minutes
+        clearEstimatedTime:
+          type: boolean
+          description: Set to true to clear the estimated time
         dueDate:
           type: string
           format: date-time
@@ -399,6 +407,11 @@ components:
             - Medium
             - High
             - Critical
+        estimatedMinutes:
+          type: integer
+          nullable: true
+          minimum: 1
+          description: Estimated time to complete the task, in minutes
         dueDate:
           type: string
           format: date-time

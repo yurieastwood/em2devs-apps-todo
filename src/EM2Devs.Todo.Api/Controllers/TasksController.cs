@@ -55,7 +55,8 @@ public sealed class TasksController : ControllerBase
         ArgumentNullException.ThrowIfNull(request);
 
         Result<TodoTask> result = await _mediator.Send(
-            new UpdateTaskCommand(taskId, request.Title, request.Description, request.Difficulty, request.Priority, request.DueDate, request.ClearDueDate),
+            new UpdateTaskCommand(taskId, request.Title, request.Description, request.Difficulty, request.Priority,
+                request.EstimatedMinutes, request.ClearEstimatedTime, request.DueDate, request.ClearDueDate),
             ct).ConfigureAwait(false);
         return result.ToHttpResult(task => Ok(MapToResponse(task)));
     }
@@ -89,7 +90,8 @@ public sealed class TasksController : ControllerBase
 
     private static TaskResponse MapToResponse(TodoTask task) =>
         new(task.Id.Value, task.Title.Value, task.Description, task.Status.ToString(),
-            task.Difficulty.ToString(), task.Priority.ToString(), task.DueDate, task.CompletedAt);
+            task.Difficulty.ToString(), task.Priority.ToString(), task.EstimatedTime?.Minutes,
+            task.DueDate, task.CompletedAt);
 }
 
 public sealed record CreateTaskRequest(string Title);
@@ -98,9 +100,12 @@ public sealed record UpdateTaskRequest(
     string? Description = null,
     string? Difficulty = null,
     string? Priority = null,
+    int? EstimatedMinutes = null,
+    bool ClearEstimatedTime = false,
     DateTimeOffset? DueDate = null,
     bool ClearDueDate = false);
 public sealed record UpdateTaskStatusRequest(string Status);
 public sealed record TaskResponse(
     Guid Id, string Title, string? Description, string Status,
-    string Difficulty, string Priority, DateTimeOffset? DueDate, DateTimeOffset? CompletedAt);
+    string Difficulty, string Priority, int? EstimatedMinutes,
+    DateTimeOffset? DueDate, DateTimeOffset? CompletedAt);

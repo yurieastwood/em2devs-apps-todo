@@ -41,6 +41,12 @@ public sealed class TodoTaskConfiguration : IEntityTypeConfiguration<TodoTask>
             .HasDefaultValue(TaskPriority.Medium)
             .IsRequired();
 
+        builder.Property(t => t.EstimatedTime)
+            .HasColumnName("estimated_minutes")
+            .HasConversion(
+                e => e != null ? e.Minutes : (int?)null,
+                v => v.HasValue ? TimeEstimate.FromMinutes(v.Value) : null);
+
         builder.Property(t => t.SourceRecurringTaskId)
             .HasColumnName("source_recurring_task_id")
             .HasConversion(

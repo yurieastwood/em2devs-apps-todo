@@ -36,8 +36,10 @@ while IFS= read -r path; do
     fi
 done <<< "${generated_paths}"
 
+total=$(echo "${generated_paths}" | grep -c '.' || true)
+
 if [[ ${#missing[@]} -eq 0 ]]; then
-    echo -e "${GREEN}All ${#generated_paths[@]} API endpoints are documented in the contract.${NC}"
+    echo -e "${GREEN}All ${total} API endpoints are documented in the contract.${NC}"
     exit 0
 else
     echo -e "${RED}${#missing[@]} API endpoint(s) missing from ${HAND_WRITTEN}:${NC}"

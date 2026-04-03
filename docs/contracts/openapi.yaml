@@ -4,6 +4,37 @@ info:
   description: Waypoint — gamified todo app API for demonstrating agentic development guardrails.
   version: "1.0.0"
 paths:
+  # ── Auth ──────────────────────────────────────────
+  /api/auth/login:
+    post:
+      operationId: login
+      summary: Authenticate and set auth cookie
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  /api/auth/logout:
+    post:
+      operationId: logout
+      summary: Clear auth cookie and log out
+      responses:
+        "200":
+          description: Logout successful
+  /api/auth/me:
+    get:
+      operationId: getMe
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+  # ── Tasks ─────────────────────────────────────────
   /api/tasks:
     get:
       operationId: listTasks
@@ -18,6 +49,7 @@ paths:
               - Todo
               - InProgress
               - Done
+              - Skipped
       responses:
         "200":
           description: A list of tasks
@@ -60,13 +92,7 @@ paths:
       operationId: getTask
       summary: Get a task by ID
       parameters:
-        - name: taskId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-            pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        - $ref: "#/components/parameters/taskId"
       responses:
         "200":
           description: The task
@@ -82,13 +108,7 @@ paths:
       operationId: updateTask
       summary: Update a task's fields
       parameters:
-        - name: taskId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-            pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        - $ref: "#/components/parameters/taskId"
       requestBody:
         required: true
         content:
@@ -114,13 +134,7 @@ paths:
       operationId: deleteTask
       summary: Delete a task by ID
       parameters:
-        - name: taskId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-            pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        - $ref: "#/components/parameters/taskId"
       responses:
         "204":
           description: Task deleted
@@ -133,13 +147,7 @@ paths:
       operationId: updateTaskStatus
       summary: Update a task's status
       parameters:
-        - name: taskId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-            pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        - $ref: "#/components/parameters/taskId"
       requestBody:
         required: true
         content:
@@ -174,13 +182,7 @@ paths:
       operationId: reopenTask
       summary: Re-open a completed task
       parameters:
-        - name: taskId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-            pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+        - $ref: "#/components/parameters/taskId"
       responses:
         "200":
           description: Task re-opened
@@ -196,6 +198,445 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+  # ── Quests ────────────────────────────────────────
+  /api/quests:
+    get:
+      operationId: listQuests
+      summary: List all quests
+      responses:
+        "200":
+          description: A list of quests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuestResponse"
+    post:
+      operationId: createQuest
+      summary: Create a new quest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateQuestRequest"
+      responses:
+        "201":
+          description: Quest created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestResponse"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
+  /api/quests/{questId}:
+    get:
+      operationId: getQuest
+      summary: Get a quest by ID
+      parameters:
+        - $ref: "#/components/parameters/questId"
+      responses:
+        "200":
+          description: The quest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestResponse"
+        "404":
+          description: Quest not found
+    delete:
+      operationId: deleteQuest
+      summary: Delete a quest
+      parameters:
+        - $ref: "#/components/parameters/questId"
+      responses:
+        "204":
+          description: Quest deleted
+        "404":
+          description: Quest not found
+  /api/quests/{questId}/tasks:
+    post:
+      operationId: addTaskToQuest
+      summary: Add an existing task to a quest
+      parameters:
+        - $ref: "#/components/parameters/questId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddTaskToQuestRequest"
+      responses:
+        "200":
+          description: Task added to quest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestResponse"
+        "404":
+          description: Quest or task not found
+  /api/quests/{questId}/tasks/{taskId}:
+    delete:
+      operationId: removeTaskFromQuest
+      summary: Remove a task from a quest
+      parameters:
+        - $ref: "#/components/parameters/questId"
+        - $ref: "#/components/parameters/taskId"
+      responses:
+        "200":
+          description: Task removed from quest
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestResponse"
+        "404":
+          description: Quest or task not found
+  /api/quests/{questId}/complete:
+    post:
+      operationId: completeQuest
+      summary: Mark a quest as complete
+      parameters:
+        - $ref: "#/components/parameters/questId"
+      responses:
+        "200":
+          description: Quest completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestResponse"
+        "404":
+          description: Quest not found
+        "409":
+          description: Quest cannot be completed
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  # ── Epics ─────────────────────────────────────────
+  /api/epics:
+    get:
+      operationId: listEpics
+      summary: List all epics
+      responses:
+        "200":
+          description: A list of epics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EpicResponse"
+    post:
+      operationId: createEpic
+      summary: Create a new epic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEpicRequest"
+      responses:
+        "201":
+          description: Epic created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EpicResponse"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
+  /api/epics/{epicId}:
+    get:
+      operationId: getEpic
+      summary: Get an epic by ID
+      parameters:
+        - $ref: "#/components/parameters/epicId"
+      responses:
+        "200":
+          description: The epic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EpicResponse"
+        "404":
+          description: Epic not found
+    delete:
+      operationId: deleteEpic
+      summary: Delete an epic
+      parameters:
+        - $ref: "#/components/parameters/epicId"
+      responses:
+        "204":
+          description: Epic deleted
+        "404":
+          description: Epic not found
+  /api/epics/{epicId}/quests:
+    post:
+      operationId: assignQuestToEpic
+      summary: Assign a quest to an epic
+      parameters:
+        - $ref: "#/components/parameters/epicId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignQuestRequest"
+      responses:
+        "200":
+          description: Quest assigned to epic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EpicResponse"
+        "404":
+          description: Epic or quest not found
+  /api/epics/{epicId}/quests/{questId}:
+    delete:
+      operationId: removeQuestFromEpic
+      summary: Remove a quest from an epic
+      parameters:
+        - $ref: "#/components/parameters/epicId"
+        - $ref: "#/components/parameters/questId"
+      responses:
+        "200":
+          description: Quest removed from epic
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EpicResponse"
+        "404":
+          description: Epic or quest not found
+  /api/epics/{epicId}/complete:
+    post:
+      operationId: completeEpic
+      summary: Mark an epic as complete
+      parameters:
+        - $ref: "#/components/parameters/epicId"
+      responses:
+        "200":
+          description: Epic completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EpicResponse"
+        "404":
+          description: Epic not found
+        "409":
+          description: Epic cannot be completed
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  # ── Recurring Tasks ───────────────────────────────
+  /api/recurring-tasks:
+    get:
+      operationId: listRecurringTasks
+      summary: List all recurring tasks
+      responses:
+        "200":
+          description: A list of recurring tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RecurringTaskResponse"
+    post:
+      operationId: createRecurringTask
+      summary: Create a new recurring task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRecurringTaskRequest"
+      responses:
+        "201":
+          description: Recurring task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecurringTaskResponse"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
+  /api/recurring-tasks/{recurringTaskId}:
+    get:
+      operationId: getRecurringTask
+      summary: Get a recurring task by ID
+      parameters:
+        - $ref: "#/components/parameters/recurringTaskId"
+      responses:
+        "200":
+          description: The recurring task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecurringTaskResponse"
+        "404":
+          description: Recurring task not found
+    put:
+      operationId: updateRecurringTask
+      summary: Update a recurring task template
+      parameters:
+        - $ref: "#/components/parameters/recurringTaskId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRecurringTaskRequest"
+      responses:
+        "200":
+          description: Recurring task updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecurringTaskResponse"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
+        "404":
+          description: Recurring task not found
+    delete:
+      operationId: deleteRecurringTask
+      summary: Delete a recurring task
+      parameters:
+        - $ref: "#/components/parameters/recurringTaskId"
+      responses:
+        "204":
+          description: Recurring task deleted
+        "404":
+          description: Recurring task not found
+  /api/recurring-tasks/{recurringTaskId}/pause:
+    patch:
+      operationId: pauseRecurringTask
+      summary: Pause a recurring task
+      parameters:
+        - $ref: "#/components/parameters/recurringTaskId"
+      responses:
+        "200":
+          description: Recurring task paused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecurringTaskResponse"
+        "404":
+          description: Recurring task not found
+        "409":
+          description: Already paused
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /api/recurring-tasks/{recurringTaskId}/resume:
+    patch:
+      operationId: resumeRecurringTask
+      summary: Resume a paused recurring task
+      parameters:
+        - $ref: "#/components/parameters/recurringTaskId"
+      responses:
+        "200":
+          description: Recurring task resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecurringTaskResponse"
+        "404":
+          description: Recurring task not found
+        "409":
+          description: Already active
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /api/recurring-tasks/{recurringTaskId}/generate:
+    post:
+      operationId: generateRecurringTaskInstance
+      summary: Generate a new task instance from recurring template
+      parameters:
+        - $ref: "#/components/parameters/recurringTaskId"
+        - name: scheduledDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Instance generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskInstanceResponse"
+        "404":
+          description: Recurring task not found
+        "409":
+          description: Recurring task is paused
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /api/recurring-tasks/{recurringTaskId}/instances:
+    get:
+      operationId: listRecurringTaskInstances
+      summary: List generated instances of a recurring task
+      parameters:
+        - $ref: "#/components/parameters/recurringTaskId"
+      responses:
+        "200":
+          description: List of task instances
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaskInstanceResponse"
+        "404":
+          description: Recurring task not found
+  /api/recurring-tasks/{recurringTaskId}/instances/{instanceId}/skip:
+    patch:
+      operationId: skipRecurringTaskInstance
+      summary: Skip a recurring task instance
+      parameters:
+        - $ref: "#/components/parameters/recurringTaskId"
+        - name: instanceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Instance skipped
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskInstanceResponse"
+        "404":
+          description: Instance not found or does not belong to recurring task
+        "409":
+          description: Instance cannot be skipped
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  # ── Profile ───────────────────────────────────────
   /api/profile:
     get:
       operationId: getProfile
@@ -208,6 +649,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProfileResponse"
 components:
+  parameters:
+    taskId:
+      name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+        pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    questId:
+      name: questId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    epicId:
+      name: epicId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    recurringTaskId:
+      name: recurringTaskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   schemas:
     ProblemDetails:
       type: object
@@ -253,6 +724,17 @@ components:
                 Title:
                   - "Title is required."
                   - "Title must not exceed 200 characters."
+    AuthResponse:
+      type: object
+      required:
+        - userId
+        - displayName
+      properties:
+        userId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
     CreateTaskRequest:
       type: object
       additionalProperties: false
@@ -264,6 +746,51 @@ components:
           minLength: 1
           maxLength: 200
           pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
+    UpdateTaskRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 200
+          pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
+        description:
+          type: string
+          nullable: true
+        difficulty:
+          type: string
+          nullable: true
+          enum:
+            - Trivial
+            - Easy
+            - Normal
+            - Hard
+            - Epic
+        priority:
+          type: string
+          nullable: true
+          enum:
+            - Low
+            - Medium
+            - High
+            - Critical
+        estimatedMinutes:
+          type: integer
+          nullable: true
+          minimum: 1
+          description: Estimated time to complete the task, in minutes
+        clearEstimatedTime:
+          type: boolean
+          description: Set to true to clear the estimated time
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+          pattern: "^[1-9]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|[+-]((0\\d|1[0-3]):[0-5]\\d|14:00))$"
+        clearDueDate:
+          type: boolean
     UpdateTaskStatusRequest:
       type: object
       additionalProperties: false
@@ -276,6 +803,308 @@ components:
             - Todo
             - InProgress
             - Done
+            - Skipped
+    TaskResponse:
+      type: object
+      required:
+        - id
+        - title
+        - status
+        - difficulty
+        - priority
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+            - Todo
+            - InProgress
+            - Done
+            - Skipped
+        difficulty:
+          type: string
+          enum:
+            - Trivial
+            - Easy
+            - Normal
+            - Hard
+            - Epic
+        priority:
+          type: string
+          enum:
+            - Low
+            - Medium
+            - High
+            - Critical
+        estimatedMinutes:
+          type: integer
+          nullable: true
+          minimum: 1
+          description: Estimated time to complete the task, in minutes
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+          pattern: "^[1-9]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|[+-]((0\\d|1[0-3]):[0-5]\\d|14:00))$"
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+    CreateQuestRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+    AddTaskToQuestRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - taskId
+      properties:
+        taskId:
+          type: string
+          format: uuid
+    QuestTaskResponse:
+      type: object
+      required:
+        - id
+        - title
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        status:
+          type: string
+    QuestResponse:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - progress
+        - isCompleted
+        - tasks
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        isCompleted:
+          type: boolean
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestTaskResponse"
+    CreateEpicRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        targetDate:
+          type: string
+          format: date
+          nullable: true
+    AssignQuestRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - questId
+      properties:
+        questId:
+          type: string
+          format: uuid
+    EpicQuestResponse:
+      type: object
+      required:
+        - id
+        - title
+        - progress
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+    EpicResponse:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - progress
+        - isCompleted
+        - quests
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        targetDate:
+          type: string
+          format: date
+          nullable: true
+        progress:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+        isCompleted:
+          type: boolean
+        quests:
+          type: array
+          items:
+            $ref: "#/components/schemas/EpicQuestResponse"
+    CreateRecurringTaskRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - pattern
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        pattern:
+          type: string
+          enum:
+            - Daily
+            - Weekly
+            - Monthly
+    UpdateRecurringTaskRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 200
+        pattern:
+          type: string
+          nullable: true
+          enum:
+            - Daily
+            - Weekly
+            - Monthly
+        applyToFutureInstances:
+          type: boolean
+    RecurringTaskResponse:
+      type: object
+      required:
+        - id
+        - title
+        - pattern
+        - isActive
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        pattern:
+          type: string
+          enum:
+            - Daily
+            - Weekly
+            - Monthly
+        isActive:
+          type: boolean
+    TaskInstanceResponse:
+      type: object
+      required:
+        - id
+        - title
+        - status
+        - difficulty
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+            - Todo
+            - InProgress
+            - Done
+            - Skipped
+        difficulty:
+          type: string
+          enum:
+            - Trivial
+            - Easy
+            - Normal
+            - Hard
+            - Epic
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        scheduledDate:
+          type: string
+          format: date
+          nullable: true
+        sourceRecurringTaskId:
+          type: string
+          format: uuid
+          nullable: true
     ProfileResponse:
       type: object
       required:
@@ -324,100 +1153,3 @@ components:
         finalXp:
           type: integer
           minimum: 1
-    UpdateTaskRequest:
-      type: object
-      additionalProperties: false
-      properties:
-        title:
-          type: string
-          nullable: true
-          minLength: 1
-          maxLength: 200
-          pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
-        description:
-          type: string
-          nullable: true
-        difficulty:
-          type: string
-          nullable: true
-          enum:
-            - Trivial
-            - Easy
-            - Normal
-            - Hard
-            - Epic
-        priority:
-          type: string
-          nullable: true
-          enum:
-            - Low
-            - Medium
-            - High
-            - Critical
-        estimatedMinutes:
-          type: integer
-          nullable: true
-          minimum: 1
-          description: Estimated time to complete the task, in minutes
-        clearEstimatedTime:
-          type: boolean
-          description: Set to true to clear the estimated time
-        dueDate:
-          type: string
-          format: date-time
-          nullable: true
-          pattern: "^[1-9]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|[+-]((0\\d|1[0-3]):[0-5]\\d|14:00))$"
-        clearDueDate:
-          type: boolean
-    TaskResponse:
-      type: object
-      required:
-        - id
-        - title
-        - status
-        - difficulty
-        - priority
-      properties:
-        id:
-          type: string
-          format: uuid
-        title:
-          type: string
-        description:
-          type: string
-          nullable: true
-        status:
-          type: string
-          enum:
-            - Todo
-            - InProgress
-            - Done
-        difficulty:
-          type: string
-          enum:
-            - Trivial
-            - Easy
-            - Normal
-            - Hard
-            - Epic
-        priority:
-          type: string
-          enum:
-            - Low
-            - Medium
-            - High
-            - Critical
-        estimatedMinutes:
-          type: integer
-          nullable: true
-          minimum: 1
-          description: Estimated time to complete the task, in minutes
-        dueDate:
-          type: string
-          format: date-time
-          nullable: true
-          pattern: "^[1-9]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|[+-]((0\\d|1[0-3]):[0-5]\\d|14:00))$"
-        completedAt:
-          type: string
-          format: date-time
-          nullable: true

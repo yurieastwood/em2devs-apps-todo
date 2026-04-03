@@ -10,7 +10,7 @@ Feature: Guilds
 
   Rule: Users can create and manage guilds of 2-12 members
 
-    @done
+    @todo
     Scenario: Create a guild
       When I create a guild with the following details:
         | Field       | Value                        |
@@ -35,14 +35,14 @@ Feature: Guilds
       Then they should be added to "Side Project Squad"
       And the guild should have 2 members
 
-    @done
+    @todo
     Scenario: Guild reaches maximum capacity
       Given my guild "Side Project Squad" has 12 members
       When a 13th user attempts to join via invite link
       Then they should see a message that the guild is at capacity
       And they should not be added to the guild
 
-    @done
+    @todo
     Scenario: Remove a member from a guild
       Given I am the leader of "Side Project Squad" with 5 members
       When I remove the member "Alex" from the guild

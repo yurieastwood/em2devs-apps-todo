@@ -316,6 +316,20 @@ public sealed class TasksControllerTests : IDisposable
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    [Fact]
+    public async Task Should_ReturnBadRequest_When_NumericPriorityProvided()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/tasks",
+            new { title = "Numeric priority" });
+        TaskResponseDto? created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        HttpResponseMessage response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{created!.Id}",
+            new { priority = "1" });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
     private sealed record TaskDetailDto(Guid Id, string Title, string Status, string Difficulty, string Priority);
 }
 

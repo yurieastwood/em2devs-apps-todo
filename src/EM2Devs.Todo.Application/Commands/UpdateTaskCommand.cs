@@ -68,10 +68,13 @@ public sealed class UpdateTaskCommandHandler : IRequestHandler<UpdateTaskCommand
 
         if (request.Priority is not null)
         {
-            if (!Enum.TryParse<TaskPriority>(request.Priority, out TaskPriority priority) ||
+            string validPriorities = string.Join(", ", Enum.GetNames<TaskPriority>());
+
+            if (int.TryParse(request.Priority, out _) ||
+                !Enum.TryParse<TaskPriority>(request.Priority, out TaskPriority priority) ||
                 !Enum.IsDefined(priority))
             {
-                return new ValidationError($"Invalid priority '{request.Priority}'. Valid values: Low, Medium, High, Critical.");
+                return new ValidationError($"Invalid priority '{request.Priority}'. Valid values: {validPriorities}.");
             }
 
             task.UpdatePriority(priority);

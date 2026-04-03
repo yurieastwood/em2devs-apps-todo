@@ -346,6 +346,14 @@ components:
             - Normal
             - Hard
             - Epic
+        priority:
+          type: string
+          nullable: true
+          enum:
+            - Low
+            - Medium
+            - High
+            - Critical
         dueDate:
           type: string
           format: date-time
@@ -360,6 +368,7 @@ components:
         - title
         - status
         - difficulty
+        - priority
       properties:
         id:
           type: string
@@ -383,6 +392,13 @@ components:
             - Normal
             - Hard
             - Epic
+        priority:
+          type: string
+          enum:
+            - Low
+            - Medium
+            - High
+            - Critical
         dueDate:
           type: string
           format: date-time

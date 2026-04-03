@@ -281,6 +281,56 @@ public sealed class TasksControllerTests : IDisposable
         // Then
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task Should_UpdatePriority_When_ValidPriorityProvided()
+    {
+        // Given
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/tasks",
+            new { title = "Priority test" });
+        TaskResponseDto? created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        // When
+        HttpResponseMessage response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{created!.Id}",
+            new { priority = "Critical" });
+
+        // Then
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        TaskDetailDto? updated = await response.Content.ReadFromJsonAsync<TaskDetailDto>();
+        updated!.Priority.ShouldBe("Critical");
+        updated.Difficulty.ShouldBe("Normal"); // unchanged
+    }
+
+    [Fact]
+    public async Task Should_ReturnBadRequest_When_InvalidPriorityProvided()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/tasks",
+            new { title = "Bad priority" });
+        TaskResponseDto? created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        HttpResponseMessage response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{created!.Id}",
+            new { priority = "Urgent" });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Should_ReturnBadRequest_When_NumericPriorityProvided()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/tasks",
+            new { title = "Numeric priority" });
+        TaskResponseDto? created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        HttpResponseMessage response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{created!.Id}",
+            new { priority = "1" });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    private sealed record TaskDetailDto(Guid Id, string Title, string Status, string Difficulty, string Priority);
 }
 
 internal sealed record TaskResponseDto(Guid Id, string Title, string Status);

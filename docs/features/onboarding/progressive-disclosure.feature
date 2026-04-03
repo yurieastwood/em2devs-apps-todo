@@ -6,7 +6,7 @@ Feature: Progressive Disclosure and Onboarding
 
   Rule: Account creation is minimal and gets users to their first task immediately
 
-    @done
+    @todo
     Scenario: Create an account with minimal friction
       Given I am on the Waypoint signup page
       When I sign up using a social login provider
@@ -15,7 +15,7 @@ Feature: Progressive Disclosure and Onboarding
       And I should not see any gamification elements yet
       And the interface should look like a clean, simple TODO app
 
-    @done
+    @todo
     Scenario: Create first task during onboarding
       Given I have just created my account
       When I am prompted to create my first task
@@ -24,7 +24,7 @@ Feature: Progressive Disclosure and Onboarding
       And I should see a brief welcome message
       And I should be taken to my task inbox
 
-    @done
+    @todo
     Scenario: Skip the first-task prompt
       Given I have just created my account
       When I dismiss the first-task prompt

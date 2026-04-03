@@ -11,6 +11,7 @@ public sealed class TodoTask
     public TaskStatus Status { get; private set; }
     public bool IsBossTask { get; private set; }
     public TaskDifficulty Difficulty { get; private set; }
+    public TaskPriority Priority { get; private set; }
     public DateTimeOffset? DueDate { get; private set; }
     public DateTimeOffset? CompletedAt { get; private set; }
     public RecurringTaskId? SourceRecurringTaskId { get; private set; }
@@ -22,12 +23,14 @@ public sealed class TodoTask
         && Status != TaskStatus.Skipped;
 
     private TodoTask(TaskId id, TaskTitle title, TaskDifficulty difficulty, DateTimeOffset? dueDate,
+        TaskPriority priority = TaskPriority.Medium,
         RecurringTaskId? sourceRecurringTaskId = null, DateOnly? scheduledDate = null)
     {
         Id = id;
         Title = title;
         Status = TaskStatus.Todo;
         Difficulty = difficulty;
+        Priority = priority;
         DueDate = dueDate;
         SourceRecurringTaskId = sourceRecurringTaskId;
         ScheduledDate = scheduledDate;
@@ -44,7 +47,7 @@ public sealed class TodoTask
         ArgumentNullException.ThrowIfNull(sourceId);
         var dueDate = scheduledDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
         return new TodoTask(TaskId.New(), title, difficulty, new DateTimeOffset(dueDate),
-            sourceId, scheduledDate);
+            sourceRecurringTaskId: sourceId, scheduledDate: scheduledDate);
     }
 
     public void MoveToInProgress()
@@ -93,6 +96,11 @@ public sealed class TodoTask
     public void UpdateDifficulty(TaskDifficulty difficulty)
     {
         Difficulty = difficulty;
+    }
+
+    public void UpdatePriority(TaskPriority priority)
+    {
+        Priority = priority;
     }
 
     public void UpdateDueDate(DateTimeOffset? dueDate)

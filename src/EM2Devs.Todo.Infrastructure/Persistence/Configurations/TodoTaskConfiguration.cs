@@ -34,6 +34,13 @@ public sealed class TodoTaskConfiguration : IEntityTypeConfiguration<TodoTask>
             .HasMaxLength(20)
             .IsRequired();
 
+        builder.Property(t => t.Priority)
+            .HasColumnName("priority")
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(TaskPriority.Medium)
+            .IsRequired();
+
         builder.Property(t => t.SourceRecurringTaskId)
             .HasColumnName("source_recurring_task_id")
             .HasConversion(

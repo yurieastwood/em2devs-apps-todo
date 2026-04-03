@@ -12,6 +12,7 @@ public sealed record UpdateTaskCommand(
     string? Title = null,
     string? Description = null,
     string? Difficulty = null,
+    string? Priority = null,
     DateTimeOffset? DueDate = null,
     bool ClearDueDate = false) : IRequest<Result<TodoTask>>;
 
@@ -63,6 +64,17 @@ public sealed class UpdateTaskCommandHandler : IRequestHandler<UpdateTaskCommand
             }
 
             task.UpdateDifficulty(difficulty);
+        }
+
+        if (request.Priority is not null)
+        {
+            if (!Enum.TryParse<TaskPriority>(request.Priority, out TaskPriority priority) ||
+                !Enum.IsDefined(priority))
+            {
+                return new ValidationError($"Invalid priority '{request.Priority}'. Valid values: Low, Medium, High, Critical.");
+            }
+
+            task.UpdatePriority(priority);
         }
 
         if (request.ClearDueDate)

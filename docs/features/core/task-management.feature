@@ -124,7 +124,7 @@ Feature: Task Management
       Given I have an open task "Update website" with priority "Low"
       When I change the priority to "High"
       Then the task priority should be "High"
-      And the task difficulty rating should be updated accordingly
+      And the task difficulty should remain unchanged
 
     @done
     Scenario: Reschedule a task

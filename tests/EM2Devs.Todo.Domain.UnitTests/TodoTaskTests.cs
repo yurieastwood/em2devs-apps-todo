@@ -325,6 +325,47 @@ public sealed class TodoTaskTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_DefaultToMediumPriority_When_Created()
+    {
+        // When
+        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+
+        // Then
+        task.Priority.ShouldBe(TaskPriority.Medium);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UpdatePriority_When_NewPriorityProvided()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        task.Priority.ShouldBe(TaskPriority.Medium);
+
+        // When
+        task.UpdatePriority(TaskPriority.Critical);
+
+        // Then
+        task.Priority.ShouldBe(TaskPriority.Critical);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotChangeDifficulty_When_PriorityUpdated()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Test"), TaskDifficulty.Hard);
+
+        // When
+        task.UpdatePriority(TaskPriority.Low);
+
+        // Then — priority and difficulty are independent
+        task.Priority.ShouldBe(TaskPriority.Low);
+        task.Difficulty.ShouldBe(TaskDifficulty.Hard);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_UpdateDueDate_When_NewDateProvided()
     {
         // Given

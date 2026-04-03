@@ -330,7 +330,37 @@ public sealed class TasksControllerTests : IDisposable
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
-    private sealed record TaskDetailDto(Guid Id, string Title, string Status, string Difficulty, string Priority);
+    [Fact]
+    public async Task Should_SetEstimatedTime_When_ValidMinutesProvided()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/tasks",
+            new { title = "Estimate test" });
+        TaskResponseDto? created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        HttpResponseMessage response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{created!.Id}",
+            new { estimatedMinutes = 120 });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        TaskDetailDto? updated = await response.Content.ReadFromJsonAsync<TaskDetailDto>();
+        updated!.EstimatedMinutes.ShouldBe(120);
+    }
+
+    [Fact]
+    public async Task Should_ReturnBadRequest_When_EstimatedMinutesIsZero()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/tasks",
+            new { title = "Zero estimate" });
+        TaskResponseDto? created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        HttpResponseMessage response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{created!.Id}",
+            new { estimatedMinutes = 0 });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    private sealed record TaskDetailDto(Guid Id, string Title, string Status, string Difficulty, string Priority, int? EstimatedMinutes);
 }
 
 internal sealed record TaskResponseDto(Guid Id, string Title, string Status);

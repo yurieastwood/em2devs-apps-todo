@@ -13,6 +13,8 @@ public sealed record UpdateTaskCommand(
     string? Description = null,
     string? Difficulty = null,
     string? Priority = null,
+    int? EstimatedMinutes = null,
+    bool ClearEstimatedTime = false,
     DateTimeOffset? DueDate = null,
     bool ClearDueDate = false) : IRequest<Result<TodoTask>>;
 
@@ -78,6 +80,25 @@ public sealed class UpdateTaskCommandHandler : IRequestHandler<UpdateTaskCommand
             }
 
             task.UpdatePriority(priority);
+        }
+
+        if (request.ClearEstimatedTime)
+        {
+            task.UpdateEstimatedTime(null);
+        }
+        else if (request.EstimatedMinutes.HasValue)
+        {
+            TimeEstimate estimate;
+            try
+            {
+                estimate = TimeEstimate.FromMinutes(request.EstimatedMinutes.Value);
+            }
+            catch (DomainException ex)
+            {
+                return new ValidationError(ex.Message);
+            }
+
+            task.UpdateEstimatedTime(estimate);
         }
 
         if (request.ClearDueDate)

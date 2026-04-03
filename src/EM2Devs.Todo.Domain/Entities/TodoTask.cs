@@ -12,6 +12,7 @@ public sealed class TodoTask
     public bool IsBossTask { get; private set; }
     public TaskDifficulty Difficulty { get; private set; }
     public TaskPriority Priority { get; private set; }
+    public TimeEstimate? EstimatedTime { get; private set; }
     public DateTimeOffset? DueDate { get; private set; }
     public DateTimeOffset? CompletedAt { get; private set; }
     public RecurringTaskId? SourceRecurringTaskId { get; private set; }
@@ -101,6 +102,11 @@ public sealed class TodoTask
     public void UpdatePriority(TaskPriority priority)
     {
         Priority = priority;
+    }
+
+    public void UpdateEstimatedTime(TimeEstimate? estimatedTime)
+    {
+        EstimatedTime = estimatedTime;
     }
 
     public void UpdateDueDate(DateTimeOffset? dueDate)

@@ -128,6 +128,11 @@ public sealed class RecurringTasksController : ControllerBase
     public async Task<IActionResult> GenerateInstance(
         Guid recurringTaskId, [FromQuery] DateOnly? scheduledDate, CancellationToken ct)
     {
+        if (Request.Query.ContainsKey("scheduledDate") && !scheduledDate.HasValue)
+        {
+            return BadRequest(new { error = "Invalid scheduledDate format. Expected: yyyy-MM-dd" });
+        }
+
         Result<TodoTask> result = await _mediator
             .Send(new GenerateInstancesCommand(recurringTaskId, scheduledDate), ct).ConfigureAwait(false);
         return result.ToHttpResult(task =>

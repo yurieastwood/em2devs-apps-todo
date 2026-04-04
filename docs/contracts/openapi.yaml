@@ -266,6 +266,10 @@ paths:
               operationId: completeQuest
               parameters:
                 questId: $response.body#/id
+            AssignQuestToEpic:
+              operationId: assignQuestToEpic
+              requestBody:
+                questId: $response.body#/id
         "400":
           description: Validation error
           content:
@@ -285,6 +289,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/QuestResponse"
+        "400":
+          description: Invalid quest ID format
         "404":
           description: Quest not found
     delete:
@@ -295,6 +301,8 @@ paths:
       responses:
         "204":
           description: Quest deleted
+        "400":
+          description: Invalid quest ID format
         "404":
           description: Quest not found
   /api/quests/{questId}/tasks:
@@ -433,6 +441,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EpicResponse"
+        "400":
+          description: Invalid epic ID format
         "404":
           description: Epic not found
     delete:
@@ -443,6 +453,8 @@ paths:
       responses:
         "204":
           description: Epic deleted
+        "400":
+          description: Invalid epic ID format
         "404":
           description: Epic not found
   /api/epics/{epicId}/quests:
@@ -593,6 +605,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RecurringTaskResponse"
+        "400":
+          description: Invalid recurring task ID format
         "404":
           description: Recurring task not found
     put:
@@ -635,6 +649,8 @@ paths:
       responses:
         "204":
           description: Recurring task deleted
+        "400":
+          description: Invalid recurring task ID format
         "404":
           description: Recurring task not found
   /api/recurring-tasks/{recurringTaskId}/pause:
@@ -650,6 +666,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RecurringTaskResponse"
+        "400":
+          description: Invalid recurring task ID format
         "404":
           description: Recurring task not found
         "409":
@@ -671,6 +689,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RecurringTaskResponse"
+        "400":
+          description: Invalid recurring task ID format
         "404":
           description: Recurring task not found
         "409":
@@ -727,6 +747,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TaskInstanceResponse"
+        "400":
+          description: Invalid recurring task ID format
         "404":
           description: Recurring task not found
   /api/recurring-tasks/{recurringTaskId}/instances/{instanceId}/skip:
@@ -748,6 +770,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TaskInstanceResponse"
+        "400":
+          description: Invalid ID format
         "404":
           description: Instance not found or does not belong to recurring task
         "409":
@@ -987,7 +1011,7 @@ components:
           type: string
           minLength: 1
           maxLength: 200
-          pattern: "\\S"
+          pattern: "[^\\x00-\\x1f\\x7f-\\x9f\\s]"
         description:
           type: string
         dueDate:
@@ -1060,7 +1084,7 @@ components:
           type: string
           minLength: 1
           maxLength: 200
-          pattern: "\\S"
+          pattern: "[^\\x00-\\x1f\\x7f-\\x9f\\s]"
         description:
           type: string
         targetDate:

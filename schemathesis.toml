@@ -1,0 +1,7 @@
+# Exclude compound child operations from Schemathesis testing.
+# These require multi-step setup (create child + assign) that link
+# inference cannot express. They are documented in the spec and
+# validated by dedicated API integration tests.
+[[operations]]
+include-path-regex = "/api/(quests/\\{questId\\}/tasks|epics/\\{epicId\\}/quests)"
+enabled = false

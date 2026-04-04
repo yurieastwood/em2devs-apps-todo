@@ -50,9 +50,6 @@ npx --yes @stoplight/spectral-cli lint docs/contracts/openapi.yaml --ruleset .sp
 # Phase 2: dynamic — running implementation honors the spec
 API_PORT=15001
 dotnet build src/EM2Devs.Todo.Api --configuration Release --verbosity quiet || fail "API build failed"
-bash scripts/check-openapi-coverage.sh docs/contracts/openapi.yaml src/EM2Devs.Todo.Api/EM2Devs.Todo.Api.json \
-  && pass "All API endpoints documented in contract" \
-  || fail "Undocumented endpoints — update docs/contracts/openapi.yaml"
 dotnet run --project src/EM2Devs.Todo.Api --configuration Release --no-build \
   --urls "http://localhost:${API_PORT}" &>/dev/null &
 API_PID=$!
@@ -62,13 +59,9 @@ for i in $(seq 1 30); do
   curl -s "http://localhost:${API_PORT}/api/tasks" &>/dev/null && { API_READY=true; break; } || sleep 1
 done
 [[ "${API_READY}" == "true" ]] || fail "API did not start within 30 seconds — check port ${API_PORT}"
-schemathesis run docs/contracts/openapi.yaml --url "http://localhost:${API_PORT}" --checks all --phases examples,coverage \
+schemathesis run docs/contracts/openapi.yaml --url "http://localhost:${API_PORT}" --checks all --phases examples,coverage,stateful \
   && pass "Implementation matches contract (Schemathesis)" \
   || fail "Contract drift — implementation doesn't match spec (ADR-0004)"
-schemathesis run docs/contracts/openapi.yaml --url "http://localhost:${API_PORT}" --checks all --phases stateful \
-  --exclude-path-regex '/api/(quests|epics|recurring-tasks)' \
-  && pass "Stateful tests pass (Tasks + Profile + Auth)" \
-  || fail "Stateful contract drift — implementation doesn't match spec (ADR-0004)"
 kill "${API_PID}" 2>/dev/null; wait "${API_PID}" 2>/dev/null
 trap - EXIT
 

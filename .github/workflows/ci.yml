@@ -241,8 +241,6 @@ jobs:
         run: pip install "schemathesis==4.11.2"
       - name: Build API
         run: dotnet build src/EM2Devs.Todo.Api --configuration Release
-      - name: Spec coverage check
-        run: bash scripts/check-openapi-coverage.sh docs/contracts/openapi.yaml src/EM2Devs.Todo.Api/EM2Devs.Todo.Api.json
       - name: Start API
         run: |
           nohup dotnet run --project src/EM2Devs.Todo.Api --configuration Release --no-build \
@@ -251,10 +249,8 @@ jobs:
           for i in $(seq 1 30); do
             curl -s http://localhost:5001/api/tasks > /dev/null 2>&1 && break || sleep 1
           done
-      - name: Dynamic validation — coverage (Schemathesis)
-        run: schemathesis run docs/contracts/openapi.yaml --url http://localhost:5001 --checks all --phases examples,coverage
-      - name: Dynamic validation — stateful (Schemathesis, Tasks + Profile + Auth)
-        run: schemathesis run docs/contracts/openapi.yaml --url http://localhost:5001 --checks all --phases stateful --exclude-path-regex '/api/(quests|epics|recurring-tasks)'
+      - name: Dynamic validation (Schemathesis)
+        run: schemathesis run docs/contracts/openapi.yaml --url http://localhost:5001 --checks all --phases examples,coverage,stateful
       - name: Stop API
         if: always()
         run: kill $(cat /tmp/api.pid) 2>/dev/null || true

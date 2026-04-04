@@ -278,6 +278,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/QuestResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
         "404":
           description: Quest or task not found
         "409":
@@ -403,6 +409,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EpicResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
         "404":
           description: Epic or quest not found
         "409":
@@ -525,6 +537,12 @@ paths:
                 $ref: "#/components/schemas/ValidationProblemDetails"
         "404":
           description: Recurring task not found
+        "409":
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
     delete:
       operationId: deleteRecurringTask
       summary: Delete a recurring task
@@ -902,6 +920,7 @@ components:
         taskId:
           type: string
           format: uuid
+          pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     QuestTaskResponse:
       type: object
       required:
@@ -974,6 +993,7 @@ components:
         questId:
           type: string
           format: uuid
+          pattern: "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     EpicQuestResponse:
       type: object
       required:

@@ -325,6 +325,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/QuestResponse"
+        "400":
+          description: Invalid quest ID format
         "404":
           description: Quest not found
         "409":
@@ -458,6 +460,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EpicResponse"
+        "400":
+          description: Invalid epic ID format
         "404":
           description: Epic not found
         "409":
@@ -910,6 +914,7 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+          pattern: "\\S"
         description:
           type: string
         dueDate:
@@ -982,6 +987,7 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+          pattern: "\\S"
         description:
           type: string
         targetDate:

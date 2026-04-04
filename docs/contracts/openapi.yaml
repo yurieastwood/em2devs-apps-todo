@@ -910,6 +910,7 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+          pattern: "^[^\\x00-\\x1f]*[^\\x00-\\x1f\\s][^\\x00-\\x1f]*$"
         description:
           type: string
         dueDate:
@@ -982,6 +983,7 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+          pattern: "^[^\\x00-\\x1f]*[^\\x00-\\x1f\\s][^\\x00-\\x1f]*$"
         description:
           type: string
         targetDate:
@@ -1057,6 +1059,7 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+          pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
         pattern:
           type: string
           enum:
@@ -1072,6 +1075,7 @@ components:
           nullable: true
           minLength: 1
           maxLength: 200
+          pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
         pattern:
           type: string
           nullable: true

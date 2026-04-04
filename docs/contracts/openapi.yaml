@@ -308,6 +308,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/QuestResponse"
+        "400":
+          description: Invalid ID format
         "404":
           description: Quest or task not found
   /api/quests/{questId}/complete:
@@ -439,6 +441,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EpicResponse"
+        "400":
+          description: Invalid ID format
         "404":
           description: Epic or quest not found
   /api/epics/{epicId}/complete:
@@ -609,7 +613,6 @@ paths:
           schema:
             type: string
             format: date
-            nullable: true
       responses:
         "200":
           description: Instance generated

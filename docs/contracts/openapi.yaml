@@ -34,6 +34,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Not authenticated
   # ── Tasks ─────────────────────────────────────────
   /api/tasks:
     get:
@@ -607,6 +609,7 @@ paths:
           schema:
             type: string
             format: date
+            nullable: true
       responses:
         "200":
           description: Instance generated

@@ -83,6 +83,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TaskResponse"
+          links:
+            GetTask:
+              operationId: getTask
+              parameters:
+                taskId: $response.body#/id
+            UpdateTask:
+              operationId: updateTask
+              parameters:
+                taskId: $response.body#/id
+            DeleteTask:
+              operationId: deleteTask
+              parameters:
+                taskId: $response.body#/id
+            UpdateTaskStatus:
+              operationId: updateTaskStatus
+              parameters:
+                taskId: $response.body#/id
+            AddTaskToQuest:
+              operationId: addTaskToQuest
+              requestBody:
+                taskId: $response.body#/id
         "400":
           description: Validation error
           content:
@@ -232,6 +253,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/QuestResponse"
+          links:
+            GetQuest:
+              operationId: getQuest
+              parameters:
+                questId: $response.body#/id
+            DeleteQuest:
+              operationId: deleteQuest
+              parameters:
+                questId: $response.body#/id
+            CompleteQuest:
+              operationId: completeQuest
+              parameters:
+                questId: $response.body#/id
         "400":
           description: Validation error
           content:
@@ -367,6 +401,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/EpicResponse"
+          links:
+            GetEpic:
+              operationId: getEpic
+              parameters:
+                epicId: $response.body#/id
+            DeleteEpic:
+              operationId: deleteEpic
+              parameters:
+                epicId: $response.body#/id
+            CompleteEpic:
+              operationId: completeEpic
+              parameters:
+                epicId: $response.body#/id
         "400":
           description: Validation error
           content:
@@ -502,6 +549,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RecurringTaskResponse"
+          links:
+            GetRecurringTask:
+              operationId: getRecurringTask
+              parameters:
+                recurringTaskId: $response.body#/id
+            UpdateRecurringTask:
+              operationId: updateRecurringTask
+              parameters:
+                recurringTaskId: $response.body#/id
+            DeleteRecurringTask:
+              operationId: deleteRecurringTask
+              parameters:
+                recurringTaskId: $response.body#/id
+            PauseRecurringTask:
+              operationId: pauseRecurringTask
+              parameters:
+                recurringTaskId: $response.body#/id
+            GenerateInstance:
+              operationId: generateRecurringTaskInstance
+              parameters:
+                recurringTaskId: $response.body#/id
+            ListInstances:
+              operationId: listRecurringTaskInstances
+              parameters:
+                recurringTaskId: $response.body#/id
         "400":
           description: Validation error
           content:

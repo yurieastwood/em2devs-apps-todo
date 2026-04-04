@@ -924,7 +924,8 @@ components:
           type: integer
           nullable: true
           minimum: 1
-          description: Estimated time to complete the task, in minutes
+          maximum: 525600
+          description: Estimated time to complete the task, in minutes (max 1 year)
         clearEstimatedTime:
           type: boolean
           description: Set to true to clear the estimated time
@@ -991,7 +992,8 @@ components:
           type: integer
           nullable: true
           minimum: 1
-          description: Estimated time to complete the task, in minutes
+          maximum: 525600
+          description: Estimated time to complete the task, in minutes (max 1 year)
         dueDate:
           type: string
           format: date-time

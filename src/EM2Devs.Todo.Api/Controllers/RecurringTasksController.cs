@@ -130,7 +130,10 @@ public sealed class RecurringTasksController : ControllerBase
     {
         if (Request.Query.ContainsKey("scheduledDate") && !scheduledDate.HasValue)
         {
-            return BadRequest(new { error = "Invalid scheduledDate format. Expected: yyyy-MM-dd" });
+            return Problem(
+                detail: "Invalid scheduledDate format. Expected: yyyy-MM-dd",
+                title: "Validation failed",
+                statusCode: 400);
         }
 
         Result<TodoTask> result = await _mediator

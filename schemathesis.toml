@@ -1,0 +1,3 @@
+# Hooks disable stateful link inference via the Python API
+# (the TOML parser in v4.14.3 doesn't expose stateful.inference.algorithms)
+hooks = "./schemathesis_hooks.py"

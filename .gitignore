@@ -1,5 +1,8 @@
 # Build results
 [Dd]ebug/
+
+# Generated OpenAPI spec (build-time artifact from Microsoft.Extensions.ApiDescription.Server)
+src/EM2Devs.Todo.Api/EM2Devs.Todo.Api.json
 [Rr]elease/
 x64/
 x86/

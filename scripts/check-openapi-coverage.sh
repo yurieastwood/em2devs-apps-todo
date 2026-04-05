@@ -25,6 +25,13 @@ else
     exit 1
 fi
 
+# Verify PyYAML is available for the selected interpreter
+if ! "${PY}" -c "import yaml" &>/dev/null; then
+    echo -e "${RED}PyYAML is required for '${PY}' but is not installed.${NC}"
+    echo "Install it with: ${PY} -m pip install pyyaml"
+    exit 1
+fi
+
 # Extract METHOD /path from generated JSON spec, excluding versioned duplicates
 generated_ops=$("${PY}" -c "
 import json, sys

@@ -11,6 +11,10 @@ Usage: python3 scripts/run-schemathesis.py <spec-path> <base-url>
 
 import sys
 
+if len(sys.argv) != 3:
+    print(f"Usage: {sys.argv[0]} <spec-path> <base-url>", file=sys.stderr)
+    sys.exit(2)
+
 import schemathesis
 from schemathesis.config import StatefulPhaseConfig
 

@@ -81,6 +81,9 @@ TestResults/
 # Aspire
 .dcproj.user
 
+# Superpowers (local plans/artifacts)
+docs/superpowers/
+
 # Misc
 *.swp
 *.swo

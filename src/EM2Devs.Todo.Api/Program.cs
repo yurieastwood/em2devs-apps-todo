@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using EM2Devs.Todo.Api.ModelBinding;
 using Scalar.AspNetCore;
 using EM2Devs.Todo.Application.Behaviors;
 using EM2Devs.Todo.Application.Commands;
@@ -121,7 +122,10 @@ builder.Services.AddApiVersioning(options =>
     options.ApiVersionReader = new UrlSegmentApiVersionReader();
 }).AddMvc();
 
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        options.ModelBinderProviders.Insert(0, new DateOnlyModelBinderProvider());
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;

@@ -16,28 +16,34 @@ require npx          "install Node.js from https://nodejs.org"
 require schemathesis "install via 'pip install schemathesis' or 'pipx install schemathesis'"
 require curl         "install via your system package manager"
 
-gate "G1 — Compiler / Type System"
+echo -e "${YELLOW}═══ Commit Stage ═══${NC}"
+
+gate "Commit — Build"
 dotnet build --configuration Release /p:TreatWarningsAsErrors=true --verbosity quiet && pass "Build succeeded" || fail "Build failed — check type errors (ADR-0002)"
 
-gate "G2 — Lint & Format"
+gate "Commit — Format"
 dotnet format --verify-no-changes && pass "Formatting clean" || fail "Format violations — run 'dotnet format' to fix"
 
-gate "G3 — Architecture Fitness Tests"
-dotnet test tests/EM2Devs.Todo.ArchitectureTests --configuration Release --verbosity quiet && pass "Architecture rules hold" || fail "Architecture violation — see ADR-0001"
-
-gate "G4 — Scenario-Driven Tests"
-dotnet test --configuration Release --filter "Category!=Architecture" --verbosity quiet && pass "All scenarios pass" || fail "Test failure — fix production code, not the test (ADR-0003)"
-
-gate "G5 — Supply Chain Security"
-dotnet list package --vulnerable --include-transitive 2>&1 | grep -q "has the following vulnerable packages" && fail "Vulnerable NuGet packages found — update or replace them" || pass "No known vulnerabilities"
-
-gate "G6 — API Contract Validation"
-# Phase 1: static — spec document is well-formed
+gate "Commit — Contract Lint"
 npx --yes @stoplight/spectral-cli lint docs/contracts/openapi.yaml --ruleset .spectral.yaml \
   && pass "Spec valid (Spectral)" \
   || fail "Spec violation — see ADR-0004"
+bash scripts/check-openapi-coverage.sh docs/contracts/openapi.yaml src/EM2Devs.Todo.Api/EM2Devs.Todo.Api.json \
+  && pass "All operations documented (coverage check)" \
+  || fail "Undocumented API operations — update docs/contracts/openapi.yaml"
 
-# Phase 2: dynamic — running implementation honors the spec
+gate "Commit — Architecture"
+dotnet test tests/EM2Devs.Todo.ArchitectureTests --configuration Release --verbosity quiet && pass "Architecture rules hold" || fail "Architecture violation — see ADR-0001"
+
+gate "Commit — Tests"
+dotnet test --configuration Release --filter "Category!=Architecture" --verbosity quiet && pass "All scenarios pass" || fail "Test failure — fix production code, not the test (ADR-0003)"
+
+gate "Commit — Security"
+dotnet list package --vulnerable --include-transitive 2>&1 | grep -q "has the following vulnerable packages" && fail "Vulnerable NuGet packages found — update or replace them" || pass "No known vulnerabilities"
+
+echo -e "${YELLOW}═══ Acceptance Stage ═══${NC}"
+
+gate "Acceptance — Contract Test"
 API_PORT=15001
 dotnet run --project src/EM2Devs.Todo.Api --configuration Release --no-build \
   --urls "http://localhost:${API_PORT}" &>/dev/null &
@@ -54,8 +60,8 @@ schemathesis run docs/contracts/openapi.yaml --url "http://localhost:${API_PORT}
 kill "${API_PID}" 2>/dev/null; wait "${API_PID}" 2>/dev/null
 trap - EXIT
 
-gate "G7 — Mutation Testing"
+gate "Acceptance — Mutation"
 dotnet tool restore --verbosity quiet || fail "Tool restore failed — check .config/dotnet-tools.json"
 dotnet stryker -f stryker-config.json && pass "All mutants killed" || fail "Mutant survived — add tests to kill it (ADR-0005)"
 
-echo -e "\n${GREEN}━━━ ALL GATES PASSED ━━━${NC}\n"
+echo -e "\n${GREEN}━━━ ALL STAGES PASSED ━━━${NC}\n"

@@ -113,21 +113,31 @@ dotnet dotnet-ef database update \
   --connection "Host=localhost;Port=<port>;Database=tododb;Username=postgres;Password=<password>"
 ```
 
-## Quality Gates
+## Quality Pipeline
 
-Seven automated gates enforce code quality at every stage:
+Automated checks enforce code quality at two stages ([ADR-028](docs/decisions/20260406-028-pipeline-restructuring.md)):
 
-| Gate | What it checks | Pre-commit | Pre-push | CI |
-|------|---------------|:---:|:---:|:---:|
-| G1 — Compiler / Type System | Strongly-typed value objects + Roslyn analyzers (`TreatWarningsAsErrors`) | x | | x |
-| G2 — Lint & Format | `.editorconfig` + `dotnet format` | x | | x |
-| G3 — Architecture Fitness | NetArchTest rules enforcing Clean Architecture layer boundaries | x | | x |
-| G4 — Scenario-Driven Tests | Behaviour tests via xUnit + Shouldly | x | | x |
-| G5 — Supply Chain Security | `dotnet list package --vulnerable --include-transitive` | x | | x |
-| G6 — API Contract Validation | Spectral (static) + Schemathesis (dynamic) | | x | x |
-| G7 — Mutation Testing | Stryker.NET on Domain layer — zero surviving mutants | | x | x |
+### Commit Stage (pre-commit hook + CI)
 
-Run all gates locally:
+| Check | What it validates |
+|-------|------------------|
+| Build | Strongly-typed value objects + Roslyn analyzers (`TreatWarningsAsErrors`) |
+| Format | `.editorconfig` + `dotnet format` |
+| Frontend Lint | Svelte type check + ESLint + Prettier (when frontend files staged) |
+| Contract Lint | Spectral (spec structure) + coverage check (all operations documented) |
+| Architecture | NetArchTest rules enforcing Clean Architecture layer boundaries |
+| Tests | Behaviour tests via xUnit + Shouldly |
+| Security | `dotnet list package --vulnerable --include-transitive` |
+
+### Acceptance Stage (pre-push hook + CI)
+
+| Check | What it validates |
+|-------|------------------|
+| Contract Test | Schemathesis property-testing against running API |
+| Mutation | Stryker.NET on Domain layer — zero surviving mutants |
+| E2E | Playwright end-to-end tests (CI only) |
+
+Run all checks locally:
 
 ```bash
 ./scripts/run-gates.sh

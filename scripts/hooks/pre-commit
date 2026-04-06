@@ -13,12 +13,12 @@ require() { command -v "$1" &>/dev/null || fail "Required tool '$1' not found �
 
 require dotnet "install .NET SDK from https://dot.net"
 
-echo -e "${YELLOW}Running pre-commit gates (G1–G5)...${NC}"
+echo -e "${YELLOW}Running Commit Stage...${NC}"
 
-gate "G1 — Compiler / Type System"
+gate "Commit — Build"
 dotnet build --configuration Release /p:TreatWarningsAsErrors=true --verbosity quiet && pass "Build succeeded" || fail "Build failed — check type errors (ADR-0002)"
 
-gate "G2 — Lint & Format"
+gate "Commit — Format"
 dotnet format --verify-no-changes && pass "Formatting clean" || fail "Format violations — run 'dotnet format' to fix"
 
 FRONTEND_STAGED=$(git diff --cached --name-only --diff-filter=d -- 'src/EM2Devs.Todo.Web' | grep -E '\.(ts|svelte|json|css)$' || true)
@@ -26,19 +26,28 @@ FRONTEND_STAGED=$(git diff --cached --name-only --diff-filter=d -- 'src/EM2Devs.
 if [[ -n "${FRONTEND_STAGED}" ]]; then
   require npm "install Node.js from https://nodejs.org"
 
-  gate "G2a — Frontend Lint & Format"
+  gate "Commit — Frontend Lint"
   (cd src/EM2Devs.Todo.Web && npm run format:check) && pass "Frontend formatting clean" || fail "Frontend format violations — run 'npm run format' in src/EM2Devs.Todo.Web"
   (cd src/EM2Devs.Todo.Web && npm run lint) && pass "Frontend lint clean" || fail "Frontend lint violations — run 'npm run lint' in src/EM2Devs.Todo.Web"
   (cd src/EM2Devs.Todo.Web && npm run check) && pass "Svelte types clean" || fail "Svelte type errors — run 'npm run check' in src/EM2Devs.Todo.Web"
 fi
 
-gate "G3 — Architecture Fitness Tests"
+gate "Commit — Contract Lint"
+require npx "install Node.js from https://nodejs.org"
+npx --yes @stoplight/spectral-cli lint docs/contracts/openapi.yaml --ruleset .spectral.yaml \
+  && pass "Spec valid (Spectral)" \
+  || fail "Spec violation — see ADR-0004"
+bash scripts/check-openapi-coverage.sh docs/contracts/openapi.yaml src/EM2Devs.Todo.Api/EM2Devs.Todo.Api.json \
+  && pass "All operations documented (coverage check)" \
+  || fail "Undocumented API operations — update docs/contracts/openapi.yaml"
+
+gate "Commit — Architecture"
 dotnet test tests/EM2Devs.Todo.ArchitectureTests --configuration Release --verbosity quiet && pass "Architecture rules hold" || fail "Architecture violation — see ADR-0001"
 
-gate "G4 — Scenario-Driven Tests"
+gate "Commit — Tests"
 dotnet test --configuration Release --filter "Category!=Architecture" --verbosity quiet && pass "All scenarios pass" || fail "Test failure — fix production code, not the test (ADR-0003)"
 
-gate "G5 — Supply Chain Security"
+gate "Commit — Security"
 dotnet list package --vulnerable --include-transitive 2>&1 | grep -q "has the following vulnerable packages" && fail "Vulnerable NuGet packages found — update or replace them" || pass "No known vulnerabilities"
 
-echo -e "\n${GREEN}━━━ PRE-COMMIT GATES PASSED (G1–G5) ━━━${NC}\n"
+echo -e "\n${GREEN}━━━ COMMIT STAGE PASSED ━━━${NC}\n"

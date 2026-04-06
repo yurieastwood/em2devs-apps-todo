@@ -331,6 +331,34 @@ public sealed class RecurringTasksControllerTests : IDisposable
         response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
     }
 
+    [Theory]
+    [InlineData("not-a-date")]
+    [InlineData("2026-13-99")]
+    public async Task Should_ReturnBadRequest_When_ScheduledDateIsInvalid(string invalidDate)
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/recurring-tasks",
+            new { title = "Bad date", pattern = "Daily" });
+        RecurringTaskDto? created = await createResponse.Content.ReadFromJsonAsync<RecurringTaskDto>();
+
+        HttpResponseMessage response = await _client.PostAsync(
+            $"/api/recurring-tasks/{created!.Id}/generate?scheduledDate={invalidDate}", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Should_GenerateInstanceWithDefaultDate_When_ScheduledDateIsEmpty()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/recurring-tasks",
+            new { title = "Empty date", pattern = "Daily" });
+        RecurringTaskDto? created = await createResponse.Content.ReadFromJsonAsync<RecurringTaskDto>();
+
+        HttpResponseMessage response = await _client.PostAsync(
+            $"/api/recurring-tasks/{created!.Id}/generate?scheduledDate=", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
     private sealed record RecurringTaskDto(Guid Id, string Title, string Pattern, bool IsActive);
     private sealed record TaskInstanceDto(
         Guid Id, string Title, string? Description, string Status, string Difficulty,

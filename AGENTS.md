@@ -33,7 +33,7 @@ A task is ready to be picked up when:
 
 A task is done when ALL of the following are true:
 
-- All local gates pass (pre-commit G1–G5 + conditional G2a for `src/EM2Devs.Todo.Web/` changes, pre-push G6–G7)
+- All local checks pass (pre-commit Commit Stage + pre-push Acceptance Stage)
 - Scenario tags updated (`@wip` on start, `@done` before PR)
 - PR created to `main` with a conventional commit message
 - PR reviewed by a different agent or human — never the author
@@ -62,10 +62,10 @@ Write only the code needed to make the failing test pass. Confirm it **passes**.
 
 After the test passes, the full gate sequence runs automatically via git hooks:
 
-- **Pre-commit** runs G1–G5 (backend) and frontend checks when frontend files are staged
-- **Pre-push** runs G6–G7
+- **Pre-commit** runs the Commit Stage (Build, Format, Frontend Lint, Contract Lint, Architecture, Tests, Security)
+- **Pre-push** runs the Acceptance Stage (Contract Test, Mutation)
 
-See the [Quality Gates table in README.md](README.md#quality-gates) for what each gate checks. Frontend gates (format, lint, type check) run conditionally — only when files in `src/EM2Devs.Todo.Web/` are staged.
+See the [Quality Pipeline in README.md](README.md#quality-pipeline) for what each check validates. Frontend Lint runs conditionally — only when files in `src/EM2Devs.Todo.Web/` are staged.
 
 ### Step 5: Fix Any Gate Failures
 
@@ -81,7 +81,7 @@ See the [Error Reference](#error-reference) at the bottom of this file.
 
 1. Tag the scenario(s) `@done` in the feature file
 2. Commit with a conventional commit message (see [ADR-016](docs/decisions/20260305-016-code-quality.md))
-3. Push — pre-push hook runs G6–G7
+3. Push — pre-push hook runs Acceptance Stage
 4. Create the PR: `gh pr create`
 5. Request review from another agent or human
 
@@ -123,7 +123,7 @@ Changing it requires **explicit human approval**:
 1. Identify the changes needed
 2. Report the proposed changes to the coordinator with a clear summary
 3. **Wait for human approval** before modifying the file
-4. Once approved, update the contract and verify G6 passes
+4. Once approved, update the contract and verify Contract Lint and Contract Test pass
 
 ## Constraints — Do NOT Violate These
 
@@ -159,17 +159,18 @@ Changing it requires **explicit human approval**:
 
 ## Error Reference
 
-| Error pattern | Gate | What to do |
+| Error pattern | Check | What to do |
 |---|---|---|
-| `CS0029: Cannot implicitly convert type` | G1 | Mixing value objects. Check ADR-0002 / [ADR-023](docs/decisions/20260314-023-strongly-typed-domain-ids.md). |
-| `Whitespace / formatting differs` | G2 | Run `dotnet format` to auto-fix. |
-| `Types in Domain should not depend on Infrastructure` | G3 | Wrong dependency. Check ADR-0001 / [ADR-022](docs/decisions/20260314-022-clean-architecture-enforcement.md). |
-| `Test failed: Should_...` | G4 | Fix the production code, not the test. Check ADR-0003 / [ADR-024](docs/decisions/20260314-024-scenario-driven-testing.md). |
-| `Warning treated as error` | G1 | Address the analyzer warning. Do not suppress it. |
-| `has the following vulnerable packages` | G5 | A NuGet dependency has a known CVE. Update or replace it. |
-| `OpenAPI violation` (Spectral) | G6 | Spec is malformed. Fix the spec. Check ADR-0004 / [ADR-025](docs/decisions/20260314-025-api-contract-source-of-truth.md). |
-| `Contract drift` (Schemathesis) | G6 | Implementation doesn't match spec. Fix the controller/DTO. Check ADR-0004 / [ADR-025](docs/decisions/20260314-025-api-contract-source-of-truth.md). |
-| `Mutant survived` | G7 | Add a test that catches the mutation. Check ADR-0005 / [ADR-026](docs/decisions/20260314-026-mutation-testing.md). |
-| `Frontend format violations` | G2a | Run `npm run format` in `src/EM2Devs.Todo.Web/`. |
-| `Frontend lint violations` | G2a | Run `npm run lint` in `src/EM2Devs.Todo.Web/`. |
-| `Svelte type errors` | G2a | Run `npm run check` in `src/EM2Devs.Todo.Web/`. |
+| `CS0029: Cannot implicitly convert type` | Commit\|Build | Mixing value objects. Check [ADR-023](docs/decisions/20260314-023-strongly-typed-domain-ids.md). |
+| `Warning treated as error` | Commit\|Build | Address the analyzer warning. Do not suppress it. |
+| `Whitespace / formatting differs` | Commit\|Format | Run `dotnet format` to auto-fix. |
+| `Frontend format violations` | Commit\|Frontend Lint | Run `npm run format` in `src/EM2Devs.Todo.Web/`. |
+| `Frontend lint violations` | Commit\|Frontend Lint | Run `npm run lint` in `src/EM2Devs.Todo.Web/`. |
+| `Svelte type errors` | Commit\|Frontend Lint | Run `npm run check` in `src/EM2Devs.Todo.Web/`. |
+| `OpenAPI violation` (Spectral) | Commit\|Contract Lint | Spec is malformed. Fix the spec. Check [ADR-025](docs/decisions/20260314-025-api-contract-source-of-truth.md). |
+| `Undocumented API operations` | Commit\|Contract Lint | Add the missing operations to `docs/contracts/openapi.yaml`. |
+| `Types in Domain should not depend on Infrastructure` | Commit\|Architecture | Wrong dependency. Check [ADR-022](docs/decisions/20260314-022-clean-architecture-enforcement.md). |
+| `Test failed: Should_...` | Commit\|Tests | Fix the production code, not the test. Check [ADR-024](docs/decisions/20260314-024-scenario-driven-testing.md). |
+| `has the following vulnerable packages` | Commit\|Security | A NuGet dependency has a known CVE. Update or replace it. |
+| `Contract drift` (Schemathesis) | Acceptance\|Contract Test | Implementation doesn't match spec. Fix the controller/DTO. Check [ADR-025](docs/decisions/20260314-025-api-contract-source-of-truth.md). |
+| `Mutant survived` | Acceptance\|Mutation | Add a test that catches the mutation. Check [ADR-026](docs/decisions/20260314-026-mutation-testing.md). |

@@ -1,6 +1,6 @@
 # Mutation Testing with Stryker.NET
 
-- Status: Accepted
+- Status: Accepted (gate naming partially superseded by [ADR-028](20260406-028-pipeline-restructuring.md))
 - Date: 2026-03-14
 
 ## Context and Problem Statement

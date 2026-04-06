@@ -42,7 +42,6 @@ echo -e "${YELLOW}Running Acceptance Stage...${NC}"
 
 gate "Acceptance — Contract Test"
 API_PORT=15001
-dotnet build src/EM2Devs.Todo.Api --configuration Release --verbosity quiet || fail "API build failed"
 dotnet run --project src/EM2Devs.Todo.Api --configuration Release --no-build \
   --urls "http://localhost:${API_PORT}" &>/dev/null &
 API_PID=$!

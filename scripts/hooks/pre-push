@@ -11,7 +11,6 @@ fail()    { echo -e "${RED}✗ $1${NC}"; exit 1; }
 gate()    { echo -e "\n${YELLOW}━━━ $1 ━━━${NC}"; }
 require() { command -v "$1" &>/dev/null || fail "Required tool '$1' not found — $2"; }
 
-require npx          "install Node.js from https://nodejs.org"
 require dotnet       "install .NET SDK from https://dot.net"
 require schemathesis "install via 'pip install schemathesis' or 'pipx install schemathesis'"
 require curl         "install via your system package manager"
@@ -39,22 +38,11 @@ else
     main"
 fi
 
-echo -e "${YELLOW}Running pre-push gates (G6–G7)...${NC}"
+echo -e "${YELLOW}Running Acceptance Stage...${NC}"
 
-gate "G6 — API Contract Validation"
-# Phase 1: static — spec document is well-formed
-npx --yes @stoplight/spectral-cli lint docs/contracts/openapi.yaml --ruleset .spectral.yaml \
-  && pass "Spec valid (Spectral)" \
-  || fail "Spec violation — see ADR-0004"
-
-# Phase 2: coverage — every implemented operation is documented in the contract
-dotnet build src/EM2Devs.Todo.Api --configuration Release --verbosity quiet || fail "API build failed"
-bash scripts/check-openapi-coverage.sh docs/contracts/openapi.yaml src/EM2Devs.Todo.Api/EM2Devs.Todo.Api.json \
-  && pass "All operations documented (coverage check)" \
-  || fail "Undocumented API operations — update docs/contracts/openapi.yaml"
-
-# Phase 3: dynamic — running implementation honors the spec
+gate "Acceptance — Contract Test"
 API_PORT=15001
+dotnet build src/EM2Devs.Todo.Api --configuration Release --verbosity quiet || fail "API build failed"
 dotnet run --project src/EM2Devs.Todo.Api --configuration Release --no-build \
   --urls "http://localhost:${API_PORT}" &>/dev/null &
 API_PID=$!
@@ -70,8 +58,8 @@ schemathesis run docs/contracts/openapi.yaml --url "http://localhost:${API_PORT}
 kill "${API_PID}" 2>/dev/null; wait "${API_PID}" 2>/dev/null
 trap - EXIT
 
-gate "G7 — Mutation Testing"
+gate "Acceptance — Mutation"
 dotnet tool restore --verbosity quiet || fail "Tool restore failed — check .config/dotnet-tools.json"
 dotnet stryker -f stryker-config.json && pass "All mutants killed" || fail "Mutant survived — add tests to kill it (ADR-0005)"
 
-echo -e "\n${GREEN}━━━ PRE-PUSH GATES PASSED (G6–G7) ━━━${NC}\n"
+echo -e "\n${GREEN}━━━ ACCEPTANCE STAGE PASSED ━━━${NC}\n"

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolve } from '$app/paths';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData | null } = $props();
@@ -12,9 +13,6 @@
 	let actionInFlight = $state<string | null>(null);
 	let notification = $state<string | null>(null);
 	let onboardingDismissed = $state(false);
-	let editingTaskId = $state<string | null>(null);
-	let editTitle = $state('');
-	let editDescription = $state('');
 	let confirmDeleteId = $state<string | null>(null);
 
 	let createError = $derived(
@@ -23,7 +21,6 @@
 	let actionError = $derived(
 		(form?.action === 'updateStatus' ||
 			form?.action === 'delete' ||
-			form?.action === 'edit' ||
 			form?.action === 'reopen') &&
 			form?.error
 			? String(form.error)
@@ -48,18 +45,6 @@
 		if (current === 'Todo') return 'Start';
 		if (current === 'InProgress') return 'Complete';
 		return '';
-	}
-
-	function startEditing(task: { id: string; title: string; description: string | null }) {
-		editingTaskId = task.id;
-		editTitle = task.title;
-		editDescription = task.description ?? '';
-	}
-
-	function cancelEditing() {
-		editingTaskId = null;
-		editTitle = '';
-		editDescription = '';
 	}
 </script>
 
@@ -154,178 +139,125 @@
 		<ul class="task-list" data-testid="task-list">
 			{#each tasks as task (task.id)}
 				<li class="task-item" data-status={task.status} data-testid="task-item">
-					{#if editingTaskId === task.id}
-						<form
-							method="POST"
-							action="?/edit"
-							class="edit-form"
-							use:enhance={() => {
-								actionInFlight = task.id;
-								return async ({ update, result }) => {
-									try {
-										await update();
-									} finally {
-										actionInFlight = null;
-										if (result.type === 'success') cancelEditing();
-									}
-								};
-							}}
+					<div class="task-info">
+						<a
+							class="task-title-link"
+							class:done={task.status === 'Done'}
+							href={resolve(`/tasks/${task.id}`)}
+							data-testid="task-title"
 						>
-							<input type="hidden" name="taskId" value={task.id} />
-							<input
-								type="text"
-								name="title"
-								bind:value={editTitle}
-								maxlength={200}
-								class="edit-input"
-								data-testid="edit-title-input"
-							/>
-							<textarea
-								name="description"
-								bind:value={editDescription}
-								placeholder="Add a description..."
-								class="edit-textarea"
-								data-testid="edit-description-input"
-							></textarea>
-							<div class="edit-actions">
+							{task.title}
+						</a>
+						<span
+							class="task-status"
+							data-status={task.status}
+							data-testid="task-status">{task.status}</span
+						>
+					</div>
+					<div class="task-actions">
+						{#if nextStatus(task.status)}
+							<form
+								method="POST"
+								action="?/updateStatus"
+								use:enhance={() => {
+									actionInFlight = task.id;
+									return async ({ update }) => {
+										try {
+											await update();
+										} finally {
+											actionInFlight = null;
+										}
+									};
+								}}
+							>
+								<input type="hidden" name="taskId" value={task.id} />
+								<input
+									type="hidden"
+									name="status"
+									value={nextStatus(task.status)}
+								/>
 								<button
 									type="submit"
-									class="btn-save"
-									disabled={actionInFlight === task.id || !editTitle.trim()}
-									data-testid="edit-save-button"
+									class="btn-action"
+									disabled={actionInFlight === task.id}
+									data-testid="task-advance-button"
 								>
-									{actionInFlight === task.id ? 'Saving...' : 'Save'}
+									{actionInFlight === task.id
+										? '...'
+										: nextStatusLabel(task.status)}
 								</button>
+							</form>
+						{/if}
+						{#if task.status === 'Done'}
+							<form
+								method="POST"
+								action="?/reopen"
+								use:enhance={() => {
+									actionInFlight = task.id;
+									return async ({ update }) => {
+										try {
+											await update();
+										} finally {
+											actionInFlight = null;
+										}
+									};
+								}}
+							>
+								<input type="hidden" name="taskId" value={task.id} />
+								<button
+									type="submit"
+									class="btn-action"
+									disabled={actionInFlight === task.id}
+									data-testid="task-reopen-button"
+								>
+									{actionInFlight === task.id ? '...' : 'Reopen'}
+								</button>
+							</form>
+						{/if}
+						{#if confirmDeleteId === task.id}
+							<div class="confirm-delete">
+								<span>Delete?</span>
+								<form
+									method="POST"
+									action="?/delete"
+									use:enhance={() => {
+										actionInFlight = task.id;
+										return async ({ update }) => {
+											try {
+												await update();
+											} finally {
+												actionInFlight = null;
+												confirmDeleteId = null;
+											}
+										};
+									}}
+								>
+									<input type="hidden" name="taskId" value={task.id} />
+									<button
+										type="submit"
+										class="btn-confirm-yes"
+										disabled={actionInFlight === task.id}
+										data-testid="task-confirm-delete"
+									>
+										{actionInFlight === task.id ? '...' : 'Yes'}
+									</button>
+								</form>
 								<button
 									type="button"
-									class="btn-cancel"
-									onclick={cancelEditing}
-									data-testid="edit-cancel-button">Cancel</button
+									class="btn-confirm-no"
+									onclick={() => (confirmDeleteId = null)}
+									data-testid="task-cancel-delete">No</button
 								>
 							</div>
-						</form>
-					{:else}
-						<div class="task-info">
+						{:else}
 							<button
 								type="button"
-								class="task-title-btn"
-								class:done={task.status === 'Done'}
-								onclick={() => startEditing(task)}
-								data-testid="task-title"
+								class="btn-delete"
+								onclick={() => (confirmDeleteId = task.id)}
+								data-testid="task-delete-button">Delete</button
 							>
-								{task.title}
-							</button>
-							<span
-								class="task-status"
-								data-status={task.status}
-								data-testid="task-status">{task.status}</span
-							>
-						</div>
-						<div class="task-actions">
-							{#if nextStatus(task.status)}
-								<form
-									method="POST"
-									action="?/updateStatus"
-									use:enhance={() => {
-										actionInFlight = task.id;
-										return async ({ update }) => {
-											try {
-												await update();
-											} finally {
-												actionInFlight = null;
-											}
-										};
-									}}
-								>
-									<input type="hidden" name="taskId" value={task.id} />
-									<input
-										type="hidden"
-										name="status"
-										value={nextStatus(task.status)}
-									/>
-									<button
-										type="submit"
-										class="btn-action"
-										disabled={actionInFlight === task.id}
-										data-testid="task-advance-button"
-									>
-										{actionInFlight === task.id
-											? '...'
-											: nextStatusLabel(task.status)}
-									</button>
-								</form>
-							{/if}
-							{#if task.status === 'Done'}
-								<form
-									method="POST"
-									action="?/reopen"
-									use:enhance={() => {
-										actionInFlight = task.id;
-										return async ({ update }) => {
-											try {
-												await update();
-											} finally {
-												actionInFlight = null;
-											}
-										};
-									}}
-								>
-									<input type="hidden" name="taskId" value={task.id} />
-									<button
-										type="submit"
-										class="btn-action"
-										disabled={actionInFlight === task.id}
-										data-testid="task-reopen-button"
-									>
-										{actionInFlight === task.id ? '...' : 'Reopen'}
-									</button>
-								</form>
-							{/if}
-							{#if confirmDeleteId === task.id}
-								<div class="confirm-delete">
-									<span>Delete?</span>
-									<form
-										method="POST"
-										action="?/delete"
-										use:enhance={() => {
-											actionInFlight = task.id;
-											return async ({ update }) => {
-												try {
-													await update();
-												} finally {
-													actionInFlight = null;
-													confirmDeleteId = null;
-												}
-											};
-										}}
-									>
-										<input type="hidden" name="taskId" value={task.id} />
-										<button
-											type="submit"
-											class="btn-confirm-yes"
-											disabled={actionInFlight === task.id}
-											data-testid="task-confirm-delete"
-										>
-											{actionInFlight === task.id ? '...' : 'Yes'}
-										</button>
-									</form>
-									<button
-										type="button"
-										class="btn-confirm-no"
-										onclick={() => (confirmDeleteId = null)}
-										data-testid="task-cancel-delete">No</button
-									>
-								</div>
-							{:else}
-								<button
-									type="button"
-									class="btn-delete"
-									onclick={() => (confirmDeleteId = task.id)}
-									data-testid="task-delete-button">Delete</button
-								>
-							{/if}
-						</div>
-					{/if}
+						{/if}
+					</div>
 				</li>
 			{/each}
 		</ul>
@@ -426,9 +358,6 @@
 		padding: 0.75rem 1rem;
 		border: 1px solid #e5e7eb;
 		border-radius: 0.25rem;
-	}
-
-	.task-item:not(:has(.edit-form)) {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -442,23 +371,19 @@
 		min-width: 0;
 	}
 
-	.task-title-btn {
-		background: none;
-		border: none;
-		padding: 0;
-		cursor: pointer;
-		text-align: left;
-		font-size: inherit;
+	.task-title-link {
+		color: inherit;
+		text-decoration: none;
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
 
-	.task-title-btn:hover {
+	.task-title-link:hover {
 		color: #2563eb;
 	}
 
-	.task-title-btn.done {
+	.task-title-link.done {
 		text-decoration: line-through;
 		color: #9ca3af;
 	}
@@ -522,59 +447,6 @@
 	.btn-delete:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
-	}
-
-	.edit-form {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		width: 100%;
-	}
-
-	.edit-input {
-		padding: 0.5rem 0.75rem;
-		border: 1px solid #2563eb;
-		border-radius: 0.25rem;
-		font-size: 1rem;
-	}
-
-	.edit-textarea {
-		padding: 0.5rem 0.75rem;
-		border: 1px solid #d1d5db;
-		border-radius: 0.25rem;
-		font-size: 0.875rem;
-		min-height: 3rem;
-		resize: vertical;
-		font-family: inherit;
-	}
-
-	.edit-actions {
-		display: flex;
-		gap: 0.5rem;
-	}
-
-	.btn-save {
-		padding: 0.25rem 0.75rem;
-		background: #2563eb;
-		color: white;
-		border: none;
-		border-radius: 0.25rem;
-		cursor: pointer;
-		font-size: 0.75rem;
-	}
-
-	.btn-save:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	.btn-cancel {
-		padding: 0.25rem 0.75rem;
-		border: 1px solid #d1d5db;
-		border-radius: 0.25rem;
-		cursor: pointer;
-		font-size: 0.75rem;
-		background: white;
 	}
 
 	.confirm-delete {

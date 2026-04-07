@@ -15,6 +15,38 @@
 	let onboardingDismissed = $state(false);
 	let confirmDeleteId = $state<string | null>(null);
 
+	type StatusFilter = 'all' | 'Todo' | 'InProgress' | 'Done' | 'Skipped';
+	type SortKey = 'created' | 'dueDate' | 'priority';
+
+	let statusFilter = $state<StatusFilter>('all');
+	let sortKey = $state<SortKey>('created');
+
+	const PRIORITY_ORDER: Record<string, number> = {
+		Critical: 0,
+		High: 1,
+		Medium: 2,
+		Low: 3
+	};
+
+	let visibleTasks = $derived.by(() => {
+		const filtered =
+			statusFilter === 'all' ? tasks : tasks.filter((t) => t.status === statusFilter);
+		const sorted = [...filtered];
+		if (sortKey === 'dueDate') {
+			sorted.sort((a, b) => {
+				if (a.dueDate === null && b.dueDate === null) return 0;
+				if (a.dueDate === null) return 1;
+				if (b.dueDate === null) return -1;
+				return a.dueDate.localeCompare(b.dueDate);
+			});
+		} else if (sortKey === 'priority') {
+			sorted.sort(
+				(a, b) => (PRIORITY_ORDER[a.priority] ?? 99) - (PRIORITY_ORDER[b.priority] ?? 99)
+			);
+		}
+		return sorted;
+	});
+
 	let createError = $derived(
 		form?.action === 'create' && form?.error ? String(form.error) : null
 	);
@@ -95,6 +127,29 @@
 		{/if}
 	</form>
 
+	{#if tasks.length > 0}
+		<div class="list-controls">
+			<label class="control">
+				Filter:
+				<select bind:value={statusFilter} data-testid="filter-status">
+					<option value="all">All</option>
+					<option value="Todo">Todo</option>
+					<option value="InProgress">In Progress</option>
+					<option value="Done">Done</option>
+					<option value="Skipped">Skipped</option>
+				</select>
+			</label>
+			<label class="control">
+				Sort by:
+				<select bind:value={sortKey} data-testid="sort-key">
+					<option value="created">Created</option>
+					<option value="dueDate">Due date</option>
+					<option value="priority">Priority</option>
+				</select>
+			</label>
+		</div>
+	{/if}
+
 	{#if loadError}
 		<p class="error" role="alert">{loadError}</p>
 	{:else if tasks.length === 0 && !onboardingDismissed}
@@ -135,9 +190,11 @@
 		</div>
 	{:else if tasks.length === 0}
 		<p class="empty">No tasks yet. Create your first task to get started!</p>
+	{:else if visibleTasks.length === 0}
+		<p class="empty" data-testid="filter-empty">No tasks match the current filter.</p>
 	{:else}
 		<ul class="task-list" data-testid="task-list">
-			{#each tasks as task (task.id)}
+			{#each visibleTasks as task (task.id)}
 				<li class="task-item" data-status={task.status} data-testid="task-item">
 					<div class="task-info">
 						<a
@@ -325,6 +382,27 @@
 	.create-form button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.list-controls {
+		display: flex;
+		gap: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	.control {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.875rem;
+		color: #374151;
+	}
+
+	.control select {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid #d1d5db;
+		border-radius: 0.25rem;
+		font-size: 0.875rem;
 	}
 
 	.form-error {

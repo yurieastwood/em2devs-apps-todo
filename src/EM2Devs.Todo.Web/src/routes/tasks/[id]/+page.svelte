@@ -6,12 +6,24 @@
 	let { data, form }: { data: PageData; form: ActionData | null } = $props();
 	let task = $derived(data.task);
 
+	function toLocalDateTimeString(iso: string | null): string {
+		if (!iso) return '';
+		const date = new Date(iso);
+		if (Number.isNaN(date.getTime())) return '';
+		const yyyy = date.getFullYear();
+		const mm = String(date.getMonth() + 1).padStart(2, '0');
+		const dd = String(date.getDate()).padStart(2, '0');
+		const hh = String(date.getHours()).padStart(2, '0');
+		const mi = String(date.getMinutes()).padStart(2, '0');
+		return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+	}
+
 	let title = $state(task.title);
 	let description = $state(task.description ?? '');
 	let difficulty = $state(task.difficulty);
 	let priority = $state(task.priority);
 	let estimatedMinutes = $state(task.estimatedMinutes?.toString() ?? '');
-	let dueDateLocal = $state(task.dueDate ? task.dueDate.slice(0, 16) : '');
+	let dueDateLocal = $state(toLocalDateTimeString(task.dueDate));
 
 	let saving = $state(false);
 	let deleting = $state(false);

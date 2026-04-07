@@ -50,17 +50,35 @@ export const actions: Actions = {
 		}
 
 		const estimatedMinutes = estimatedMinutesRaw === '' ? null : Number(estimatedMinutesRaw);
+		if (estimatedMinutes !== null && Number.isNaN(estimatedMinutes)) {
+			return fail(400, {
+				action: 'save',
+				error: 'Estimated minutes must be a valid number.'
+			});
+		}
 		if (
 			estimatedMinutes !== null &&
-			(!Number.isInteger(estimatedMinutes) || estimatedMinutes < 1)
+			(!Number.isInteger(estimatedMinutes) ||
+				estimatedMinutes < 1 ||
+				estimatedMinutes > 525600)
 		) {
 			return fail(400, {
 				action: 'save',
-				error: 'Estimated minutes must be a positive integer.'
+				error: 'Estimated minutes must be an integer between 1 and 525600.'
 			});
 		}
 
-		const dueDate = dueDateRaw === '' ? null : new Date(dueDateRaw).toISOString();
+		let dueDate: string | null = null;
+		if (dueDateRaw !== '') {
+			const parsedDueDate = new Date(dueDateRaw);
+			if (Number.isNaN(parsedDueDate.getTime())) {
+				return fail(400, {
+					action: 'save',
+					error: 'Due date must be a valid date/time.'
+				});
+			}
+			dueDate = parsedDueDate.toISOString();
+		}
 
 		try {
 			await updateTask(fetch, getBaseUrl(), params.id, {

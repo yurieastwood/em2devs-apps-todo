@@ -19,7 +19,11 @@
 			return;
 		}
 		if (profile.totalXp > previousXp) {
-			xpDelta = profile.totalXp - previousXp;
+			const earnedXp = profile.totalXp - previousXp;
+			xpDelta = 0;
+			queueMicrotask(() => {
+				xpDelta = earnedXp;
+			});
 		}
 		previousXp = profile.totalXp;
 	});

@@ -50,15 +50,21 @@ test.describe('Task management flow', () => {
 	});
 
 	test('should sort tasks by priority', async ({ page }) => {
-		// All tasks are created with default Medium priority — verify the
-		// control mounts and selecting it does not error.
-		await createTask(page, 'First');
-		await createTask(page, 'Second');
+		await createTask(page, 'Low priority task');
+		await createTask(page, 'High priority task');
+
+		// Edit the High priority task via the detail page
+		await page.getByTestId('task-title').filter({ hasText: 'High priority task' }).click();
+		await page.getByTestId('task-edit-priority').selectOption('High');
+		await page.getByTestId('task-edit-save').click();
+		await expect(page).toHaveURL('/');
 
 		await page.getByTestId('sort-key').selectOption('priority');
 
 		const items = page.getByTestId('task-item');
 		await expect(items).toHaveCount(2);
+		await expect(items.nth(0)).toContainText('High priority task');
+		await expect(items.nth(1)).toContainText('Low priority task');
 	});
 
 	test('should navigate to task detail and edit fields', async ({ page }) => {

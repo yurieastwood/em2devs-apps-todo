@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
 	listTasks,
 	createTask,
+	getTask,
 	updateTaskStatus,
 	updateTask,
 	reopenTask,
@@ -39,6 +40,8 @@ describe('listTasks', () => {
 				description: null,
 				status: 'Todo',
 				difficulty: 'Normal',
+				priority: 'Medium',
+				estimatedMinutes: null,
 				dueDate: null,
 				completedAt: null
 			},
@@ -48,6 +51,8 @@ describe('listTasks', () => {
 				description: null,
 				status: 'InProgress',
 				difficulty: 'Normal',
+				priority: 'Medium',
+				estimatedMinutes: null,
 				dueDate: null,
 				completedAt: null
 			}
@@ -77,6 +82,8 @@ describe('createTask', () => {
 			description: null,
 			status: 'Todo',
 			difficulty: 'Normal',
+			priority: 'Medium',
+			estimatedMinutes: null,
 			dueDate: null,
 			completedAt: null
 		};
@@ -119,6 +126,8 @@ describe('updateTaskStatus', () => {
 			description: null,
 			status: 'InProgress',
 			difficulty: 'Normal',
+			priority: 'Medium',
+			estimatedMinutes: null,
 			dueDate: null,
 			completedAt: null
 		};
@@ -181,6 +190,8 @@ describe('updateTask', () => {
 			description: 'New desc',
 			status: 'Todo',
 			difficulty: 'Hard',
+			priority: 'Medium',
+			estimatedMinutes: null,
 			dueDate: null,
 			completedAt: null
 		};
@@ -221,6 +232,8 @@ describe('reopenTask', () => {
 			description: null,
 			status: 'Todo',
 			difficulty: 'Normal',
+			priority: 'Medium',
+			estimatedMinutes: null,
 			dueDate: null,
 			completedAt: null
 		};
@@ -243,5 +256,38 @@ describe('reopenTask', () => {
 		};
 
 		await expect(reopenTask(mockError(409, problem), BASE, '1')).rejects.toThrow(ApiError);
+	});
+});
+
+describe('getTask', () => {
+	it('fetches a single task by id', async () => {
+		const expected: Task = {
+			id: 'abc',
+			title: 'Single task',
+			description: null,
+			status: 'Todo',
+			difficulty: 'Normal',
+			priority: 'Medium',
+			estimatedMinutes: null,
+			dueDate: null,
+			completedAt: null
+		};
+		const fetchMock = mockOk(expected);
+
+		const result = await getTask(fetchMock, BASE, 'abc');
+
+		expect(result).toEqual(expected);
+		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/tasks/abc`));
+	});
+
+	it('throws ApiError on not found', async () => {
+		const problem = {
+			type: 'https://tools.ietf.org/html/rfc9457',
+			title: 'Resource not found',
+			status: 404,
+			detail: 'Task not found'
+		};
+
+		await expect(getTask(mockError(404, problem), BASE, 'xyz')).rejects.toThrow(ApiError);
 	});
 });

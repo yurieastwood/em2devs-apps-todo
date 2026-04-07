@@ -2,6 +2,7 @@
 
 - Status: Accepted (gate naming partially superseded by [ADR-028](20260406-028-pipeline-restructuring.md))
 - Date: 2026-03-19
+- Observations: Gate naming partially superseded by [ADR-028](20260406-028-pipeline-restructuring.md)
 
 ## Context and Problem Statement
 

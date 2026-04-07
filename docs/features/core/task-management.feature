@@ -194,14 +194,14 @@ Feature: Task Management
       Then I should see 2 tasks
       And I should see "Fix login bug" and "Update API docs"
 
-    @wip
+    @done
     Scenario: Sort tasks by due date
       Given I have multiple tasks with different due dates
       When I sort tasks by "Due Date" ascending
       Then tasks should be ordered from earliest due date to latest
       And tasks with no due date should appear at the end
 
-    @wip
+    @done
     Scenario: Sort tasks by priority
       Given I have tasks with priorities "Low", "High", "Medium", and "Critical"
       When I sort tasks by "Priority" descending

@@ -2,11 +2,27 @@
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import type { ActionData, PageData } from './$types';
+	import XpEarnedToast from '$lib/components/XpEarnedToast.svelte';
 
 	let { data, form }: { data: PageData; form: ActionData | null } = $props();
 
 	let tasks = $derived(data.tasks);
 	let loadError = $derived(data.error);
+	let profile = $derived(data.profile);
+	let previousXp = $state<number | null>(null);
+	let xpDelta = $state(0);
+
+	$effect(() => {
+		if (profile === null) return;
+		if (previousXp === null) {
+			previousXp = profile.totalXp;
+			return;
+		}
+		if (profile.totalXp > previousXp) {
+			xpDelta = profile.totalXp - previousXp;
+		}
+		previousXp = profile.totalXp;
+	});
 
 	let newTitle = $state('');
 	let creating = $state(false);
@@ -85,6 +101,7 @@
 </svelte:head>
 
 <main>
+	<XpEarnedToast delta={xpDelta} />
 	<h1>Tasks</h1>
 
 	{#if notification}

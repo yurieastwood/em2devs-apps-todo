@@ -7,6 +7,7 @@ import {
 	deleteTask,
 	ApiError
 } from '$lib/api/tasks';
+import { getProfile } from '$lib/api/profile';
 import { getBaseUrl } from '$lib/server/config';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -20,11 +21,14 @@ function failFromError(e: unknown, fallbackMessage: string, action: string) {
 
 export const load: PageServerLoad = async ({ fetch }) => {
 	try {
-		const tasks = await listTasks(fetch, getBaseUrl());
-		return { tasks, error: null };
+		const [tasks, profile] = await Promise.all([
+			listTasks(fetch, getBaseUrl()),
+			getProfile(fetch, getBaseUrl()).catch(() => null)
+		]);
+		return { tasks, profile, error: null };
 	} catch (e) {
 		const message = e instanceof Error ? e.message : 'An unexpected error occurred';
-		return { tasks: [], error: message };
+		return { tasks: [], profile: null, error: message };
 	}
 };
 

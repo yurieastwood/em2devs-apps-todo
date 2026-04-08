@@ -9,6 +9,7 @@ public sealed class RecurringTask
     public TaskTitle Title { get; private set; }
     public RecurrencePattern Pattern { get; private set; }
     public bool IsActive { get; private set; }
+    public DateOnly? LastGeneratedAt { get; private set; }
 
     private RecurringTask(RecurringTaskId id, TaskTitle title, RecurrencePattern pattern)
     {
@@ -16,6 +17,7 @@ public sealed class RecurringTask
         Title = title;
         Pattern = pattern;
         IsActive = true;
+        LastGeneratedAt = null;
     }
 
     public static RecurringTask Create(TaskTitle title, RecurrencePattern pattern)
@@ -31,6 +33,34 @@ public sealed class RecurringTask
         }
 
         return TodoTask.CreateFromRecurring(Title, Id, scheduledDate);
+    }
+
+    public void MarkInstanceGenerated(DateOnly generatedDate)
+    {
+        LastGeneratedAt = generatedDate;
+    }
+
+    public bool IsDueForGeneration(DateOnly today)
+    {
+        if (!IsActive)
+        {
+            return false;
+        }
+
+        if (LastGeneratedAt is null)
+        {
+            return true;
+        }
+
+        DateOnly last = LastGeneratedAt.Value;
+
+        return Pattern switch
+        {
+            RecurrencePattern.Daily => last < today,
+            RecurrencePattern.Weekly => today.DayNumber - last.DayNumber >= 7,
+            RecurrencePattern.Monthly => last.Year != today.Year || last.Month != today.Month,
+            _ => false
+        };
     }
 
     public void Pause()

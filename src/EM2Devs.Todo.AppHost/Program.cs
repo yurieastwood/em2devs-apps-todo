@@ -14,6 +14,13 @@ var api = builder.AddProject<Projects.EM2Devs_Todo_Api>("api")
     .WaitFor(postgres)
     .WaitFor(redis);
 
+builder.AddProject<Projects.EM2Devs_Todo_Worker>("worker")
+    .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName)
+    .WithReference(postgres)
+    .WithReference(redis)
+    .WaitFor(postgres)
+    .WaitFor(redis);
+
 builder.AddNpmApp("web", "../EM2Devs.Todo.Web", "dev")
     .WithNpmPackageInstallation()
     .WithHttpEndpoint(port: 5173, env: "PORT")

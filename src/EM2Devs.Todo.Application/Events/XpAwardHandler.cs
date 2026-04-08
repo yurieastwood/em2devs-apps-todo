@@ -25,7 +25,7 @@ public sealed class XpAwardHandler : INotificationHandler<TaskCompletedEvent>
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        PlayerProfile profile = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);
+        PlayerProfileReadModel profile = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);
 
         XpBreakdown breakdown = XpCalculator.Calculate(
             notification.Difficulty,
@@ -40,7 +40,7 @@ public sealed class XpAwardHandler : INotificationHandler<TaskCompletedEvent>
 
         await _profileRepository.AwardXpAsync(breakdown.ToExperiencePoints(), breakdownModel, ct).ConfigureAwait(false);
 
-        PlayerProfile updatedProfile = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);
+        PlayerProfileReadModel updatedProfile = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);
 
         if (updatedProfile.Level > previousLevel)
         {

@@ -27,7 +27,7 @@ public sealed class XpAwardHandlerTests
     {
         // Given
         _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
-            .Returns(new PlayerProfile(100, 2, 50, 3, 5));
+            .Returns(new PlayerProfileReadModel(100, 2, 50, 3, 5));
 
         TaskCompletedEvent evt = new(
             new TaskId(Guid.NewGuid()),
@@ -50,7 +50,7 @@ public sealed class XpAwardHandlerTests
     {
         // Given
         _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
-            .Returns(new PlayerProfile(0, 1, 50, 0, 0));
+            .Returns(new PlayerProfileReadModel(0, 1, 50, 0, 0));
 
         TaskCompletedEvent evt = new(
             new TaskId(Guid.NewGuid()),
@@ -73,8 +73,8 @@ public sealed class XpAwardHandlerTests
         // Given — profile starts at level 1, levels up after XP
         _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
             .Returns(
-                new PlayerProfile(40, 1, 10, 0, 0),  // before award
-                new PlayerProfile(70, 2, 30, 0, 0));  // after award (leveled up)
+                new PlayerProfileReadModel(40, 1, 10, 0, 0),  // before award
+                new PlayerProfileReadModel(70, 2, 30, 0, 0));  // after award (leveled up)
 
         TaskCompletedEvent evt = new(
             new TaskId(Guid.NewGuid()),
@@ -96,7 +96,7 @@ public sealed class XpAwardHandlerTests
     {
         // Given
         _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
-            .Returns(new PlayerProfile(50, 2, 100, 0, 0));
+            .Returns(new PlayerProfileReadModel(50, 2, 100, 0, 0));
 
         TaskCompletedEvent evt = new(
             new TaskId(Guid.NewGuid()),

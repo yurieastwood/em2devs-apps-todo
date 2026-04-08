@@ -5,25 +5,27 @@ using EM2Devs.Todo.Domain.ValueObjects;
 namespace EM2Devs.Todo.Infrastructure.Persistence;
 
 /// <summary>
-/// In-memory player profile repository for PoC.
-/// Tracks mutable XP and level state across the application lifetime.
+/// In-memory player profile repository for tests and the no-DB fallback.
+/// Tracks XP, level, current streak, and longest streak across the application lifetime.
 /// </summary>
 public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 {
     private readonly object _lock = new();
     private Level _level = Level.StartingLevel();
+    private Streak _streak = Streak.NewStreak();
+    private int _longestStreak;
     private XpBreakdownReadModel? _lastBreakdown;
 
-    public Task<PlayerProfile> GetProfileAsync(CancellationToken ct = default)
+    public Task<PlayerProfileReadModel> GetProfileAsync(CancellationToken ct = default)
     {
         lock (_lock)
         {
-            return Task.FromResult(new PlayerProfile(
+            return Task.FromResult(new PlayerProfileReadModel(
                 TotalXp: _level.CurrentXp.Value,
                 Level: _level.Value,
                 XpToNextLevel: _level.XpToNextLevel(),
-                CurrentStreak: 0,
-                LongestStreak: 0,
+                CurrentStreak: _streak.CurrentDays,
+                LongestStreak: _longestStreak,
                 LastXpBreakdown: _lastBreakdown));
         }
     }
@@ -36,6 +38,30 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
         {
             _level = _level.AddXp(xp);
             _lastBreakdown = breakdown;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task RecordCompletionAsync(DateOnly today, CancellationToken ct = default)
+    {
+        lock (_lock)
+        {
+            _streak = _streak.RecordCompletion(today);
+            if (_streak.CurrentDays > _longestStreak)
+            {
+                _longestStreak = _streak.CurrentDays;
+            }
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task ProcessDayEndAsync(DateOnly endOfDay, CancellationToken ct = default)
+    {
+        lock (_lock)
+        {
+            _streak = _streak.ProcessDayEnd(endOfDay);
         }
 
         return Task.CompletedTask;

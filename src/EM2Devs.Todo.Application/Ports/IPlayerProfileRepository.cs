@@ -5,6 +5,8 @@ namespace EM2Devs.Todo.Application.Ports;
 
 public interface IPlayerProfileRepository
 {
-    Task<PlayerProfile> GetProfileAsync(CancellationToken ct = default);
+    Task<PlayerProfileReadModel> GetProfileAsync(CancellationToken ct = default);
     Task AwardXpAsync(ExperiencePoints xp, XpBreakdownReadModel? breakdown = null, CancellationToken ct = default);
+    Task RecordCompletionAsync(DateOnly today, CancellationToken ct = default);
+    Task ProcessDayEndAsync(DateOnly endOfDay, CancellationToken ct = default);
 }

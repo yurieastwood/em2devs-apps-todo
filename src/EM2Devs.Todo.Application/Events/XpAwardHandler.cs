@@ -7,6 +7,9 @@ namespace EM2Devs.Todo.Application.Events;
 
 /// <summary>
 /// Awards XP when a task is completed, with deadline and streak modifiers.
+/// Records the streak completion *before* reading the profile so the multiplier
+/// sees the up-to-date streak (Plan 1: this fixes the silent no-op bug where
+/// the handler was always passing CurrentStreak=0 to XpCalculator).
 /// Publishes LevelUpEvent if the XP gain causes a level up.
 /// Part of the gamification chain: TaskCompleted → XpAwarded → LevelUp (ADR-010, ADR-018).
 /// </summary>
@@ -25,12 +28,19 @@ public sealed class XpAwardHandler : INotificationHandler<TaskCompletedEvent>
     {
         ArgumentNullException.ThrowIfNull(notification);
 
+        DateTimeOffset completedAt = notification.CompletedAt ?? DateTimeOffset.UtcNow;
+        DateOnly completionDate = DateOnly.FromDateTime(completedAt.UtcDateTime);
+
+        // Record the streak completion FIRST, then re-read the profile so the
+        // multiplier sees the updated streak count.
+        await _profileRepository.RecordCompletionAsync(completionDate, ct).ConfigureAwait(false);
+
         PlayerProfileReadModel profile = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);
 
         XpBreakdown breakdown = XpCalculator.Calculate(
             notification.Difficulty,
             notification.Deadline,
-            notification.CompletedAt ?? DateTimeOffset.UtcNow,
+            completedAt,
             profile.CurrentStreak);
 
         int previousLevel = profile.Level;

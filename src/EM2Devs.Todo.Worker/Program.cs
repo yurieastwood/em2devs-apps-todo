@@ -40,7 +40,7 @@ builder.Services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(streakKey)
         .WithIdentity("DailyStreakEvaluationTrigger")
-        .WithCronSchedule("0 0 0 * * ?")); // 00:00 UTC daily
+        .WithCronSchedule("0 0 0 * * ?", x => x.InTimeZone(TimeZoneInfo.Utc))); // 00:00 UTC daily
 });
 
 builder.Services.AddQuartzHostedService(options =>

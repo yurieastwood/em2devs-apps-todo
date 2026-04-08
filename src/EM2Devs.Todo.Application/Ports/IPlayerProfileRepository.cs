@@ -7,6 +7,6 @@ public interface IPlayerProfileRepository
 {
     Task<PlayerProfileReadModel> GetProfileAsync(CancellationToken ct = default);
     Task AwardXpAsync(ExperiencePoints xp, XpBreakdownReadModel? breakdown = null, CancellationToken ct = default);
-    Task RecordCompletionAsync(DateOnly today, CancellationToken ct = default);
-    Task ProcessDayEndAsync(DateOnly endOfDay, CancellationToken ct = default);
+    Task RecordCompletionAsync(DateOnly completionDate, CancellationToken ct = default);
+    Task ProcessDayEndAsync(DateOnly evaluationDate, CancellationToken ct = default);
 }

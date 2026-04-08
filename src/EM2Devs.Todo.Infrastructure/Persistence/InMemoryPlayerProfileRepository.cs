@@ -1,19 +1,18 @@
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.ReadModels;
+using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
 
 namespace EM2Devs.Todo.Infrastructure.Persistence;
 
 /// <summary>
 /// In-memory player profile repository for tests and the no-DB fallback.
-/// Tracks XP, level, current streak, and longest streak across the application lifetime.
+/// Holds a single PlayerProfile aggregate instance and delegates state changes to it.
 /// </summary>
 public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 {
     private readonly object _lock = new();
-    private Level _level = Level.StartingLevel();
-    private Streak _streak = Streak.NewStreak();
-    private int _longestStreak;
+    private PlayerProfile _profile = PlayerProfile.NewProfile();
     private XpBreakdownReadModel? _lastBreakdown;
 
     public Task<PlayerProfileReadModel> GetProfileAsync(CancellationToken ct = default)
@@ -21,11 +20,11 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
         lock (_lock)
         {
             return Task.FromResult(new PlayerProfileReadModel(
-                TotalXp: _level.CurrentXp.Value,
-                Level: _level.Value,
-                XpToNextLevel: _level.XpToNextLevel(),
-                CurrentStreak: _streak.CurrentDays,
-                LongestStreak: _longestStreak,
+                TotalXp: _profile.Level.CurrentXp.Value,
+                Level: _profile.Level.Value,
+                XpToNextLevel: _profile.Level.XpToNextLevel(),
+                CurrentStreak: _profile.Streak.CurrentDays,
+                LongestStreak: _profile.LongestStreak,
                 LastXpBreakdown: _lastBreakdown));
         }
     }
@@ -36,32 +35,28 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 
         lock (_lock)
         {
-            _level = _level.AddXp(xp);
+            _profile.AwardXp(xp);
             _lastBreakdown = breakdown;
         }
 
         return Task.CompletedTask;
     }
 
-    public Task RecordCompletionAsync(DateOnly today, CancellationToken ct = default)
+    public Task RecordCompletionAsync(DateOnly completionDate, CancellationToken ct = default)
     {
         lock (_lock)
         {
-            _streak = _streak.RecordCompletion(today);
-            if (_streak.CurrentDays > _longestStreak)
-            {
-                _longestStreak = _streak.CurrentDays;
-            }
+            _profile.RecordCompletion(completionDate);
         }
 
         return Task.CompletedTask;
     }
 
-    public Task ProcessDayEndAsync(DateOnly endOfDay, CancellationToken ct = default)
+    public Task ProcessDayEndAsync(DateOnly evaluationDate, CancellationToken ct = default)
     {
         lock (_lock)
         {
-            _streak = _streak.ProcessDayEnd(endOfDay);
+            _profile.ProcessDayEnd(evaluationDate);
         }
 
         return Task.CompletedTask;

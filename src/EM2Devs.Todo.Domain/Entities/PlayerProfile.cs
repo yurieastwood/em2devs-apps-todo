@@ -10,30 +10,24 @@ namespace EM2Devs.Todo.Domain.Entities;
 /// </summary>
 public sealed class PlayerProfile
 {
-    public int Id { get; private set; }
+    public PlayerProfileId Id { get; }
     public Level Level { get; private set; }
     public Streak Streak { get; private set; }
     public int LongestStreak { get; private set; }
 
-    // EF Core requires a parameterless constructor for reconstruction.
-    private PlayerProfile()
+    private PlayerProfile(PlayerProfileId id, Level level, Streak streak, int longestStreak)
     {
-        Level = Level.StartingLevel();
-        Streak = Streak.NewStreak();
-    }
-
-    private PlayerProfile(Level level, Streak streak, int longestStreak)
-    {
+        Id = id;
         Level = level;
         Streak = streak;
         LongestStreak = longestStreak;
     }
 
     public static PlayerProfile NewProfile() =>
-        new(Level.StartingLevel(), Streak.NewStreak(), longestStreak: 0);
+        new(PlayerProfileId.New(), Level.StartingLevel(), Streak.NewStreak(), longestStreak: 0);
 
-    public static PlayerProfile Reconstitute(Level level, Streak streak, int longestStreak) =>
-        new(level, streak, longestStreak);
+    public static PlayerProfile Reconstitute(PlayerProfileId id, Level level, Streak streak, int longestStreak) =>
+        new(id, level, streak, longestStreak);
 
     public void AwardXp(ExperiencePoints xp)
     {
@@ -41,17 +35,17 @@ public sealed class PlayerProfile
         Level = Level.AddXp(xp);
     }
 
-    public void RecordCompletion(DateOnly today)
+    public void RecordCompletion(DateOnly completionDate)
     {
-        Streak = Streak.RecordCompletion(today);
+        Streak = Streak.RecordCompletion(completionDate);
         if (Streak.CurrentDays > LongestStreak)
         {
             LongestStreak = Streak.CurrentDays;
         }
     }
 
-    public void ProcessDayEnd(DateOnly endOfDay)
+    public void ProcessDayEnd(DateOnly evaluationDate)
     {
-        Streak = Streak.ProcessDayEnd(endOfDay);
+        Streak = Streak.ProcessDayEnd(evaluationDate);
     }
 }

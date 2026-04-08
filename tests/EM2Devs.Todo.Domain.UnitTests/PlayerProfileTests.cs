@@ -44,18 +44,32 @@ public sealed class PlayerProfileTests
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_IncrementCurrentStreak_When_RecordingCompletionOnConsecutiveDay()
+    public void Should_NoOp_When_RecordingCompletionTwiceOnSameDay()
     {
-        // Given — yesterday's streak is 4
+        // Given — fresh profile, recorded once today
         var profile = PlayerProfile.NewProfile();
-        profile.RecordCompletion(_yesterday);
-        profile.RecordCompletion(_yesterday); // duplicate same day, no change
-        profile.LongestStreak.ShouldBe(1);
-
-        // When
         profile.RecordCompletion(_today);
 
-        // Then
+        // When — recorded again same day
+        profile.RecordCompletion(_today);
+
+        // Then — still 1 day, no double-increment
+        profile.Streak.CurrentDays.ShouldBe(1);
+        profile.LongestStreak.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_IncrementCurrentStreak_When_RecordingCompletionOnConsecutiveDay()
+    {
+        // Given — fresh profile, completed once yesterday
+        var profile = PlayerProfile.NewProfile();
+        profile.RecordCompletion(_yesterday);
+
+        // When — completed again today
+        profile.RecordCompletion(_today);
+
+        // Then — streak advances to 2
         profile.Streak.CurrentDays.ShouldBe(2);
         profile.LongestStreak.ShouldBe(2);
     }
@@ -90,11 +104,23 @@ public sealed class PlayerProfileTests
         var streak = new Streak(3, _yesterday, 1);
 
         // When
-        var profile = PlayerProfile.Reconstitute(level, streak, longestStreak: 12);
+        var profile = PlayerProfile.Reconstitute(PlayerProfileId.New(), level, streak, longestStreak: 12);
 
         // Then
         profile.Level.Value.ShouldBe(7);
         profile.Streak.CurrentDays.ShouldBe(3);
         profile.LongestStreak.ShouldBe(12);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_HaveDistinctIds_When_TwoNewProfilesCreated()
+    {
+        // Given / When
+        var first = PlayerProfile.NewProfile();
+        var second = PlayerProfile.NewProfile();
+
+        // Then — strongly-typed IDs are unique per instance
+        first.Id.ShouldNotBe(second.Id);
     }
 }

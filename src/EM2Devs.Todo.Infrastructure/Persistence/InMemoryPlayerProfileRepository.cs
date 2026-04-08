@@ -12,8 +12,13 @@ namespace EM2Devs.Todo.Infrastructure.Persistence;
 public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 {
     private readonly object _lock = new();
+    private readonly ILastXpBreakdownCache _breakdownCache;
     private PlayerProfile _profile = PlayerProfile.NewProfile();
-    private XpBreakdownReadModel? _lastBreakdown;
+
+    public InMemoryPlayerProfileRepository(ILastXpBreakdownCache breakdownCache)
+    {
+        _breakdownCache = breakdownCache;
+    }
 
     public Task<PlayerProfileReadModel> GetProfileAsync(CancellationToken ct = default)
     {
@@ -25,7 +30,7 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
                 XpToNextLevel: _profile.Level.XpToNextLevel(),
                 CurrentStreak: _profile.Streak.CurrentDays,
                 LongestStreak: _profile.LongestStreak,
-                LastXpBreakdown: _lastBreakdown));
+                LastXpBreakdown: _breakdownCache.GetCurrent()));
         }
     }
 
@@ -36,7 +41,7 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
         lock (_lock)
         {
             _profile.AwardXp(xp);
-            _lastBreakdown = breakdown;
+            _breakdownCache.SetCurrent(breakdown);
         }
 
         return Task.CompletedTask;

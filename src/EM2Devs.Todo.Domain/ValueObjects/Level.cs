@@ -17,7 +17,7 @@ public sealed record Level
     private static readonly int[] _thresholds = BuildThresholds();
 
     public int Value { get; }
-    public ExperiencePoints CurrentXp { get; }
+    public ExperiencePoints CurrentXp { get; private set; }
 
     /// <remarks>
     /// CurrentXp is not validated against the level threshold to allow
@@ -39,6 +39,17 @@ public sealed record Level
 
         Value = value;
         CurrentXp = currentXp;
+    }
+
+    /// <summary>
+    /// EF Core constructor. <see cref="CurrentXp"/> is an owned nested type and cannot
+    /// be bound via constructor parameters; EF assigns it through the private setter
+    /// after materialisation. The scalar <see cref="Value"/> is bound here.
+    /// </summary>
+    private Level(int value)
+    {
+        Value = value;
+        CurrentXp = new ExperiencePoints(0);
     }
 
     public static Level StartingLevel() => new(1, new ExperiencePoints(0));

@@ -23,6 +23,19 @@ public sealed class PlayerProfile
         LongestStreak = longestStreak;
     }
 
+    /// <summary>
+    /// EF Core constructor. Owned-type properties (<see cref="Level"/>, <see cref="Streak"/>)
+    /// cannot be bound to constructor parameters in EF Core, so they're populated via private
+    /// setters after construction. Initialised here to satisfy non-null reference defaults.
+    /// </summary>
+    private PlayerProfile(PlayerProfileId id, int longestStreak)
+    {
+        Id = id;
+        Level = Level.StartingLevel();
+        Streak = Streak.NewStreak();
+        LongestStreak = longestStreak;
+    }
+
     public static PlayerProfile NewProfile() =>
         new(PlayerProfileId.New(), Level.StartingLevel(), Streak.NewStreak(), longestStreak: 0);
 

@@ -3,6 +3,7 @@ using System;
 using EM2Devs.Todo.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EM2Devs.Todo.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TodoDbContext))]
-    partial class TodoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260408035825_AddBackgroundJobsTables")]
+    partial class AddBackgroundJobsTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -125,28 +128,8 @@ namespace EM2Devs.Todo.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("DueDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int?>("EstimatedTime")
-                        .HasColumnType("integer")
-                        .HasColumnName("estimated_minutes");
-
                     b.Property<bool>("IsBossTask")
                         .HasColumnType("boolean");
-
-                    b.Property<string>("Priority")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasDefaultValue("Medium")
-                        .HasColumnName("priority");
-
-                    b.Property<DateOnly?>("ScheduledDate")
-                        .HasColumnType("date")
-                        .HasColumnName("scheduled_date");
-
-                    b.Property<Guid?>("SourceRecurringTaskId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("source_recurring_task_id");
 
                     b.Property<string>("Status")
                         .IsRequired()

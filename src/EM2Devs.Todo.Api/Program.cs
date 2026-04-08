@@ -27,22 +27,26 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 string? connectionString = builder.Configuration.GetConnectionString("tododb");
+builder.Services.AddSingleton<ILastXpBreakdownCache, LastXpBreakdownCache>();
+
 if (!string.IsNullOrEmpty(connectionString))
 {
     builder.AddNpgsqlDbContext<TodoDbContext>("tododb");
     builder.Services.AddScoped<ITaskRepository, PostgresTaskRepository>();
-
+    builder.Services.AddScoped<IRecurringTaskRepository, PostgresRecurringTaskRepository>();
+    builder.Services.AddScoped<IPlayerProfileRepository, PostgresPlayerProfileRepository>();
+    builder.Services.AddScoped<IStreakSnapshotRepository, PostgresStreakSnapshotRepository>();
 }
 else
 {
     builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
+    builder.Services.AddSingleton<IRecurringTaskRepository, InMemoryRecurringTaskRepository>();
+    builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
 }
 
-builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
 // TODO: Add conditional Postgres/InMemory registration (like ITaskRepository) when persistence is implemented
 builder.Services.AddSingleton<IQuestRepository, InMemoryQuestRepository>();
 builder.Services.AddSingleton<IEpicRepository, InMemoryEpicRepository>();
-builder.Services.AddSingleton<IRecurringTaskRepository, InMemoryRecurringTaskRepository>();
 
 builder.Services.AddScoped<DemoCurrentUser>();
 builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<DemoCurrentUser>());

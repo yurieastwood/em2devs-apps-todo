@@ -51,10 +51,7 @@ public sealed class PlayerProfile
     public void RecordCompletion(DateOnly completionDate)
     {
         Streak = Streak.RecordCompletion(completionDate);
-        if (Streak.CurrentDays > LongestStreak)
-        {
-            LongestStreak = Streak.CurrentDays;
-        }
+        LongestStreak = Math.Max(LongestStreak, Streak.CurrentDays);
     }
 
     public void ProcessDayEnd(DateOnly evaluationDate)

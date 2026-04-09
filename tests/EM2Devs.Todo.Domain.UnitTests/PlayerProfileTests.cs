@@ -123,4 +123,15 @@ public sealed class PlayerProfileTests
         // Then — strongly-typed IDs are unique per instance
         first.Id.ShouldNotBe(second.Id);
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_AwardXpCalledWithNull()
+    {
+        // Given
+        var profile = PlayerProfile.NewProfile();
+
+        // When / Then — null guard on AwardXp
+        Should.Throw<ArgumentNullException>(() => profile.AwardXp(null!));
+    }
 }

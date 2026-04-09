@@ -14,6 +14,7 @@ using EM2Devs.Todo.Infrastructure.Persistence;
 using EM2Devs.Todo.ServiceDefaults;
 using EM2Devs.Todo.Api.Middleware;
 using EM2Devs.Todo.Api.Extensions;
+using EM2Devs.Todo.Api.HostedServices;
 using Asp.Versioning;
 using FluentValidation;
 
@@ -36,6 +37,12 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.Services.AddScoped<IRecurringTaskRepository, PostgresRecurringTaskRepository>();
     builder.Services.AddScoped<IPlayerProfileRepository, PostgresPlayerProfileRepository>();
     builder.Services.AddScoped<IStreakSnapshotRepository, PostgresStreakSnapshotRepository>();
+
+    // Seed the singleton PlayerProfile row at host start-up (before HTTP traffic arrives)
+    // so concurrent first-request handlers cannot race inside GetOrCreateAsync. Runs only
+    // when host.Run() is actually invoked — design-time `dotnet ef` tooling bypasses
+    // IHostedService.StartAsync, so the seed never runs against an unmigrated schema.
+    builder.Services.AddHostedService<PlayerProfileSeederHostedService>();
 }
 else
 {
@@ -143,18 +150,9 @@ bool isNonProduction = app.Environment.IsDevelopment()
 bool autoMigrateRequested = string.Equals(
     Environment.GetEnvironmentVariable("AUTO_MIGRATE"), "true", StringComparison.OrdinalIgnoreCase);
 
-if (!string.IsNullOrEmpty(connectionString) && isNonProduction)
+if (!string.IsNullOrEmpty(connectionString) && isNonProduction && autoMigrateRequested)
 {
-    if (autoMigrateRequested)
-    {
-        await app.ApplyMigrationsAsync().ConfigureAwait(false);
-    }
-
-    // Always seed the singleton PlayerProfile in non-production. This must run regardless
-    // of whether migrations were applied in-process (AUTO_MIGRATE=true, via Aspire) or
-    // out-of-process (e.g. CI pipeline running `dotnet ef database update` before startup).
-    // The seed is idempotent; running twice is a no-op.
-    await app.SeedPlayerProfileAsync().ConfigureAwait(false);
+    await app.ApplyMigrationsAsync().ConfigureAwait(false);
 }
 
 app.UseExceptionHandler();

@@ -136,4 +136,38 @@ public sealed class PlayerProfileTests
         var ex = Should.Throw<ArgumentNullException>(() => profile.AwardXp(null!));
         ex.ParamName.ShouldBe("xp");
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ResetStreak_When_ProcessDayEndCalledAfterMissedDay()
+    {
+        // Given — 3-day streak ending yesterday
+        var profile = PlayerProfile.NewProfile();
+        profile.RecordCompletion(_today.AddDays(-2));
+        profile.RecordCompletion(_today.AddDays(-1));
+        profile.RecordCompletion(_today);
+        profile.Streak.CurrentDays.ShouldBe(3);
+
+        // When — day-end evaluation runs the day after the missed day
+        // (streak has no grace days, so it should reset)
+        profile.ProcessDayEnd(_today.AddDays(2));
+
+        // Then — current streak reset, longest preserved
+        profile.Streak.CurrentDays.ShouldBe(0);
+        profile.LongestStreak.ShouldBe(3);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NoOp_When_ProcessDayEndCalledWithNoActiveStreak()
+    {
+        // Given — fresh profile, no streak at all
+        var profile = PlayerProfile.NewProfile();
+
+        // When
+        profile.ProcessDayEnd(_today);
+
+        // Then — still zero
+        profile.Streak.CurrentDays.ShouldBe(0);
+    }
 }

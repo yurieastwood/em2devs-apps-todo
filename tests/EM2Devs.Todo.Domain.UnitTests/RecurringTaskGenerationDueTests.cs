@@ -101,4 +101,19 @@ public sealed class RecurringTaskGenerationDueTests
         // Even with no instances yet, a paused task is not due.
         recurring.IsDueForGeneration(lastScheduledDate: null, today: _today).ShouldBeFalse();
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeDue_When_PatternIsUnrecognisedEnumValue()
+    {
+        // Given — cast an out-of-range int to RecurrencePattern to exercise the
+        // switch's default arm. Prevents a silently-added enum value from quietly
+        // generating instances without an explicit schedule decision.
+        var recurring = RecurringTask.Create(_title, (RecurrencePattern)999);
+
+        // Then — default arm returns false, even with a prior instance present
+        recurring
+            .IsDueForGeneration(lastScheduledDate: _today.AddDays(-30), today: _today)
+            .ShouldBeFalse();
+    }
 }

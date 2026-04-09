@@ -131,7 +131,9 @@ public sealed class PlayerProfileTests
         // Given
         var profile = PlayerProfile.NewProfile();
 
-        // When / Then — null guard on AwardXp
-        Should.Throw<ArgumentNullException>(() => profile.AwardXp(null!));
+        // When / Then — null guard on AwardXp must fire before falling through to Level.AddXp
+        // (ParamName "xp" distinguishes PlayerProfile.AwardXp's guard from Level.AddXp's "earned")
+        var ex = Should.Throw<ArgumentNullException>(() => profile.AwardXp(null!));
+        ex.ParamName.ShouldBe("xp");
     }
 }

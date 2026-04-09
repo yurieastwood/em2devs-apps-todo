@@ -143,9 +143,18 @@ bool isNonProduction = app.Environment.IsDevelopment()
 bool autoMigrateRequested = string.Equals(
     Environment.GetEnvironmentVariable("AUTO_MIGRATE"), "true", StringComparison.OrdinalIgnoreCase);
 
-if (!string.IsNullOrEmpty(connectionString) && isNonProduction && autoMigrateRequested)
+if (!string.IsNullOrEmpty(connectionString) && isNonProduction)
 {
-    await app.ApplyMigrationsAsync().ConfigureAwait(false);
+    if (autoMigrateRequested)
+    {
+        await app.ApplyMigrationsAsync().ConfigureAwait(false);
+    }
+
+    // Always seed the singleton PlayerProfile in non-production. This must run regardless
+    // of whether migrations were applied in-process (AUTO_MIGRATE=true, via Aspire) or
+    // out-of-process (e.g. CI pipeline running `dotnet ef database update` before startup).
+    // The seed is idempotent; running twice is a no-op.
+    await app.SeedPlayerProfileAsync().ConfigureAwait(false);
 }
 
 app.UseExceptionHandler();

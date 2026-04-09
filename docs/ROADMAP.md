@@ -38,6 +38,7 @@ A user can create tasks, complete them, earn XP, and see their level — backed 
 - [x] Player profile aggregate (XP total, current level, streak)
 - [x] API endpoint: GET /api/profile (XP, level, streak)
 - [x] Update OpenAPI contract for profile endpoint (human approved)
+- [x] Streak multiplier in XP scoring actually uses current streak (Plan 1 fix — was silent no-op before)
 
 ### PoC Exit Criteria — `done`
 
@@ -98,12 +99,12 @@ Authentication, a basic frontend, and the core gamification loop (tasks → XP �
 - [x] Frontend: quest list and detail screens (PR #52)
 - [x] Epic API endpoints and frontend (PR #52)
 
-### 2.7 Background Jobs
+### 2.7 Background Jobs — `wip`
 
-- [ ] Quartz.NET setup (per ADR-019)
-- [ ] Recurring task instance generation
-- [ ] Streak evaluation (daily)
-- [ ] Notification scheduling
+- [x] Quartz.NET setup (per ADR-019) — separate `EM2Devs.Todo.Worker` project, in-memory job store
+- [x] Recurring task instance generation — `RecurringTaskGenerationJob`, every 5 minutes; due-state derived from `MAX(tasks.scheduled_date WHERE source_recurring_task_id = ...)` rather than a field on the template
+- [x] Streak evaluation (daily) — `DailyStreakEvaluationJob`, midnight UTC, writes `streak_snapshots`
+- [ ] Notification scheduling — Plan 2 (depends on Notification persistence)
 
 ### 2.8 Real-Time
 

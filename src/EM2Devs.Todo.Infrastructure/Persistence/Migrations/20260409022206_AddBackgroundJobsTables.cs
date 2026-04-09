@@ -37,8 +37,7 @@ public partial class AddBackgroundJobsTables : Migration
                 id = table.Column<Guid>(type: "uuid", nullable: false),
                 title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                 pattern = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                is_active = table.Column<bool>(type: "boolean", nullable: false),
-                last_generated_at = table.Column<DateOnly>(type: "date", nullable: true)
+                is_active = table.Column<bool>(type: "boolean", nullable: false)
             },
             constraints: table =>
             {
@@ -75,7 +74,9 @@ public partial class AddBackgroundJobsTables : Migration
         ArgumentNullException.ThrowIfNull(migrationBuilder);
 
         migrationBuilder.DropTable(name: "player_profiles");
+
         migrationBuilder.DropTable(name: "recurring_tasks");
+
         migrationBuilder.DropTable(name: "streak_snapshots");
     }
 }

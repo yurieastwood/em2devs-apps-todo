@@ -51,17 +51,16 @@ public sealed class PostgresRecurringTaskRepositoryTests : IAsyncLifetime, IDisp
         retrieved.Title.Value.ShouldBe("Daily standup");
         retrieved.Pattern.ShouldBe(RecurrencePattern.Daily);
         retrieved.IsActive.ShouldBeTrue();
-        retrieved.LastGeneratedAt.ShouldBeNull();
     }
 
     [Fact]
-    public async Task Should_PersistLastGeneratedAt_When_MarkedAndSaved()
+    public async Task Should_PersistTitleAndPatternUpdates_When_TemplateEdited()
     {
         RecurringTask recurring = RecurringTask.Create(new TaskTitle("Weekly review"), RecurrencePattern.Weekly);
         await _repository.SaveAsync(recurring);
 
-        DateOnly today = new(2026, 4, 7);
-        recurring.MarkInstanceGenerated(today);
+        recurring.UpdateTitle(new TaskTitle("Weekly retro"));
+        recurring.UpdatePattern(RecurrencePattern.Daily);
         await _repository.SaveAsync(recurring);
 
         DbContextOptions<TodoDbContext> options = new DbContextOptionsBuilder<TodoDbContext>()
@@ -70,7 +69,8 @@ public sealed class PostgresRecurringTaskRepositoryTests : IAsyncLifetime, IDisp
         await using TodoDbContext fresh = new(options);
         RecurringTask? reloaded = await fresh.RecurringTasks.FindAsync(recurring.Id);
         reloaded.ShouldNotBeNull();
-        reloaded.LastGeneratedAt.ShouldBe(today);
+        reloaded.Title.Value.ShouldBe("Weekly retro");
+        reloaded.Pattern.ShouldBe(RecurrencePattern.Daily);
     }
 
     [Fact]

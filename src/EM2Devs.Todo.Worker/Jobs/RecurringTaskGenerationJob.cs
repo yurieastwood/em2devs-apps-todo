@@ -7,13 +7,22 @@ using Quartz;
 namespace EM2Devs.Todo.Worker.Jobs;
 
 /// <summary>
-/// Quartz job: scans active RecurringTasks and generates a new TodoTask
-/// instance for each one whose IsDueForGeneration(today) returns true.
+/// Quartz job: scans active RecurringTasks and generates a new TodoTask instance
+/// for each one that is due for generation today.
+///
+/// "Is due" is decided by <see cref="RecurringTask.IsDueForGeneration(DateOnly?, DateOnly)"/>, a
+/// pure function that takes the last scheduled date of this template's instances plus today. The
+/// single source of truth for "last generation" is the instances table itself — this job queries
+/// <see cref="ITaskRepository.GetByRecurringTaskIdAsync"/> and picks the max scheduled date.
 ///
 /// Cron: every 5 minutes (configured in Program.cs).
-/// Idempotent: re-running the job within the same calendar day generates
-/// nothing for already-processed daily tasks because IsDueForGeneration
-/// re-checks LastGeneratedAt against today's date.
+/// Idempotent: re-running within the same calendar day generates nothing for already-processed
+/// daily tasks because the new instance carries today's scheduled date, and the predicate will
+/// return false on the next tick.
+///
+/// Note: <see cref="RecurringTask.IsDueForGeneration(DateOnly?, DateOnly)"/> has a known clock-skew
+/// asymmetry for Monthly when <paramref name="lastScheduledDate"/> is in a future month. Tracked
+/// as a follow-up.
 /// </summary>
 [DisallowConcurrentExecution]
 public sealed partial class RecurringTaskGenerationJob : IJob
@@ -40,28 +49,47 @@ public sealed partial class RecurringTaskGenerationJob : IJob
         ArgumentNullException.ThrowIfNull(context);
 
         DateOnly today = DateOnly.FromDateTime(_timeProvider.GetUtcNow().UtcDateTime);
-        IReadOnlyList<RecurringTask> all = await _recurringRepository.GetAllAsync(context.CancellationToken).ConfigureAwait(false);
+        IReadOnlyList<RecurringTask> all = await _recurringRepository
+            .GetAllAsync(context.CancellationToken)
+            .ConfigureAwait(false);
 
         int generated = 0;
         foreach (RecurringTask recurring in all)
         {
-            // Note: RecurringTask.IsDueForGeneration has a known clock-skew asymmetry for Monthly. Tracked as a follow-up.
-            if (!recurring.IsDueForGeneration(today))
+            DateOnly? lastScheduledDate = await GetLastScheduledDateAsync(recurring.Id, context.CancellationToken)
+                .ConfigureAwait(false);
+
+            if (!recurring.IsDueForGeneration(lastScheduledDate, today))
             {
                 continue;
             }
 
-            TodoTask instance = recurring.GenerateNextInstance();
+            TodoTask instance = recurring.GenerateNextInstance(today);
             await _taskRepository.SaveAsync(instance, context.CancellationToken).ConfigureAwait(false);
-
-            recurring.MarkInstanceGenerated(today);
-            await _recurringRepository.SaveAsync(recurring, context.CancellationToken).ConfigureAwait(false);
 
             generated++;
             LogInstanceGenerated(_logger, instance.Id, recurring.Id, recurring.Title.Value);
         }
 
         LogJobCompleted(_logger, today, generated, all.Count);
+    }
+
+    private async Task<DateOnly?> GetLastScheduledDateAsync(RecurringTaskId recurringTaskId, CancellationToken ct)
+    {
+        IReadOnlyList<TodoTask> instances = await _taskRepository
+            .GetByRecurringTaskIdAsync(recurringTaskId, ct)
+            .ConfigureAwait(false);
+
+        DateOnly? max = null;
+        foreach (TodoTask instance in instances)
+        {
+            if (instance.ScheduledDate is { } scheduled && (max is null || scheduled > max.Value))
+            {
+                max = scheduled;
+            }
+        }
+
+        return max;
     }
 
     [LoggerMessage(

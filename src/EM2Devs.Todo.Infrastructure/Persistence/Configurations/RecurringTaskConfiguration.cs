@@ -38,8 +38,5 @@ public sealed class RecurringTaskConfiguration : IEntityTypeConfiguration<Recurr
         builder.Property(r => r.IsActive)
             .HasColumnName("is_active")
             .IsRequired();
-
-        builder.Property(r => r.LastGeneratedAt)
-            .HasColumnName("last_generated_at");
     }
 }

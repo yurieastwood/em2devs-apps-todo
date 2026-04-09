@@ -7,7 +7,10 @@ using Xunit;
 namespace EM2Devs.Todo.Domain.UnitTests;
 
 /// <summary>
-/// Tests for RecurringTask.IsDueForGeneration(today) and MarkInstanceGenerated(today).
+/// Tests for RecurringTask.IsDueForGeneration(lastScheduledDate, today) — a pure function
+/// that decides whether a new instance should be generated given the last scheduled date
+/// (derived from the instance table by the caller) and today's date.
+///
 /// Maps to: docs/features/core/recurring-tasks.feature
 /// </summary>
 public sealed class RecurringTaskGenerationDueTests
@@ -19,75 +22,73 @@ public sealed class RecurringTaskGenerationDueTests
     [Trait("Category", "Domain")]
     public void Should_BeDue_When_NeverGenerated()
     {
-        // Given
+        // Given — no instances yet, so lastScheduledDate is null
         var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily);
 
         // Then
-        recurring.IsDueForGeneration(_today).ShouldBeTrue();
+        recurring.IsDueForGeneration(lastScheduledDate: null, today: _today).ShouldBeTrue();
     }
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_NotBeDue_When_DailyAlreadyGeneratedToday()
+    public void Should_NotBeDue_When_DailyLastScheduledIsToday()
     {
         var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily);
-        recurring.MarkInstanceGenerated(_today);
 
-        recurring.IsDueForGeneration(_today).ShouldBeFalse();
+        recurring.IsDueForGeneration(lastScheduledDate: _today, today: _today).ShouldBeFalse();
     }
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_BeDue_When_DailyLastGeneratedYesterday()
+    public void Should_BeDue_When_DailyLastScheduledIsYesterday()
     {
         var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily);
-        recurring.MarkInstanceGenerated(_today.AddDays(-1));
 
-        recurring.IsDueForGeneration(_today).ShouldBeTrue();
+        recurring.IsDueForGeneration(lastScheduledDate: _today.AddDays(-1), today: _today).ShouldBeTrue();
     }
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_NotBeDue_When_WeeklyLastGenerated6DaysAgo()
+    public void Should_NotBeDue_When_WeeklyLastScheduled6DaysAgo()
     {
         var recurring = RecurringTask.Create(_title, RecurrencePattern.Weekly);
-        recurring.MarkInstanceGenerated(_today.AddDays(-6));
 
-        recurring.IsDueForGeneration(_today).ShouldBeFalse();
+        recurring.IsDueForGeneration(lastScheduledDate: _today.AddDays(-6), today: _today).ShouldBeFalse();
     }
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_BeDue_When_WeeklyLastGenerated7DaysAgo()
+    public void Should_BeDue_When_WeeklyLastScheduled7DaysAgo()
     {
         var recurring = RecurringTask.Create(_title, RecurrencePattern.Weekly);
-        recurring.MarkInstanceGenerated(_today.AddDays(-7));
 
-        recurring.IsDueForGeneration(_today).ShouldBeTrue();
+        recurring.IsDueForGeneration(lastScheduledDate: _today.AddDays(-7), today: _today).ShouldBeTrue();
     }
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_NotBeDue_When_MonthlyLastGeneratedSameMonth()
+    public void Should_NotBeDue_When_MonthlyLastScheduledSameMonth()
     {
         // Given — both dates in April 2026
         var recurring = RecurringTask.Create(_title, RecurrencePattern.Monthly);
-        recurring.MarkInstanceGenerated(new DateOnly(2026, 4, 1));
 
         // Then
-        recurring.IsDueForGeneration(_today).ShouldBeFalse();
+        recurring
+            .IsDueForGeneration(lastScheduledDate: new DateOnly(2026, 4, 1), today: _today)
+            .ShouldBeFalse();
     }
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_BeDue_When_MonthlyLastGeneratedDifferentMonth()
+    public void Should_BeDue_When_MonthlyLastScheduledDifferentMonth()
     {
         // Given — March 31, evaluating on April 7
         var recurring = RecurringTask.Create(_title, RecurrencePattern.Monthly);
-        recurring.MarkInstanceGenerated(new DateOnly(2026, 3, 31));
 
         // Then
-        recurring.IsDueForGeneration(_today).ShouldBeTrue();
+        recurring
+            .IsDueForGeneration(lastScheduledDate: new DateOnly(2026, 3, 31), today: _today)
+            .ShouldBeTrue();
     }
 
     [Fact]
@@ -97,6 +98,7 @@ public sealed class RecurringTaskGenerationDueTests
         var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily);
         recurring.Pause();
 
-        recurring.IsDueForGeneration(_today).ShouldBeFalse();
+        // Even with no instances yet, a paused task is not due.
+        recurring.IsDueForGeneration(lastScheduledDate: null, today: _today).ShouldBeFalse();
     }
 }

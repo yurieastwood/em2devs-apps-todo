@@ -9,7 +9,6 @@ public sealed class RecurringTask
     public TaskTitle Title { get; private set; }
     public RecurrencePattern Pattern { get; private set; }
     public bool IsActive { get; private set; }
-    public DateOnly? LastGeneratedAt { get; private set; }
 
     private RecurringTask(RecurringTaskId id, TaskTitle title, RecurrencePattern pattern)
     {
@@ -17,7 +16,6 @@ public sealed class RecurringTask
         Title = title;
         Pattern = pattern;
         IsActive = true;
-        LastGeneratedAt = null;
     }
 
     public static RecurringTask Create(TaskTitle title, RecurrencePattern pattern)
@@ -35,24 +33,28 @@ public sealed class RecurringTask
         return TodoTask.CreateFromRecurring(Title, Id, scheduledDate);
     }
 
-    public void MarkInstanceGenerated(DateOnly generatedDate)
-    {
-        LastGeneratedAt = generatedDate;
-    }
-
-    public bool IsDueForGeneration(DateOnly today)
+    /// <summary>
+    /// Pure function: decides whether a new instance should be generated for <paramref name="today"/>
+    /// given the scheduled date of the most recent instance (or <c>null</c> if none exists yet).
+    ///
+    /// The single source of truth for "last generation" is the instance table — this entity does not
+    /// carry its own <c>LastGeneratedAt</c> field. The caller (typically <c>RecurringTaskGenerationJob</c>)
+    /// queries the instances table for <c>MAX(scheduled_date)</c> scoped to this recurring task's Id
+    /// and passes the result here.
+    /// </summary>
+    public bool IsDueForGeneration(DateOnly? lastScheduledDate, DateOnly today)
     {
         if (!IsActive)
         {
             return false;
         }
 
-        if (LastGeneratedAt is null)
+        if (lastScheduledDate is null)
         {
             return true;
         }
 
-        DateOnly last = LastGeneratedAt.Value;
+        DateOnly last = lastScheduledDate.Value;
 
         return Pattern switch
         {

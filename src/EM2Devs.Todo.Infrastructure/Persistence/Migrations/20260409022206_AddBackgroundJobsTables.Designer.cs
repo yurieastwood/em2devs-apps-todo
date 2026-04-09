@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace EM2Devs.Todo.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(TodoDbContext))]
-    [Migration("20260408035825_AddBackgroundJobsTables")]
+    [Migration("20260409022206_AddBackgroundJobsTables")]
     partial class AddBackgroundJobsTables
     {
         /// <inheritdoc />
@@ -49,10 +49,6 @@ namespace EM2Devs.Todo.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
-
-                    b.Property<DateOnly?>("LastGeneratedAt")
-                        .HasColumnType("date")
-                        .HasColumnName("last_generated_at");
 
                     b.Property<string>("Pattern")
                         .IsRequired()
@@ -128,8 +124,28 @@ namespace EM2Devs.Todo.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset?>("DueDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("EstimatedTime")
+                        .HasColumnType("integer")
+                        .HasColumnName("estimated_minutes");
+
                     b.Property<bool>("IsBossTask")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Medium")
+                        .HasColumnName("priority");
+
+                    b.Property<DateOnly?>("ScheduledDate")
+                        .HasColumnType("date")
+                        .HasColumnName("scheduled_date");
+
+                    b.Property<Guid?>("SourceRecurringTaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_recurring_task_id");
 
                     b.Property<string>("Status")
                         .IsRequired()

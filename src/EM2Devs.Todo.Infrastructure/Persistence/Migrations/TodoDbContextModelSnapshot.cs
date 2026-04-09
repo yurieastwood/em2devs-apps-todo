@@ -47,10 +47,6 @@ namespace EM2Devs.Todo.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
-                    b.Property<DateOnly?>("LastGeneratedAt")
-                        .HasColumnType("date")
-                        .HasColumnName("last_generated_at");
-
                     b.Property<string>("Pattern")
                         .IsRequired()
                         .HasMaxLength(20)

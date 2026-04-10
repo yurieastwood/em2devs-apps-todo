@@ -56,7 +56,13 @@ public sealed partial class RecurringTaskGenerationJob : IJob
         int generated = 0;
         foreach (RecurringTask recurring in all)
         {
-            DateOnly? lastScheduledDate = await GetLastScheduledDateAsync(recurring.Id, context.CancellationToken)
+            if (!recurring.IsActive)
+            {
+                continue;
+            }
+
+            DateOnly? lastScheduledDate = await _taskRepository
+                .GetMaxScheduledDateAsync(recurring.Id, context.CancellationToken)
                 .ConfigureAwait(false);
 
             if (!recurring.IsDueForGeneration(lastScheduledDate, today))
@@ -72,24 +78,6 @@ public sealed partial class RecurringTaskGenerationJob : IJob
         }
 
         LogJobCompleted(_logger, today, generated, all.Count);
-    }
-
-    private async Task<DateOnly?> GetLastScheduledDateAsync(RecurringTaskId recurringTaskId, CancellationToken ct)
-    {
-        IReadOnlyList<TodoTask> instances = await _taskRepository
-            .GetByRecurringTaskIdAsync(recurringTaskId, ct)
-            .ConfigureAwait(false);
-
-        DateOnly? max = null;
-        foreach (TodoTask instance in instances)
-        {
-            if (instance.ScheduledDate is { } scheduled && (max is null || scheduled > max.Value))
-            {
-                max = scheduled;
-            }
-        }
-
-        return max;
     }
 
     [LoggerMessage(

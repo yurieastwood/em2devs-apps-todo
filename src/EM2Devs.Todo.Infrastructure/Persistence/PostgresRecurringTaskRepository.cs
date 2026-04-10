@@ -29,11 +29,7 @@ public sealed class PostgresRecurringTaskRepository : IRecurringTaskRepository
     {
         ArgumentNullException.ThrowIfNull(recurringTask);
 
-        bool exists = await _dbContext.RecurringTasks
-            .AnyAsync(r => r.Id == recurringTask.Id, ct)
-            .ConfigureAwait(false);
-
-        if (!exists)
+        if (_dbContext.Entry(recurringTask).State == EntityState.Detached)
         {
             _dbContext.RecurringTasks.Add(recurringTask);
         }

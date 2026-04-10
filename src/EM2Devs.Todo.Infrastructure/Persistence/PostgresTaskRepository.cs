@@ -29,11 +29,7 @@ public sealed class PostgresTaskRepository : ITaskRepository
     {
         ArgumentNullException.ThrowIfNull(task);
 
-        bool exists = await _dbContext.Tasks
-            .AnyAsync(t => t.Id == task.Id, ct)
-            .ConfigureAwait(false);
-
-        if (!exists)
+        if (_dbContext.Entry(task).State == EntityState.Detached)
         {
             _dbContext.Tasks.Add(task);
         }
@@ -62,6 +58,15 @@ public sealed class PostgresTaskRepository : ITaskRepository
         return await _dbContext.Tasks
             .Where(t => t.SourceRecurringTaskId == sourceId)
             .ToListAsync(ct)
+            .ConfigureAwait(false);
+    }
+
+    public async Task<DateOnly?> GetMaxScheduledDateAsync(RecurringTaskId sourceId, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(sourceId);
+        return await _dbContext.Tasks
+            .Where(t => t.SourceRecurringTaskId == sourceId && t.ScheduledDate != null)
+            .MaxAsync(t => t.ScheduledDate, ct)
             .ConfigureAwait(false);
     }
 }

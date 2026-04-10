@@ -10,6 +10,16 @@ namespace EM2Devs.Todo.Domain.Entities;
 /// </summary>
 public sealed class PlayerProfile
 {
+    /// <summary>
+    /// Fixed identifier for the single-user demo singleton profile row. Using a deterministic
+    /// Id lets <c>PostgresPlayerProfileRepository.GetOrCreateAsync</c> rely on the primary-key
+    /// constraint to arbitrate concurrent create-on-first-request races: the loser gets a
+    /// <c>DbUpdateException</c>, the winner's row survives, and a retry read returns the same
+    /// row. When auth lands and profiles become per-user, this constant goes away.
+    /// </summary>
+    public static readonly PlayerProfileId SingletonId =
+        new(new Guid("01010101-0101-0101-0101-010101010101"));
+
     public PlayerProfileId Id { get; }
     public Level Level { get; private set; }
     public Streak Streak { get; private set; }
@@ -37,7 +47,7 @@ public sealed class PlayerProfile
     }
 
     public static PlayerProfile NewProfile() =>
-        new(PlayerProfileId.New(), Level.StartingLevel(), Streak.NewStreak(), longestStreak: 0);
+        new(SingletonId, Level.StartingLevel(), Streak.NewStreak(), longestStreak: 0);
 
     public static PlayerProfile Reconstitute(PlayerProfileId id, Level level, Streak streak, int longestStreak) =>
         new(id, level, streak, longestStreak);

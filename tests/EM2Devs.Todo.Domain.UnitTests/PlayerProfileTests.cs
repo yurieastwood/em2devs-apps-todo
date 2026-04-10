@@ -114,14 +114,17 @@ public sealed class PlayerProfileTests
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_HaveDistinctIds_When_TwoNewProfilesCreated()
+    public void Should_ShareSingletonId_When_TwoNewProfilesCreated()
     {
-        // Given / When
+        // Given / When — single-user demo mode has exactly one profile, identified by a
+        // deterministic Id. Two NewProfile() calls must produce the same Id so concurrent
+        // create-on-first-request races are arbitrated by the primary-key constraint.
         var first = PlayerProfile.NewProfile();
         var second = PlayerProfile.NewProfile();
 
-        // Then — strongly-typed IDs are unique per instance
-        first.Id.ShouldNotBe(second.Id);
+        // Then
+        first.Id.ShouldBe(PlayerProfile.SingletonId);
+        second.Id.ShouldBe(PlayerProfile.SingletonId);
     }
 
     [Fact]

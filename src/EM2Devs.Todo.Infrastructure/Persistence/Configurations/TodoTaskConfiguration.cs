@@ -55,5 +55,11 @@ public sealed class TodoTaskConfiguration : IEntityTypeConfiguration<TodoTask>
 
         builder.Property(t => t.ScheduledDate)
             .HasColumnName("scheduled_date");
+
+        // Prevent duplicate generated instances for the same recurring task + calendar date.
+        // Filtered: only applies to rows that originated from a recurring task.
+        builder.HasIndex(t => new { t.SourceRecurringTaskId, t.ScheduledDate })
+            .IsUnique()
+            .HasFilter("source_recurring_task_id IS NOT NULL");
     }
 }

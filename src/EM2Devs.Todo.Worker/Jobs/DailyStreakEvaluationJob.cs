@@ -60,7 +60,7 @@ public sealed partial class DailyStreakEvaluationJob : IJob
             .ConfigureAwait(false);
 
         await _profileRepository
-            .ProcessDayEndAsync(today, context.CancellationToken)
+            .ProcessDayEndAsync(evaluatedDay, context.CancellationToken)
             .ConfigureAwait(false);
 
         PlayerProfileReadModel after = await _profileRepository

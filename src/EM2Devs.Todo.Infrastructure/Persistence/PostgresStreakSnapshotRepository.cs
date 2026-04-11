@@ -17,7 +17,16 @@ public sealed class PostgresStreakSnapshotRepository : IStreakSnapshotRepository
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         _dbContext.StreakSnapshots.Add(snapshot);
-        await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
+        try
+        {
+            await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
+        }
+        catch (DbUpdateException)
+        {
+            // Unique constraint on snapshot_date — another process already wrote this day's
+            // snapshot. Treat as idempotent success: clear tracker and move on.
+            _dbContext.ChangeTracker.Clear();
+        }
     }
 
     public async Task<StreakSnapshot?> GetByDateAsync(DateOnly snapshotDate, CancellationToken ct = default)

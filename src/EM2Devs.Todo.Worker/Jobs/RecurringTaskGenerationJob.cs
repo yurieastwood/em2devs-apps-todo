@@ -1,6 +1,7 @@
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
@@ -71,7 +72,18 @@ public sealed partial class RecurringTaskGenerationJob : IJob
             }
 
             TodoTask instance = recurring.GenerateNextInstance(today);
-            await _taskRepository.SaveAsync(instance, context.CancellationToken).ConfigureAwait(false);
+            try
+            {
+                await _taskRepository.SaveAsync(instance, context.CancellationToken).ConfigureAwait(false);
+            }
+            catch (DbUpdateException)
+            {
+                // Unique constraint on (source_recurring_task_id, scheduled_date) — another
+                // process already generated an instance for this recurring task + date.
+                // Idempotent: skip without counting.
+                LogDuplicateSkipped(_logger, recurring.Id, today);
+                continue;
+            }
 
             generated++;
             LogInstanceGenerated(_logger, instance.Id, recurring.Id, recurring.Title.Value);
@@ -88,6 +100,14 @@ public sealed partial class RecurringTaskGenerationJob : IJob
         TaskId instanceId,
         RecurringTaskId recurringTaskId,
         string title);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "Duplicate instance for recurring task {RecurringTaskId} on {ScheduledDate} — another process already generated it; skipping.")]
+    private static partial void LogDuplicateSkipped(
+        ILogger logger,
+        RecurringTaskId recurringTaskId,
+        DateOnly scheduledDate);
 
     [LoggerMessage(
         Level = LogLevel.Information,

@@ -1,6 +1,7 @@
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
+using EM2Devs.Todo.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -31,17 +32,20 @@ public sealed partial class RecurringTaskGenerationJob : IJob
 {
     private readonly IRecurringTaskRepository _recurringRepository;
     private readonly ITaskRepository _taskRepository;
+    private readonly TodoDbContext _dbContext;
     private readonly ILogger<RecurringTaskGenerationJob> _logger;
     private readonly TimeProvider _timeProvider;
 
     public RecurringTaskGenerationJob(
         IRecurringTaskRepository recurringRepository,
         ITaskRepository taskRepository,
+        TodoDbContext dbContext,
         ILogger<RecurringTaskGenerationJob> logger,
         TimeProvider timeProvider)
     {
         _recurringRepository = recurringRepository;
         _taskRepository = taskRepository;
+        _dbContext = dbContext;
         _logger = logger;
         _timeProvider = timeProvider;
     }
@@ -81,7 +85,9 @@ public sealed partial class RecurringTaskGenerationJob : IJob
             {
                 // Unique constraint on (source_recurring_task_id, scheduled_date) — another
                 // process already generated an instance for this recurring task + date.
-                // Idempotent: skip without counting.
+                // Clear the tracker so the failed Added entity doesn't poison subsequent
+                // iterations' SaveChangesAsync calls.
+                _dbContext.ChangeTracker.Clear();
                 LogDuplicateSkipped(_logger, recurring.Id, today);
                 continue;
             }

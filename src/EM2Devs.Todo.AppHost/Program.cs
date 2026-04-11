@@ -19,7 +19,8 @@ builder.AddProject<Projects.EM2Devs_Todo_Worker>("worker")
     .WithReference(postgres)
     .WithReference(redis)
     .WaitFor(postgres)
-    .WaitFor(redis);
+    .WaitFor(redis)
+    .WaitFor(api);
 
 builder.AddNpmApp("web", "../EM2Devs.Todo.Web", "dev")
     .WithNpmPackageInstallation()

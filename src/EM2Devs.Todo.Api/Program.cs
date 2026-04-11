@@ -44,7 +44,7 @@ else
     builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
 }
 
-// TODO: Add conditional Postgres/InMemory registration (like ITaskRepository) when persistence is implemented
+// TODO: Add conditional Postgres/InMemory registration for Quest/Epic repositories when their persistence implementations are added
 builder.Services.AddSingleton<IQuestRepository, InMemoryQuestRepository>();
 builder.Services.AddSingleton<IEpicRepository, InMemoryEpicRepository>();
 

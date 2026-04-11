@@ -3,6 +3,7 @@ using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using Quartz;
 
 namespace EM2Devs.Todo.Worker.Jobs;
@@ -76,7 +77,7 @@ public sealed partial class RecurringTaskGenerationJob : IJob
             {
                 await _taskRepository.SaveAsync(instance, context.CancellationToken).ConfigureAwait(false);
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
             {
                 // Unique constraint on (source_recurring_task_id, scheduled_date) — another
                 // process already generated an instance for this recurring task + date.

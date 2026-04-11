@@ -1,6 +1,7 @@
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace EM2Devs.Todo.Infrastructure.Persistence;
 
@@ -21,7 +22,7 @@ public sealed class PostgresStreakSnapshotRepository : IStreakSnapshotRepository
         {
             await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
         {
             // Unique constraint on snapshot_date — another process already wrote this day's
             // snapshot. Treat as idempotent success: clear tracker and move on.

@@ -50,7 +50,7 @@ public sealed partial class DailyStreakEvaluationJob : IJob
             .ConfigureAwait(false);
         if (existing is not null)
         {
-            LogSnapshotAlreadyExists(evaluatedDay);
+            LogSnapshotAlreadyExists(_logger, evaluatedDay);
             return;
         }
 
@@ -78,16 +78,16 @@ public sealed partial class DailyStreakEvaluationJob : IJob
 
         await _snapshotRepository.SaveAsync(snapshot, context.CancellationToken).ConfigureAwait(false);
 
-        LogSnapshotWritten(evaluatedDay, after.CurrentStreak, after.LongestStreak, wasActive);
+        LogSnapshotWritten(_logger, evaluatedDay, after.CurrentStreak, after.LongestStreak, wasActive);
     }
 
     [LoggerMessage(
         Level = LogLevel.Information,
         Message = "DailyStreakEvaluationJob: snapshot for {EvaluatedDay} already exists, skipping write")]
-    private partial void LogSnapshotAlreadyExists(DateOnly evaluatedDay);
+    private static partial void LogSnapshotAlreadyExists(ILogger logger, DateOnly evaluatedDay);
 
     [LoggerMessage(
         Level = LogLevel.Information,
         Message = "DailyStreakEvaluationJob: wrote snapshot for {EvaluatedDay} (current={Current}, longest={Longest}, wasActive={WasActive})")]
-    private partial void LogSnapshotWritten(DateOnly evaluatedDay, int current, int longest, bool wasActive);
+    private static partial void LogSnapshotWritten(ILogger logger, DateOnly evaluatedDay, int current, int longest, bool wasActive);
 }

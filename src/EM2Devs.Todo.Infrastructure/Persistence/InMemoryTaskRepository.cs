@@ -49,10 +49,9 @@ public sealed class InMemoryTaskRepository : ITaskRepository
     {
         ArgumentNullException.ThrowIfNull(sourceId);
         DateOnly? max = _store.Values
-            .Where(t => t.SourceRecurringTaskId == sourceId && t.ScheduledDate is not null)
-            .Select(t => t.ScheduledDate!.Value)
-            .DefaultIfEmpty()
+            .Where(t => t.SourceRecurringTaskId == sourceId)
+            .Select(t => t.ScheduledDate)
             .Max();
-        return Task.FromResult(max == default ? null : (DateOnly?)max);
+        return Task.FromResult(max);
     }
 }

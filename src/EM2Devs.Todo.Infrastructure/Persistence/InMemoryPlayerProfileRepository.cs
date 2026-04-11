@@ -1,30 +1,36 @@
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.ReadModels;
+using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
 
 namespace EM2Devs.Todo.Infrastructure.Persistence;
 
 /// <summary>
-/// In-memory player profile repository for PoC.
-/// Tracks mutable XP and level state across the application lifetime.
+/// In-memory player profile repository for tests and the no-DB fallback.
+/// Holds a single PlayerProfile aggregate instance and delegates state changes to it.
 /// </summary>
 public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 {
     private readonly object _lock = new();
-    private Level _level = Level.StartingLevel();
-    private XpBreakdownReadModel? _lastBreakdown;
+    private readonly ILastXpBreakdownCache _breakdownCache;
+    private PlayerProfile _profile = PlayerProfile.NewProfile();
 
-    public Task<PlayerProfile> GetProfileAsync(CancellationToken ct = default)
+    public InMemoryPlayerProfileRepository(ILastXpBreakdownCache breakdownCache)
+    {
+        _breakdownCache = breakdownCache;
+    }
+
+    public Task<PlayerProfileReadModel> GetProfileAsync(CancellationToken ct = default)
     {
         lock (_lock)
         {
-            return Task.FromResult(new PlayerProfile(
-                TotalXp: _level.CurrentXp.Value,
-                Level: _level.Value,
-                XpToNextLevel: _level.XpToNextLevel(),
-                CurrentStreak: 0,
-                LongestStreak: 0,
-                LastXpBreakdown: _lastBreakdown));
+            return Task.FromResult(new PlayerProfileReadModel(
+                TotalXp: _profile.Level.CurrentXp.Value,
+                Level: _profile.Level.Value,
+                XpToNextLevel: _profile.Level.XpToNextLevel(),
+                CurrentStreak: _profile.Streak.CurrentDays,
+                LongestStreak: _profile.LongestStreak,
+                LastXpBreakdown: _breakdownCache.GetCurrent()));
         }
     }
 
@@ -34,8 +40,28 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 
         lock (_lock)
         {
-            _level = _level.AddXp(xp);
-            _lastBreakdown = breakdown;
+            _profile.AwardXp(xp);
+            _breakdownCache.SetCurrent(breakdown);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task RecordCompletionAsync(DateOnly completionDate, CancellationToken ct = default)
+    {
+        lock (_lock)
+        {
+            _profile.RecordCompletion(completionDate);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task ProcessDayEndAsync(DateOnly evaluationDate, CancellationToken ct = default)
+    {
+        lock (_lock)
+        {
+            _profile.ProcessDayEnd(evaluationDate);
         }
 
         return Task.CompletedTask;

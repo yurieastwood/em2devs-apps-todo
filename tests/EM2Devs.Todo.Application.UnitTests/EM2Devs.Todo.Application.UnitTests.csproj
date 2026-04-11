@@ -9,8 +9,12 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
     <PackageReference Include="Shouldly" Version="4.*" />
     <PackageReference Include="NSubstitute" Version="5.*" />
+    <!-- Pin EF Core to match Infrastructure transitive version, avoiding MSB3277 conflicts. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.14" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\EM2Devs.Todo.Application\EM2Devs.Todo.Application.csproj" />
+    <ProjectReference Include="..\..\src\EM2Devs.Todo.Infrastructure\EM2Devs.Todo.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

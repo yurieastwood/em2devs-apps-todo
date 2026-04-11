@@ -58,6 +58,14 @@ public sealed record DailyBriefId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed player profile identifier (ADR-0023).
+/// </summary>
+public sealed record PlayerProfileId(Guid Value)
+{
+    public static PlayerProfileId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>

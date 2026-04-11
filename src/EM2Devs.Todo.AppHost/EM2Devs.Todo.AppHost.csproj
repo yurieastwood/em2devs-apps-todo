@@ -13,5 +13,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\EM2Devs.Todo.Api\EM2Devs.Todo.Api.csproj" />
+    <ProjectReference Include="..\EM2Devs.Todo.Worker\EM2Devs.Todo.Worker.csproj" />
   </ItemGroup>
 </Project>

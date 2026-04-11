@@ -19,7 +19,7 @@ public sealed class ProfileController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetProfile(CancellationToken ct)
     {
-        PlayerProfile profile = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);
+        PlayerProfileReadModel profile = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);
 
         XpBreakdownResponse? breakdown = profile.LastXpBreakdown is not null
             ? new XpBreakdownResponse(

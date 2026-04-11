@@ -10,4 +10,5 @@ public interface ITaskRepository
     Task SaveAsync(TodoTask task, CancellationToken ct = default);
     Task<bool> DeleteAsync(TaskId id, CancellationToken ct = default);
     Task<IReadOnlyList<TodoTask>> GetByRecurringTaskIdAsync(RecurringTaskId sourceId, CancellationToken ct = default);
+    Task<DateOnly?> GetMaxScheduledDateAsync(RecurringTaskId sourceId, CancellationToken ct = default);
 }

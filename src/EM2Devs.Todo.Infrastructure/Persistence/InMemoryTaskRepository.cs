@@ -44,4 +44,14 @@ public sealed class InMemoryTaskRepository : ITaskRepository
             .AsReadOnly();
         return Task.FromResult(tasks);
     }
+
+    public Task<DateOnly?> GetMaxScheduledDateAsync(RecurringTaskId sourceId, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(sourceId);
+        DateOnly? max = _store.Values
+            .Where(t => t.SourceRecurringTaskId == sourceId)
+            .Select(t => t.ScheduledDate)
+            .Max();
+        return Task.FromResult(max);
+    }
 }

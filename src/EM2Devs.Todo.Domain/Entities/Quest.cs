@@ -12,6 +12,7 @@ public sealed class Quest
     public string Description { get; private set; }
     public DateOnly? DueDate { get; private set; }
     public bool IsCompleted { get; private set; }
+    public EpicId? EpicId { get; private set; }
     public IReadOnlyList<TodoTask> Tasks => _tasks.AsReadOnly();
 
     public int Progress
@@ -77,6 +78,28 @@ public sealed class Quest
         }
 
         _tasks.Remove(task);
+    }
+
+    public void AssignToEpic(EpicId epicId)
+    {
+        ArgumentNullException.ThrowIfNull(epicId);
+
+        if (EpicId is not null)
+        {
+            throw new DomainException("Quest already belongs to an epic. Remove it from the current epic first, or move it.");
+        }
+
+        EpicId = epicId;
+    }
+
+    public void UnassignFromEpic()
+    {
+        if (EpicId is null)
+        {
+            throw new DomainException("Quest is not assigned to any epic.");
+        }
+
+        EpicId = null;
     }
 
     public void Complete()

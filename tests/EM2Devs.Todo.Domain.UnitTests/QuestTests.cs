@@ -389,6 +389,122 @@ public sealed class QuestTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_RecalculateProgress_When_TaskDeletedFromQuest()
+    {
+        // Given — quest with 4 tasks, 2 completed. Delete one incomplete task.
+        // Before: 2/4 = 50%. After removing 1 incomplete: 2/3 = 66%
+        Quest quest = CreateQuestWithTasks(4);
+        quest.Tasks[0].MoveToInProgress();
+        quest.Tasks[0].MarkAsDone();
+        quest.Tasks[1].MoveToInProgress();
+        quest.Tasks[1].MarkAsDone();
+        quest.Progress.ShouldBe(50);
+
+        // When — delete the third task (incomplete)
+        quest.RemoveTask(quest.Tasks[2].Id);
+
+        // Then — progress recalculated: 2/3 = 66%
+        quest.Progress.ShouldBe(66);
+        quest.Tasks.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AssignToEpic_When_QuestHasNoEpic()
+    {
+        // Given
+        Quest quest = CreateQuest();
+        EpicId epicId = EpicId.New();
+
+        // When
+        quest.AssignToEpic(epicId);
+
+        // Then
+        quest.EpicId.ShouldBe(epicId);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_QuestAlreadyBelongsToAnEpic()
+    {
+        // Given — quest already assigned to an epic
+        Quest quest = CreateQuest();
+        quest.AssignToEpic(EpicId.New());
+
+        // When / Then — attempting to assign to another epic
+        DomainException ex = Should.Throw<DomainException>(() => quest.AssignToEpic(EpicId.New()));
+        ex.Message.ShouldContain("already belongs to an epic");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_AssigningNullEpicId()
+    {
+        // Given
+        Quest quest = CreateQuest();
+
+        // When / Then
+        Should.Throw<ArgumentNullException>(() => quest.AssignToEpic(null!));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UnassignFromEpic_When_QuestBelongsToEpic()
+    {
+        // Given
+        Quest quest = CreateQuest();
+        quest.AssignToEpic(EpicId.New());
+
+        // When
+        quest.UnassignFromEpic();
+
+        // Then
+        quest.EpicId.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_UnassigningFromNoEpic()
+    {
+        // Given
+        Quest quest = CreateQuest();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => quest.UnassignFromEpic());
+        ex.Message.ShouldContain("not assigned to any epic");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AllowReassignment_When_QuestUnassignedFirst()
+    {
+        // Given — quest assigned to first epic, then unassigned
+        Quest quest = CreateQuest();
+        EpicId firstEpicId = EpicId.New();
+        EpicId secondEpicId = EpicId.New();
+        quest.AssignToEpic(firstEpicId);
+        quest.UnassignFromEpic();
+
+        // When — assign to second epic
+        quest.AssignToEpic(secondEpicId);
+
+        // Then
+        quest.EpicId.ShouldBe(secondEpicId);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_HaveNullEpicId_When_QuestCreated()
+    {
+        // Given / When
+        Quest quest = CreateQuest();
+
+        // Then
+        quest.EpicId.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_ReplaceTask_When_TaskExistsInQuest()
     {
         // Given — quest with one task (at index 0)

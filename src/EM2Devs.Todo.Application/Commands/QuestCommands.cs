@@ -129,6 +129,11 @@ public sealed class CompleteQuestCommandHandler : IRequestHandler<CompleteQuestC
             return new NotFoundError($"Quest with id '{request.QuestId}' was not found.");
         }
 
+        if (quest.IsCompleted)
+        {
+            return quest;
+        }
+
         try
         {
             quest.Complete();

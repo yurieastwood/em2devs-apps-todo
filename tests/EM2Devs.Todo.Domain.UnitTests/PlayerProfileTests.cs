@@ -250,4 +250,92 @@ public sealed class PlayerProfileTests
         profile.Streak.CurrentDays.ShouldBe(0);
         profile.LongestStreak.ShouldBe(5);
     }
+
+    // --- Title Visibility on Profile ---
+    // Scenario: "Title visible on profile to other users"
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ExposeEmptyTitleInventory_When_NewProfileCreated()
+    {
+        // Given / When
+        var profile = PlayerProfile.NewProfile();
+
+        // Then — title inventory is available on the public profile
+        profile.TitleInventory.ShouldNotBeNull();
+        profile.TitleInventory.EarnedTitles.ShouldBeEmpty();
+        profile.TitleInventory.ActiveTitle.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ExposeActiveTitle_When_TitleSelectedOnProfile()
+    {
+        // Given — profile with a title earned and selected
+        var profile = PlayerProfile.NewProfile();
+        var title = new Title(TitleType.MorningArchitect, _today);
+        profile.AwardTitle(title);
+        profile.SelectActiveTitle(TitleType.MorningArchitect);
+
+        // When — another user views the profile
+        TitleType? displayedTitle = profile.TitleInventory.ActiveTitle;
+
+        // Then — active title is visible
+        displayedTitle.ShouldBe(TitleType.MorningArchitect);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ExposeActiveTitleDisplayName_When_TitleSelected()
+    {
+        // Given — profile with Morning Architect active
+        var profile = PlayerProfile.NewProfile();
+        profile.AwardTitle(new Title(TitleType.MorningArchitect, _today));
+        profile.SelectActiveTitle(TitleType.MorningArchitect);
+
+        // When — retrieving the display name
+        string displayName = Title.DisplayName(profile.TitleInventory.ActiveTitle!.Value);
+
+        // Then
+        displayName.ShouldBe("Morning Architect");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AwardTitle_When_CalledOnProfile()
+    {
+        // Given
+        var profile = PlayerProfile.NewProfile();
+        var title = new Title(TitleType.BossSlayer, _today);
+
+        // When
+        profile.AwardTitle(title);
+
+        // Then
+        profile.TitleInventory.HasTitle(TitleType.BossSlayer).ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_SelectingUnearnedTitleOnProfile()
+    {
+        // Given
+        var profile = PlayerProfile.NewProfile();
+
+        // When / Then
+        var ex = Should.Throw<Exceptions.DomainException>(
+            () => profile.SelectActiveTitle(TitleType.NightOwl));
+        ex.Message.ShouldContain("has not been earned");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_AwardingNullTitleOnProfile()
+    {
+        // Given
+        var profile = PlayerProfile.NewProfile();
+
+        // When / Then — null validation delegated to TitleInventory.AwardTitle
+        Should.Throw<ArgumentNullException>(() => profile.AwardTitle(null!));
+    }
 }

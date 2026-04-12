@@ -63,13 +63,13 @@ Feature: Titles and Ranks
       And I should see locked titles with their requirements
       And I should be able to select any earned title as active
 
-    @wip
+    @done
     Scenario: Title visible on profile to other users
       Given I have "Morning Architect" as my active title
       When another user views my profile
       Then they should see "Morning Architect" displayed under my name
 
-    @wip
+    @done
     Scenario: Title visible in guild member list
       Given I have "Morning Architect" as my active title
       When another user views a guild member list that includes me
@@ -85,7 +85,7 @@ Feature: Titles and Ranks
       Then "Early Bird" should still be in my earned titles
       And it should remain selectable as my active title
 
-    @wip
+    @done
     Scenario: Active title displayed when user holds many titles
       Given I have earned 8 titles
       And I have selected "Boss Slayer" as my active title

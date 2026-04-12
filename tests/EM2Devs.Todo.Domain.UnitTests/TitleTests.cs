@@ -228,4 +228,78 @@ public sealed class TitleTests
         // When / Then
         collection.HasTitle(TitleType.MarathonBuilder).ShouldBeFalse();
     }
+
+    // --- Active Title Displayed When User Holds Many Titles ---
+    // Scenario: "Active title displayed when user holds many titles"
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_DisplayOnlyActiveTitle_When_UserHoldsManyTitles()
+    {
+        // Given — user has earned 8 titles
+        var collection = TitleInventory.Empty()
+            .AwardTitle(new Title(TitleType.EarlyBird, _today))
+            .AwardTitle(new Title(TitleType.MorningArchitect, _today))
+            .AwardTitle(new Title(TitleType.NightOwl, _today))
+            .AwardTitle(new Title(TitleType.MarathonBuilder, _today))
+            .AwardTitle(new Title(TitleType.BossSlayer, _today))
+            .AwardTitle(new Title(TitleType.StreakMaster, _today))
+            .AwardTitle(new Title(TitleType.QuestCloser, _today))
+            .AwardTitle(new Title(TitleType.ConsistentPlanner, _today));
+
+        // When — user selects Boss Slayer as active
+        var result = collection.SelectActiveTitle(TitleType.BossSlayer);
+
+        // Then — only Boss Slayer is the active/displayed title
+        result.ActiveTitle.ShouldBe(TitleType.BossSlayer);
+        result.EarnedTitles.Count.ShouldBe(8);
+        Title.DisplayName(result.ActiveTitle!.Value).ShouldBe("Boss Slayer");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ShowTotalEarnedCount_When_UserHoldsManyTitles()
+    {
+        // Given — user has earned 8 titles with Boss Slayer active
+        var collection = TitleInventory.Empty()
+            .AwardTitle(new Title(TitleType.EarlyBird, _today))
+            .AwardTitle(new Title(TitleType.MorningArchitect, _today))
+            .AwardTitle(new Title(TitleType.NightOwl, _today))
+            .AwardTitle(new Title(TitleType.MarathonBuilder, _today))
+            .AwardTitle(new Title(TitleType.BossSlayer, _today))
+            .AwardTitle(new Title(TitleType.StreakMaster, _today))
+            .AwardTitle(new Title(TitleType.QuestCloser, _today))
+            .AwardTitle(new Title(TitleType.ConsistentPlanner, _today))
+            .SelectActiveTitle(TitleType.BossSlayer);
+
+        // When — another user views the profile
+        int totalEarned = collection.EarnedTitles.Count;
+
+        // Then — count indicates total earned titles
+        totalEarned.ShouldBe(8);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_SwitchActiveTitle_When_UserChangesSelectionAmongManyTitles()
+    {
+        // Given — 8 titles, Boss Slayer active
+        var collection = TitleInventory.Empty()
+            .AwardTitle(new Title(TitleType.EarlyBird, _today))
+            .AwardTitle(new Title(TitleType.MorningArchitect, _today))
+            .AwardTitle(new Title(TitleType.NightOwl, _today))
+            .AwardTitle(new Title(TitleType.MarathonBuilder, _today))
+            .AwardTitle(new Title(TitleType.BossSlayer, _today))
+            .AwardTitle(new Title(TitleType.StreakMaster, _today))
+            .AwardTitle(new Title(TitleType.QuestCloser, _today))
+            .AwardTitle(new Title(TitleType.ConsistentPlanner, _today))
+            .SelectActiveTitle(TitleType.BossSlayer);
+
+        // When — switch to Night Owl
+        var result = collection.SelectActiveTitle(TitleType.NightOwl);
+
+        // Then — active changes, count unchanged
+        result.ActiveTitle.ShouldBe(TitleType.NightOwl);
+        result.EarnedTitles.Count.ShouldBe(8);
+    }
 }

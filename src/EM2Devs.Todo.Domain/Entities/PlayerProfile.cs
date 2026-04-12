@@ -24,6 +24,7 @@ public sealed class PlayerProfile
     public Level Level { get; private set; }
     public Streak Streak { get; private set; }
     public int LongestStreak { get; private set; }
+    public TitleInventory TitleInventory { get; private set; }
 
     private readonly List<SkillTree> _skillTrees = [];
 
@@ -38,6 +39,7 @@ public sealed class PlayerProfile
         Level = level;
         Streak = streak;
         LongestStreak = longestStreak;
+        TitleInventory = TitleInventory.Empty();
     }
 
     /// <summary>
@@ -51,6 +53,7 @@ public sealed class PlayerProfile
         Level = Level.StartingLevel();
         Streak = Streak.NewStreak();
         LongestStreak = longestStreak;
+        TitleInventory = TitleInventory.Empty();
     }
 
     public static PlayerProfile NewProfile() =>
@@ -63,6 +66,25 @@ public sealed class PlayerProfile
     {
         ArgumentNullException.ThrowIfNull(xp);
         Level = Level.AddXp(xp);
+    }
+
+    /// <summary>
+    /// Awards a title to the player's inventory. Idempotent — re-awarding
+    /// an already-earned title is a no-op. Null validation is enforced by
+    /// <see cref="TitleInventory.AwardTitle"/>.
+    /// </summary>
+    public void AwardTitle(Title title)
+    {
+        TitleInventory = TitleInventory.AwardTitle(title);
+    }
+
+    /// <summary>
+    /// Selects the active title displayed on the player's public profile.
+    /// The title must already be earned.
+    /// </summary>
+    public void SelectActiveTitle(TitleType type)
+    {
+        TitleInventory = TitleInventory.SelectActiveTitle(type);
     }
 
     public void RecordCompletion(DateOnly completionDate)

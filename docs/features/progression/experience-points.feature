@@ -91,14 +91,14 @@ Feature: Experience Points
 
   Rule: The system detects and discourages XP inflation through trivial tasks
 
-    @wip
+    @done
     Scenario: Detect burst of trivial task creation
       Given I create 20 tasks in 5 minutes with no descriptions or due dates
       And I immediately complete all 20 tasks
       Then the XP awarded should be at the reduced trivial-task rate
       And I should receive a gentle notification explaining the adjustment
 
-    @wip
+    @done
     Scenario: Repeated trivial tasks earn diminishing returns
       Given I have completed 10 tasks with difficulty "Trivial" today
       When I complete an 11th trivial task

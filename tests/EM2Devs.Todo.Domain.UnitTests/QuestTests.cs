@@ -544,4 +544,59 @@ public sealed class QuestTests
         // When / Then
         Should.Throw<ArgumentNullException>(() => quest.ReplaceTask(null!));
     }
+
+    // --- Scenario: XP correctly attributed to parent quest ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_HaveZeroTotalXpEarned_When_QuestCreated()
+    {
+        // Given / When
+        Quest quest = CreateQuest();
+
+        // Then
+        quest.TotalXpEarned.Value.ShouldBe(0);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_TrackXpEarned_When_XpAttributedToQuest()
+    {
+        // Given
+        Quest quest = CreateQuest();
+        var xp = new ExperiencePoints(30);
+
+        // When
+        quest.AddXpEarned(xp);
+
+        // Then
+        quest.TotalXpEarned.Value.ShouldBe(30);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AccumulateXp_When_MultipleXpAttributions()
+    {
+        // Given
+        Quest quest = CreateQuest();
+
+        // When
+        quest.AddXpEarned(new ExperiencePoints(30));
+        quest.AddXpEarned(new ExperiencePoints(15));
+
+        // Then
+        quest.TotalXpEarned.Value.ShouldBe(45);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_AddingNullXpToQuest()
+    {
+        // Given
+        Quest quest = CreateQuest();
+
+        // When / Then
+        ArgumentNullException ex = Should.Throw<ArgumentNullException>(() => quest.AddXpEarned(null!));
+        ex.ParamName.ShouldBe("xp");
+    }
 }

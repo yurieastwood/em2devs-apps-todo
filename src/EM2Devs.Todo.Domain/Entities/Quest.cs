@@ -13,6 +13,7 @@ public sealed class Quest
     public DateOnly? DueDate { get; private set; }
     public bool IsCompleted { get; private set; }
     public EpicId? EpicId { get; private set; }
+    public ExperiencePoints TotalXpEarned { get; private set; }
     public IReadOnlyList<TodoTask> Tasks => _tasks.AsReadOnly();
 
     public int Progress
@@ -35,6 +36,7 @@ public sealed class Quest
         Title = title;
         Description = description;
         DueDate = dueDate;
+        TotalXpEarned = new ExperiencePoints(0);
     }
 
     public static Quest Create(QuestTitle title, string description, DateOnly? dueDate = null)
@@ -100,6 +102,12 @@ public sealed class Quest
         }
 
         EpicId = null;
+    }
+
+    public void AddXpEarned(ExperiencePoints xp)
+    {
+        ArgumentNullException.ThrowIfNull(xp);
+        TotalXpEarned = TotalXpEarned.Add(xp);
     }
 
     public void Complete()

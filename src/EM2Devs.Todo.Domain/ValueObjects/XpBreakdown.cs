@@ -47,19 +47,27 @@ public static class XpCalculator
     /// </summary>
     private const double DiminishingReturnsFraction = 0.5;
 
+    /// <summary>
+    /// Maximum number of recurring task completions per day before diminishing returns apply.
+    /// </summary>
+    internal const int RecurringDailyThreshold = 5;
+
     public static XpBreakdown Calculate(
         TaskDifficulty? difficulty,
         DateTimeOffset? deadline,
         DateTimeOffset completedAt,
         int currentStreakDays,
-        int dailyTrivialCompletionCount = 0)
+        int dailyTrivialCompletionCount = 0,
+        int dailyRecurringCompletionCount = 0)
     {
         TaskDifficulty effectiveDifficulty = difficulty ?? TaskDifficulty.Normal;
         int baseXp = ExperiencePoints.BaseForDifficulty(effectiveDifficulty).Value;
 
         double deadlineModifier = CalculateDeadlineModifier(deadline, completedAt);
         double streakMultiplier = CalculateStreakMultiplier(currentStreakDays);
-        double diminishingFactor = CalculateDiminishingReturnsFactor(effectiveDifficulty, dailyTrivialCompletionCount);
+        double trivialFactor = CalculateDiminishingReturnsFactor(effectiveDifficulty, dailyTrivialCompletionCount);
+        double recurringFactor = CalculateRecurringDiminishingReturnsFactor(dailyRecurringCompletionCount);
+        double diminishingFactor = trivialFactor * recurringFactor;
 
         return new XpBreakdown(baseXp, deadlineModifier, streakMultiplier, diminishingFactor);
     }
@@ -97,6 +105,22 @@ public static class XpCalculator
     {
         int effectiveDays = Math.Clamp(currentStreakDays, 0, MaxStreakBonusDays);
         return BaseStreakMultiplier + (effectiveDays * StreakBonusPerDay);
+    }
+
+    /// <summary>
+    /// Calculates diminishing returns factor for recurring task completions beyond the daily threshold.
+    /// Same halving curve as trivial tasks: first 5 at full XP, then halved each time.
+    /// Applies regardless of difficulty — any recurring task repeated too many times per day is affected.
+    /// </summary>
+    private static double CalculateRecurringDiminishingReturnsFactor(int dailyRecurringCompletionCount)
+    {
+        if (dailyRecurringCompletionCount < RecurringDailyThreshold)
+        {
+            return 1.0;
+        }
+
+        int tasksOverThreshold = dailyRecurringCompletionCount - RecurringDailyThreshold;
+        return Math.Pow(DiminishingReturnsFraction, tasksOverThreshold + 1);
     }
 
     /// <summary>

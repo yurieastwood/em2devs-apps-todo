@@ -3,6 +3,7 @@ using EM2Devs.Todo.Application.Mediator;
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.ReadModels;
 using EM2Devs.Todo.Domain;
+using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
 using NSubstitute;
 using Shouldly;
@@ -14,11 +15,14 @@ public sealed class XpAwardHandlerTests
 {
     private readonly IPlayerProfileRepository _profileRepo = Substitute.For<IPlayerProfileRepository>();
     private readonly IMediator _mediator = Substitute.For<IMediator>();
+    private readonly IQuestRepository _questRepo = Substitute.For<IQuestRepository>();
     private readonly XpAwardHandler _handler;
 
     public XpAwardHandlerTests()
     {
-        _handler = new XpAwardHandler(_profileRepo, _mediator);
+        _questRepo.GetByTaskIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>())
+            .Returns(new List<Quest>().AsReadOnly());
+        _handler = new XpAwardHandler(_profileRepo, _mediator, _questRepo);
     }
 
     [Fact]

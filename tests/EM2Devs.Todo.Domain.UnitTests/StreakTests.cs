@@ -13,6 +13,7 @@ namespace EM2Devs.Todo.Domain.UnitTests;
 /// </summary>
 public sealed class StreakTests
 {
+    private static readonly int[] _expectedMilestoneThresholds = [7, 14, 30, 60, 100, 365];
     private static readonly DateOnly _today = new(2026, 3, 15);
     private static readonly DateOnly _yesterday = _today.AddDays(-1);
     private static readonly DateOnly _twoDaysAgo = _today.AddDays(-2);
@@ -225,6 +226,88 @@ public sealed class StreakTests
 
         // Then — unchanged (no date to compare against)
         result.CurrentDays.ShouldBe(5);
+    }
+
+    // --- Rule: Streak milestones ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnMilestone_When_StreakReachesMilestoneThreshold()
+    {
+        // Given — streak of 6 days, last active yesterday
+        var streak = new Streak(6, _yesterday, 0);
+
+        // When — complete a task and streak reaches 7
+        var result = streak.RecordCompletion(_today);
+
+        // Then — milestone detected
+        result.CurrentDays.ShouldBe(7);
+        var milestone = result.CheckMilestone();
+        milestone.ShouldNotBeNull();
+        milestone.Days.ShouldBe(7);
+        milestone.Label.ShouldBe("One Week");
+    }
+
+    [Theory]
+    [Trait("Category", "Domain")]
+    [InlineData(6, 7, "One Week")]
+    [InlineData(13, 14, "Two Weeks")]
+    [InlineData(29, 30, "One Month")]
+    [InlineData(59, 60, "Two Months")]
+    [InlineData(99, 100, "The Century")]
+    [InlineData(364, 365, "The Full Year")]
+    public void Should_CelebrateMilestone_When_StreakReachesKeyThreshold(
+        int previousDays, int expectedDays, string expectedLabel)
+    {
+        // Given — streak at previous_days, last active yesterday
+        var yesterday = _today.AddDays(-1);
+        var streak = new Streak(previousDays, yesterday, 0);
+
+        // When — complete a task today
+        var result = streak.RecordCompletion(_today);
+
+        // Then — milestone celebration triggered
+        result.CurrentDays.ShouldBe(expectedDays);
+        var milestone = result.CheckMilestone();
+        milestone.ShouldNotBeNull();
+        milestone.Label.ShouldBe(expectedLabel);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnNull_When_StreakIsNotAtMilestone()
+    {
+        // Given — streak of 4 days, last active yesterday
+        var streak = new Streak(4, _yesterday, 0);
+
+        // When — complete a task and streak reaches 5 (not a milestone)
+        var result = streak.RecordCompletion(_today);
+
+        // Then — no milestone
+        result.CurrentDays.ShouldBe(5);
+        result.CheckMilestone().ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ListAllMilestoneThresholds_When_ThresholdsQueried()
+    {
+        // Given / When
+        var thresholds = StreakMilestone.Thresholds;
+
+        // Then
+        thresholds.ShouldBe(_expectedMilestoneThresholds);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnNullMilestone_When_DaysNotInThresholds()
+    {
+        // Given / When / Then
+        StreakMilestone.ForDays(0).ShouldBeNull();
+        StreakMilestone.ForDays(1).ShouldBeNull();
+        StreakMilestone.ForDays(50).ShouldBeNull();
+        StreakMilestone.ForDays(200).ShouldBeNull();
     }
 
     // --- Validation ---

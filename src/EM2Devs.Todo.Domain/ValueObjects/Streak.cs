@@ -76,6 +76,15 @@ public sealed record Streak
         return new Streak(0, LastActiveDate, 0);
     }
 
+    /// <summary>
+    /// Returns the milestone reached by the current streak day count, or null if not a milestone.
+    /// Typically called after <see cref="RecordCompletion"/> to detect newly reached milestones.
+    /// </summary>
+    public StreakMilestone? CheckMilestone()
+    {
+        return StreakMilestone.ForDays(CurrentDays);
+    }
+
     public Streak AddGraceDay()
     {
         if (GraceDaysAvailable >= MaxGraceDays)

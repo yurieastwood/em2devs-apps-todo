@@ -24,14 +24,14 @@ Feature: Streaks and Grace Days
       When I complete a 4th task
       Then my streak should remain at 10 days (already counted today)
 
-    @wip
+    @done
     Scenario: Streak milestone celebration
       Given my current streak is 6 days
       When I complete a task and my streak reaches 7 days
       Then I should see a streak milestone celebration
       And "7-day streak" should appear on my journey timeline
 
-    @wip
+    @done
     Scenario Outline: Streak milestones are celebrated at key thresholds
       Given my current streak is <previous_days> days
       When I complete a task and my streak reaches <streak_days> days
@@ -84,7 +84,7 @@ Feature: Streaks and Grace Days
       And I should see an encouraging restart message mentioning my previous 20-day streak
       And I should see my previous streak of 20 days recorded in my history
 
-    @wip
+    @done
     Scenario: No negative consequences for broken streak
       Given my streak just reset from 20 to 0
       Then no XP should be deducted

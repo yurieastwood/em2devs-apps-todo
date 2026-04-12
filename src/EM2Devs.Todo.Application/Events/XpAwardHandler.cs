@@ -56,5 +56,12 @@ public sealed class XpAwardHandler : INotificationHandler<TaskCompletedEvent>
         {
             await _mediator.Publish(new LevelUpEvent(previousLevel, updatedProfile.Level), ct).ConfigureAwait(false);
         }
+
+        StreakMilestone? milestone = StreakMilestone.ForDays(updatedProfile.CurrentStreak);
+        if (milestone is not null)
+        {
+            await _mediator.Publish(
+                new StreakMilestoneReachedEvent(milestone.Days, milestone.Label), ct).ConfigureAwait(false);
+        }
     }
 }

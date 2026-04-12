@@ -85,7 +85,7 @@ Feature: Quest Hierarchy
       And the 3 tasks should be moved to my inbox
       And the quest XP bonus should not be affected for completed tasks
 
-    @wip
+    @done
     Scenario: A quest cannot belong to more than one epic
       Given I have a quest "Build authentication" assigned to the epic "Launch MVP"
       When I attempt to assign the quest to the epic "Side Project"

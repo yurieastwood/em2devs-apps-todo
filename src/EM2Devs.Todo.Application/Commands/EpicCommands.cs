@@ -67,6 +67,7 @@ public sealed class AssignQuestToEpicCommandHandler : IRequestHandler<AssignQues
 
         try
         {
+            quest.AssignToEpic(epic.Id);
             epic.AddQuest(quest);
         }
         catch (DomainException ex)
@@ -74,6 +75,7 @@ public sealed class AssignQuestToEpicCommandHandler : IRequestHandler<AssignQues
             return new ConflictError(ex.Message);
         }
 
+        await _questRepository.SaveAsync(quest, ct).ConfigureAwait(false);
         await _epicRepository.SaveAsync(epic, ct).ConfigureAwait(false);
         return epic;
     }
@@ -83,30 +85,44 @@ public sealed record RemoveQuestFromEpicCommand(Guid EpicId, Guid QuestId) : IRe
 
 public sealed class RemoveQuestFromEpicCommandHandler : IRequestHandler<RemoveQuestFromEpicCommand, Result<Epic>>
 {
-    private readonly IEpicRepository _repository;
+    private readonly IEpicRepository _epicRepository;
+    private readonly IQuestRepository _questRepository;
 
-    public RemoveQuestFromEpicCommandHandler(IEpicRepository repository) => _repository = repository;
+    public RemoveQuestFromEpicCommandHandler(IEpicRepository epicRepository, IQuestRepository questRepository)
+    {
+        _epicRepository = epicRepository;
+        _questRepository = questRepository;
+    }
 
     public async Task<Result<Epic>> Handle(RemoveQuestFromEpicCommand request, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        Epic? epic = await _repository.GetByIdAsync(new EpicId(request.EpicId), ct).ConfigureAwait(false);
+        Epic? epic = await _epicRepository.GetByIdAsync(new EpicId(request.EpicId), ct).ConfigureAwait(false);
         if (epic is null)
         {
             return new NotFoundError($"Epic with id '{request.EpicId}' was not found.");
         }
 
+        QuestId questId = new(request.QuestId);
+
         try
         {
-            epic.RemoveQuest(new QuestId(request.QuestId));
+            epic.RemoveQuest(questId);
         }
         catch (DomainException ex)
         {
             return new NotFoundError(ex.Message);
         }
 
-        await _repository.SaveAsync(epic, ct).ConfigureAwait(false);
+        Quest? quest = await _questRepository.GetByIdAsync(questId, ct).ConfigureAwait(false);
+        if (quest?.EpicId is not null)
+        {
+            quest.UnassignFromEpic();
+            await _questRepository.SaveAsync(quest, ct).ConfigureAwait(false);
+        }
+
+        await _epicRepository.SaveAsync(epic, ct).ConfigureAwait(false);
         return epic;
     }
 }

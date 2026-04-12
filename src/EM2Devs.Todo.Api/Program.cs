@@ -95,6 +95,10 @@ builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Even
     EM2Devs.Todo.Application.Events.XpAwardHandler>();
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskStatusChangedEvent>,
     EM2Devs.Todo.Application.Events.QuestProgressHandler>();
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskDeletedEvent>,
+    EM2Devs.Todo.Application.Events.TaskDeletedHandler>();
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
+    EM2Devs.Todo.Application.Events.QuestCompletionXpHandler>();
 
 // FluentValidation + pipeline behavior (ADR-018)
 builder.Services.AddValidatorsFromAssemblyContaining<CreateTaskCommandValidator>();

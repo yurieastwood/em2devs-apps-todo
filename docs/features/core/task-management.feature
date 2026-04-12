@@ -87,7 +87,7 @@ Feature: Task Management
       And the XP awarded should reflect the overdue penalty
       And the XP awarded should still be greater than zero
 
-    @wip
+    @done
     Scenario: Complete the final task in a quest
       Given I have a quest "Prepare presentation" with 5 tasks
       And 4 of the 5 tasks are completed
@@ -163,7 +163,7 @@ Feature: Task Management
       And I cancel the deletion
       Then the task should remain in my task list
 
-    @wip
+    @done
     Scenario: Delete a task that belongs to a quest
       Given I have a quest "Launch campaign" containing 4 tasks
       And one task is "Design flyer"

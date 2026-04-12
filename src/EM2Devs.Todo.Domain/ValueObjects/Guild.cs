@@ -52,7 +52,7 @@ public sealed record Guild
         return new Guild(name, description, [leader]);
     }
 
-    public Guild AddMember(Guid userId, DateOnly today)
+    public Guild AddMember(Guid userId, DateOnly today, TitleType? activeTitle = null)
     {
         if (_members.Count >= MaxMembers)
         {
@@ -65,7 +65,7 @@ public sealed record Guild
             throw new Exceptions.DomainException("User is already a guild member.");
         }
 
-        var newMember = new GuildMember(userId, GuildRole.Member, today);
+        var newMember = new GuildMember(userId, GuildRole.Member, today, activeTitle);
         List<GuildMember> updated = [.. _members, newMember];
         return new Guild(Name, Description, updated);
     }

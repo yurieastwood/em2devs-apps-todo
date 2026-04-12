@@ -338,4 +338,76 @@ public sealed class GuildTests
         leaderId.ShouldBe(_leaderId);
         leaderId.ShouldNotBe(Guid.Empty);
     }
+
+    // --- Title Visibility in Guild Member List ---
+    // Scenario: "Title visible in guild member list"
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_CarryNoTitle_When_GuildMemberCreatedWithoutTitle()
+    {
+        // Given / When
+        var member = new GuildMember(_memberId, GuildRole.Member, _today);
+
+        // Then — active title defaults to null
+        member.ActiveTitle.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_CarryTitle_When_GuildMemberCreatedWithTitle()
+    {
+        // Given / When
+        var member = new GuildMember(_memberId, GuildRole.Member, _today, TitleType.MorningArchitect);
+
+        // Then — title visible in member list
+        member.ActiveTitle.ShouldBe(TitleType.MorningArchitect);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ShowTitleNextToName_When_ListingGuildMembers()
+    {
+        // Given — guild with members, one having an active title
+        var leader = new GuildMember(_leaderId, GuildRole.Leader, _today, TitleType.BossSlayer);
+        var member = new GuildMember(_memberId, GuildRole.Member, _today, TitleType.MorningArchitect);
+        var guild = new Guild("Test Guild", "desc", [leader, member]);
+
+        // When — listing members
+        var members = guild.Members;
+
+        // Then — each member's title is visible
+        members.First(m => m.UserId == _leaderId).ActiveTitle.ShouldBe(TitleType.BossSlayer);
+        members.First(m => m.UserId == _memberId).ActiveTitle.ShouldBe(TitleType.MorningArchitect);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AddMemberWithoutTitle_When_NoTitleProvided()
+    {
+        // Given
+        var guild = Guild.Create("Test Guild", "desc", _leaderId, _today);
+
+        // When
+        var result = guild.AddMember(_memberId, _today);
+
+        // Then
+        GuildMember added = result.Members.First(m => m.UserId == _memberId);
+        added.ActiveTitle.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AddMemberWithTitle_When_TitleProvided()
+    {
+        // Given
+        var guild = Guild.Create("Test Guild", "desc", _leaderId, _today);
+
+        // When
+        var result = guild.AddMember(_memberId, _today, TitleType.StreakMaster);
+
+        // Then
+        GuildMember added = result.Members.First(m => m.UserId == _memberId);
+        added.ActiveTitle.ShouldBe(TitleType.StreakMaster);
+    }
 }

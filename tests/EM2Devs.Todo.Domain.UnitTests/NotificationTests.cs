@@ -79,4 +79,67 @@ public sealed class NotificationTests
             Notification.Create(NotificationType.TaskReminder, ""));
         ex.Message.ShouldContain("cannot be empty");
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_MessageIsWhitespace()
+    {
+        // Given / When / Then
+        var ex = Should.Throw<DomainException>(() =>
+            Notification.Create(NotificationType.TaskReminder, "   "));
+        ex.Message.ShouldContain("cannot be empty");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_HaveCreatedAtTimestamp_When_Created()
+    {
+        // Given / When
+        var notification = Notification.Create(NotificationType.TaskReminder, "Test");
+
+        // Then
+        notification.CreatedAt.ShouldNotBe(default);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_HaveNoAutoDismiss_When_CreatedWithoutAutoDismiss()
+    {
+        // Given / When
+        var notification = Notification.Create(NotificationType.TaskReminder, "Test");
+
+        // Then
+        notification.AutoDismissAfterSeconds.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_HaveAutoDismiss_When_CreatedWithAutoDismiss()
+    {
+        // Given / When
+        var notification = Notification.Create(NotificationType.AchievementAlert, "Level up!", 5);
+
+        // Then
+        notification.AutoDismissAfterSeconds.ShouldBe(5);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_AutoDismissIsZero()
+    {
+        // Given / When / Then
+        var ex = Should.Throw<DomainException>(() =>
+            Notification.Create(NotificationType.AchievementAlert, "Test", 0));
+        ex.Message.ShouldContain("must be positive");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_AutoDismissIsNegative()
+    {
+        // Given / When / Then
+        var ex = Should.Throw<DomainException>(() =>
+            Notification.Create(NotificationType.AchievementAlert, "Test", -1));
+        ex.Message.ShouldContain("must be positive");
+    }
 }

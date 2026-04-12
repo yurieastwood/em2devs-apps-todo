@@ -9,28 +9,28 @@ Feature: Notifications and Reminders
 
   Rule: Users receive timely reminders for due tasks
 
-    @wip
+    @done
     Scenario: Reminder for task due today
       Given I have a task "Submit report" due today
       And I have not completed it
       When it reaches my configured reminder time
       Then I should receive a notification reminding me about "Submit report"
 
-    @wip
+    @done
     Scenario: Reminder for upcoming deadline
       Given I have a task "Prepare presentation" due in 2 days
       And I have notifications enabled for upcoming deadlines
       When the 2-day-before reminder triggers
       Then I should receive a notification about the approaching deadline
 
-    @wip
+    @done
     Scenario: No reminder for completed tasks
       Given I have a task "Buy milk" due today
       And I have already completed it
       When the reminder time arrives
       Then I should not receive a notification for "Buy milk"
 
-    @wip
+    @done
     Scenario: Repeated reminders for overdue tasks
       Given I have a task "Submit report" that is 2 days overdue
       And I have not completed or skipped it
@@ -38,7 +38,7 @@ Feature: Notifications and Reminders
 
   Rule: Achievements and milestones generate celebratory notifications
 
-    @wip
+    @done
     Scenario Outline: Notification for achievement
       Given I have triggered the achievement "<achievement>"
       Then I should receive a notification celebrating "<achievement>"
@@ -86,7 +86,7 @@ Feature: Notifications and Reminders
 
   Rule: Users have granular control over notification settings
 
-    @wip
+    @done
     Scenario: Configure notification categories
       When I navigate to notification settings
       Then I should be able to toggle notifications for each category:
@@ -101,7 +101,7 @@ Feature: Notifications and Reminders
         | Capacity warnings     | On      |
         | Upgrade prompts       | Off     |
 
-    @wip
+    @done
     Scenario: Set quiet hours
       When I set quiet hours from 10 PM to 7 AM
       Then no notifications should be delivered during that window

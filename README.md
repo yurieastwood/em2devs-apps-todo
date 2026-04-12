@@ -153,7 +153,7 @@ Read [AGENTS.md](AGENTS.md) before writing any code. It defines the workflow, to
 
 ## Code Quality
 
-- **Conventional commits** and **conventional branches** enforced via Husky pre-commit hooks
+- **Conventional commits** and **conventional branches** enforced via git hooks (`git config core.hooksPath scripts/hooks`)
 - **SonarAnalyzer** + **StyleCop** for .NET static analysis
 - **ESLint** + **Prettier** for the frontend
 - **Architecture tests** (NetArchTest) enforce Clean Architecture layer boundaries at CI time

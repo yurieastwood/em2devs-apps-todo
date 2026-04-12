@@ -8,17 +8,52 @@ Waypoint is a gamified todo app built with .NET 9 (Clean Architecture, CQRS) and
 
 All architectural decisions are in [`docs/decisions/`](docs/decisions/). Read the relevant ADR before working in any area.
 
+## First-Time Setup
+
+Before starting any work, ensure the environment is ready:
+
+```bash
+git config core.hooksPath scripts/hooks
+dotnet tool restore
+dotnet restore
+cd src/EM2Devs.Todo.Web && npm install && cd -
+```
+
+Verify hooks are active by checking: `git config core.hooksPath` returns `scripts/hooks`.
+
 ## Agent Coordination
 
 Agents receive tasks from a coordinator — either a human or another agent. The model is:
 
-1. **Receive a task** from the coordinator, or pull one from a defined backlog when instructed
+1. **Receive a task** from the coordinator, or pull one from the backlog (see below) when instructed
 2. **Set your status** so the coordinator and other agents know what you are working on
 3. **Do the work** following this file
 4. **Report back** when the task is complete, blocked, or needs a decision (e.g., OpenAPI contract changes require human approval)
 5. **Ask for the next task** — do not sit idle
 
 Any number of agents may work in parallel. The only hard rule: **the agent that authored a PR must never be the one that reviews it.**
+
+### Task Backlog
+
+The backlog lives in `docs/features/`. Scenarios tagged `@todo` are available for implementation. Pick the next `@todo` scenario in the feature file unless the coordinator assigns a specific task. Tag it `@wip` before starting.
+
+### Conflict Resolution
+
+When two agents modify the same file and one merges first:
+
+1. The second agent rebases their branch on `main`: `git fetch origin && git rebase origin/main`
+2. Resolve any conflicts, preserving the intent of both changes
+3. Re-run all gates after rebase to verify nothing broke
+4. Continue with the PR process
+
+### Rollback Policy
+
+If a merged PR breaks `main`:
+
+1. Create a `hotfix/` branch from `main`
+2. Fix the issue directly — do not revert the original commit
+3. Follow the normal PR process (gates, review, squash merge)
+4. Inform the coordinator of the breakage and the fix
 
 ## Definition of Ready
 
@@ -33,13 +68,11 @@ A task is ready to be picked up when:
 
 A task is done when ALL of the following are true:
 
-- All local checks pass (pre-commit Commit Stage + pre-push Acceptance Stage)
-- Scenario tags updated (`@wip` on start, `@done` before PR)
-- PR created to `main` with a conventional commit message
-- PR reviewed by a different agent or human — never the author
-- GitHub Copilot review comments replied to and conversations resolved
-- CI pipeline green
-- Merged to `main` via squash merge (`gh pr merge --squash`)
+- All local checks pass (Commit Stage + Acceptance Stage)
+- Scenario tags updated (`@wip` on start, `@done` before merge)
+- Committed with a conventional commit message
+- Merged to `main` via `git merge --no-ff` (offline) or squash merge via PR (online)
+- The `pre-merge-commit` hook passed both stages (offline), or CI pipeline green (online)
 - Coordinator informed of completion
 
 ## Workflow: Implementing a Change
@@ -77,7 +110,20 @@ If any gate fails:
 
 See the [Error Reference](#error-reference) at the bottom of this file.
 
-### Step 6: Create the PR
+### Step 6: Merge to Main (Offline Workflow)
+
+When working offline (no GitHub access), merge directly to `main` instead of creating a PR:
+
+1. Tag the scenario(s) `@done` in the feature file
+2. Commit with a conventional commit message (see [ADR-016](docs/decisions/20260305-016-code-quality.md))
+3. Switch to `main` and merge: `git checkout main && git merge <branch> --no-ff`
+4. The `pre-merge-commit` hook runs **both** Commit Stage and Acceptance Stage automatically
+5. If any gate fails, the merge is blocked — fix on the feature branch and retry
+6. Inform the coordinator
+
+### Step 6 (Alt): Create a PR (Online Workflow)
+
+When GitHub is available, use pull requests instead:
 
 1. Tag the scenario(s) `@done` in the feature file
 2. Commit with a conventional commit message (see [ADR-016](docs/decisions/20260305-016-code-quality.md))
@@ -85,7 +131,7 @@ See the [Error Reference](#error-reference) at the bottom of this file.
 4. Create the PR: `gh pr create`
 5. Request review from another agent or human
 
-### Step 7: Review Process
+### Step 7: Review Process (Online Only)
 
 1. Reviewer reads the diff (`gh pr diff <N>`)
 2. Wait for GitHub Copilot review to complete (~2-3 minutes)
@@ -106,7 +152,15 @@ BDD scenarios in `docs/features/` use status tags to track implementation progre
 
 Tag changes must be included in the PR. For the full tag taxonomy (category tags like `@core`, `@xp`, etc.), see [`docs/features/README.md`](docs/features/README.md).
 
-## PR Workflow
+## Merge Workflow
+
+All changes are developed on feature branches and merged to `main`. Two workflows are supported:
+
+### Offline (Direct Merge)
+
+Changes are merged directly from the feature branch to `main` via `git merge --no-ff`. The `pre-merge-commit` hook enforces both Commit Stage and Acceptance Stage — the merge is blocked if any gate fails.
+
+### Online (Pull Request)
 
 Branch protection is enabled on `main`. All changes go through pull requests.
 

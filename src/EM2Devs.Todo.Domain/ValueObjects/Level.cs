@@ -76,6 +76,37 @@ public sealed record Level
         return new Level(currentLevel, new ExperiencePoints(totalXp));
     }
 
+    /// <summary>
+    /// Recomputes the level from cumulative XP using current thresholds,
+    /// but guarantees the level never decreases. If the recalculated level
+    /// is lower than the current level, the current level is preserved.
+    /// Maps to: levelling.feature — "Existing users retain levels when XP thresholds are rebalanced"
+    /// </summary>
+    public Level ReapplyThresholds(int cumulativeXp)
+    {
+        int recalculatedLevel = 1;
+        int remainingXp = cumulativeXp;
+
+        while (recalculatedLevel < MaxLevel)
+        {
+            int xpNeeded = XpForNextLevel(recalculatedLevel);
+            if (remainingXp < xpNeeded)
+            {
+                break;
+            }
+
+            remainingXp -= xpNeeded;
+            recalculatedLevel++;
+        }
+
+        if (recalculatedLevel < Value)
+        {
+            return new Level(Value, CurrentXp);
+        }
+
+        return new Level(recalculatedLevel, new ExperiencePoints(remainingXp));
+    }
+
     public int XpToNextLevel()
     {
         if (Value >= MaxLevel)

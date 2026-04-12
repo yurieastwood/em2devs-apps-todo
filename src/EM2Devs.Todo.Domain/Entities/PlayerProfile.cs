@@ -38,7 +38,6 @@ public sealed class PlayerProfile
     /// cannot be bound to constructor parameters in EF Core, so they're populated via private
     /// setters after construction. Initialised here to satisfy non-null reference defaults.
     /// </summary>
-    // Stryker disable all : EF Core materialisation constructor — not reachable from domain tests
     private PlayerProfile(PlayerProfileId id, int longestStreak)
     {
         Id = id;
@@ -46,7 +45,6 @@ public sealed class PlayerProfile
         Streak = Streak.NewStreak();
         LongestStreak = longestStreak;
     }
-    // Stryker restore all
 
     public static PlayerProfile NewProfile() =>
         new(SingletonId, Level.StartingLevel(), Streak.NewStreak(), longestStreak: 0);

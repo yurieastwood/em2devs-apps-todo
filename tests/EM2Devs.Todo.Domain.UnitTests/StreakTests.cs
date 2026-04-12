@@ -402,6 +402,22 @@ public sealed class StreakTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_FreezeSuccessfully_When_DurationIsMinimumOneDay()
+    {
+        // Given
+        var streak = new Streak(10, _yesterday, 0);
+
+        // When
+        var frozen = streak.Freeze(_today, 1);
+
+        // Then — duration of 1 is valid (boundary)
+        frozen.IsFrozen.ShouldBeTrue();
+        frozen.ActiveFreeze.ShouldNotBeNull();
+        frozen.ActiveFreeze!.Duration.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_NotBreakStreak_When_DayEndsDuringFreeze()
     {
         // Given — streak frozen at 30 days for 5 days

@@ -13,7 +13,12 @@
     },
     "reporters": [
       "cleartext",
-      "html"
+      "html",
+      "json"
+    ],
+    "ignore-methods": [
+      "^PlayerProfile\\(PlayerProfileId, Int32\\)$",
+      "^Level\\(Int32\\)$"
     ]
   }
 }

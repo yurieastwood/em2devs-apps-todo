@@ -339,4 +339,210 @@ public sealed class StreakTests
             () => new Streak(0, null, Streak.MaxGraceDays + 1));
         ex.Message.ShouldContain("cannot exceed");
     }
+
+    // --- Rule: Users can manually freeze their streak ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_FreezeStreak_When_ActivatingStreakFreeze()
+    {
+        // Given — streak of 30 days
+        var streak = new Streak(30, _yesterday, 0);
+
+        // When — activate a streak freeze for 5 days
+        var frozenAt = _today;
+        var result = streak.Freeze(frozenAt, 5);
+
+        // Then — streak is frozen at 30 days
+        result.IsFrozen.ShouldBeTrue();
+        result.CurrentDays.ShouldBe(30);
+        result.ActiveFreeze.ShouldNotBeNull();
+        result.ActiveFreeze!.FrozenAt.ShouldBe(frozenAt);
+        result.ActiveFreeze.Duration.ShouldBe(5);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_FreezeDurationExceedsMaximum()
+    {
+        // Given — any streak
+        var streak = new Streak(10, _yesterday, 0);
+
+        // When / Then — attempting to freeze for 15 days (max is 7)
+        var ex = Should.Throw<DomainException>(() => streak.Freeze(_today, 15));
+        ex.Message.ShouldContain("maximum freeze duration is 7 days");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AllowMaxFreezeDuration_When_FreezingForExactly7Days()
+    {
+        // Given
+        var streak = new Streak(10, _yesterday, 0);
+
+        // When — freeze for exactly 7 days (the max)
+        var result = streak.Freeze(_today, StreakFreeze.MaxFreezeDuration);
+
+        // Then — freeze accepted
+        result.IsFrozen.ShouldBeTrue();
+        result.ActiveFreeze!.Duration.ShouldBe(7);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_FreezeDurationIsZeroOrNegative()
+    {
+        // Given
+        var streak = new Streak(10, _yesterday, 0);
+
+        // When / Then
+        var ex = Should.Throw<DomainException>(() => streak.Freeze(_today, 0));
+        ex.Message.ShouldContain("at least 1 day");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBreakStreak_When_DayEndsDuringFreeze()
+    {
+        // Given — streak frozen at 30 days for 5 days
+        var frozenAt = _today;
+        var streak = new Streak(30, _yesterday, 0).Freeze(frozenAt, 5);
+
+        // When — day ends during freeze (day 2 of freeze)
+        var dayDuringFreeze = frozenAt.AddDays(1);
+        var result = streak.ProcessDayEnd(dayDuringFreeze);
+
+        // Then — streak preserved, still frozen
+        result.CurrentDays.ShouldBe(30);
+        result.IsFrozen.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ResumeStreak_When_FreezeExpires()
+    {
+        // Given — streak frozen at 30 days for 5 days
+        var frozenAt = _today;
+        var streak = new Streak(30, _yesterday, 0).Freeze(frozenAt, 5);
+
+        // When — freeze period ends (process day end after freeze expires)
+        var afterFreeze = frozenAt.AddDays(5);
+        var result = streak.ProcessDayEnd(afterFreeze);
+
+        // Then — freeze expired, streak resumed (not broken)
+        result.IsFrozen.ShouldBeFalse();
+        result.CurrentDays.ShouldBe(30);
+        result.ActiveFreeze.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ContinueFromPreviousStreak_When_CompletingTaskAfterFreezeEnds()
+    {
+        // Given — streak was frozen at 30 days for 5 days, freeze has ended
+        var frozenAt = _today;
+        var streak = new Streak(30, _yesterday, 0).Freeze(frozenAt, 5);
+        var afterFreeze = frozenAt.AddDays(5);
+        var unfrozenStreak = streak.ProcessDayEnd(afterFreeze);
+
+        // When — complete a task the next day after freeze ends
+        var nextDay = afterFreeze.AddDays(1);
+        var result = unfrozenStreak.RecordCompletion(nextDay);
+
+        // Then — streak continues from 31
+        result.CurrentDays.ShouldBe(31);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_KeepFreezeActive_When_CompletingTaskDuringFreeze()
+    {
+        // Given — streak frozen at 30 days for 5 days, on day 2
+        var frozenAt = _today;
+        var streak = new Streak(30, _yesterday, 0).Freeze(frozenAt, 5);
+
+        // When — complete a task during the freeze
+        var day2OfFreeze = frozenAt.AddDays(1);
+        var result = streak.RecordCompletion(day2OfFreeze);
+
+        // Then — freeze remains active, streak stays at 30
+        result.IsFrozen.ShouldBeTrue();
+        result.CurrentDays.ShouldBe(30);
+        result.LastActiveDate.ShouldBe(day2OfFreeze);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AutoExpireFreeze_When_ProcessDayEndAfterMaxDuration()
+    {
+        // Given — streak frozen at 30 days for 7 days (max)
+        var frozenAt = _today;
+        var streak = new Streak(30, _yesterday, 0).Freeze(frozenAt, 7);
+
+        // When — process day end after 7 days
+        var afterMax = frozenAt.AddDays(7);
+        var result = streak.ProcessDayEnd(afterMax);
+
+        // Then — freeze auto-expired
+        result.IsFrozen.ShouldBeFalse();
+        result.CurrentDays.ShouldBe(30);
+        result.ActiveFreeze.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ManuallyUnfreeze_When_UnfreezeCalledDuringFreeze()
+    {
+        // Given — streak frozen
+        var streak = new Streak(30, _yesterday, 0).Freeze(_today, 5);
+
+        // When — manually unfreeze
+        var result = streak.Unfreeze(_today);
+
+        // Then — unfrozen
+        result.IsFrozen.ShouldBeFalse();
+        result.CurrentDays.ShouldBe(30);
+        result.ActiveFreeze.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NoOp_When_UnfreezeCalledOnUnfrozenStreak()
+    {
+        // Given — not frozen
+        var streak = new Streak(10, _yesterday, 0);
+
+        // When
+        var result = streak.Unfreeze(_today);
+
+        // Then — unchanged
+        result.ShouldBe(streak);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_FreezingAlreadyFrozenStreak()
+    {
+        // Given — already frozen
+        var streak = new Streak(30, _yesterday, 0).Freeze(_today, 5);
+
+        // When / Then
+        var ex = Should.Throw<DomainException>(() => streak.Freeze(_today, 3));
+        ex.Message.ShouldContain("already frozen");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotConsumeGraceDay_When_FrozenAndDayMissed()
+    {
+        // Given — streak frozen with grace days available
+        var streak = new Streak(30, _yesterday, 2).Freeze(_today, 5);
+
+        // When — day ends during freeze
+        var result = streak.ProcessDayEnd(_today.AddDays(1));
+
+        // Then — grace days not consumed
+        result.GraceDaysAvailable.ShouldBe(2);
+        result.CurrentDays.ShouldBe(30);
+    }
 }

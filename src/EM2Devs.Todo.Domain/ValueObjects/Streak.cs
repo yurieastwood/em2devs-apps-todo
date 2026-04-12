@@ -2,7 +2,8 @@ namespace EM2Devs.Todo.Domain.ValueObjects;
 
 /// <summary>
 /// Streak value object tracking consecutive days of task completion.
-/// Supports grace days to protect streaks from occasional missed days.
+/// Supports grace days to protect streaks from occasional missed days,
+/// and streak freezes for planned absences.
 /// </summary>
 public sealed record Streak
 {
@@ -11,8 +12,12 @@ public sealed record Streak
     public int CurrentDays { get; }
     public DateOnly? LastActiveDate { get; }
     public int GraceDaysAvailable { get; }
+    public StreakFreeze? ActiveFreeze { get; }
 
-    public Streak(int currentDays, DateOnly? lastActiveDate, int graceDaysAvailable)
+    public bool IsFrozen => ActiveFreeze is not null;
+
+    public Streak(int currentDays, DateOnly? lastActiveDate, int graceDaysAvailable,
+        StreakFreeze? activeFreeze = null)
     {
         if (currentDays < 0)
         {
@@ -32,12 +37,47 @@ public sealed record Streak
         CurrentDays = currentDays;
         LastActiveDate = lastActiveDate;
         GraceDaysAvailable = graceDaysAvailable;
+        ActiveFreeze = activeFreeze;
     }
 
     public static Streak NewStreak() => new(0, null, 0);
 
+    /// <summary>
+    /// Activates a streak freeze for the specified duration.
+    /// While frozen, missed days do not break the streak.
+    /// </summary>
+    public Streak Freeze(DateOnly frozenAt, int duration)
+    {
+        if (IsFrozen)
+        {
+            throw new Exceptions.DomainException("Streak is already frozen.");
+        }
+
+        var freeze = new StreakFreeze(frozenAt, duration);
+        return new Streak(CurrentDays, LastActiveDate, GraceDaysAvailable, freeze);
+    }
+
+    /// <summary>
+    /// Manually ends an active streak freeze. The streak continues from where it was.
+    /// </summary>
+    public Streak Unfreeze(DateOnly unfreezeDate)
+    {
+        if (!IsFrozen)
+        {
+            return this;
+        }
+
+        return new Streak(CurrentDays, unfreezeDate, GraceDaysAvailable);
+    }
+
     public Streak RecordCompletion(DateOnly today)
     {
+        // During a freeze, record the active date but don't change streak days
+        if (IsFrozen)
+        {
+            return new Streak(CurrentDays, today, GraceDaysAvailable, ActiveFreeze);
+        }
+
         // Already completed today — no change
         if (LastActiveDate == today)
         {
@@ -56,6 +96,20 @@ public sealed record Streak
 
     public Streak ProcessDayEnd(DateOnly today)
     {
+        // If frozen, check if freeze has expired
+        if (IsFrozen)
+        {
+            if (ActiveFreeze!.IsExpired(today))
+            {
+                // Freeze expired — remove it, set LastActiveDate to today so next
+                // completion counts as consecutive
+                return new Streak(CurrentDays, today, GraceDaysAvailable);
+            }
+
+            // Still within freeze period — skip streak-break logic
+            return this;
+        }
+
         // Only act if there's an active streak that missed today
         bool missedToday = CurrentDays > 0
             && LastActiveDate is not null

@@ -94,7 +94,7 @@ Feature: Streaks and Grace Days
 
   Rule: Users can manually freeze their streak when they know they will be unavailable
 
-    @wip
+    @done
     Scenario: Activate a streak freeze
       Given my current streak is 30 days
       And I am going on holiday for 5 days
@@ -103,13 +103,13 @@ Feature: Streaks and Grace Days
       And the 5 frozen days should not count against my streak
       And I should not receive task reminders during the freeze
 
-    @wip
+    @done
     Scenario: Streak freeze has a maximum duration
       When I attempt to freeze my streak for 15 days
       Then I should see a message that the maximum freeze duration is 7 days
       And I should be offered to set a 7-day freeze instead
 
-    @wip
+    @done
     Scenario: Streak resumes after freeze ends
       Given my streak is frozen at 30 days for 5 days
       When the freeze period ends
@@ -127,7 +127,7 @@ Feature: Streaks and Grace Days
       Then it should count toward today's streak in my timezone
       And my streak should remain at 5 days if I already completed a task today
 
-    @wip
+    @done
     Scenario: Completing tasks during a streak freeze does not end the freeze early
       Given my streak is frozen at 30 days for 5 days
       And I am on day 2 of the freeze

@@ -36,7 +36,7 @@ Feature: Recurring Tasks and Quest Chains
         | Recurrence | Monthly on the last Friday |
       Then the task should appear on the last Friday of each month
 
-    @wip
+    @done
     Scenario: Create a recurring task with an end date
       When I create a recurring task with the following details:
         | Field      | Value                |
@@ -56,7 +56,7 @@ Feature: Recurring Tasks and Quest Chains
       And tomorrow's instance should be generated
       And the recurring task streak should increment by 1
 
-    @wip
+    @done
     Scenario: Complete a recurring task instance late
       Given I have a daily recurring task "Morning standup prep"
       And yesterday's instance is still open

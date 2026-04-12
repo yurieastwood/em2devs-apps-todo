@@ -26,6 +26,10 @@ public sealed class TodoTask
         && Status != TaskStatus.Done
         && Status != TaskStatus.Skipped;
 
+    public bool WasCompletedLate => ScheduledDate.HasValue
+        && CompletedAt.HasValue
+        && DateOnly.FromDateTime(CompletedAt.Value.UtcDateTime) > ScheduledDate.Value;
+
     private TodoTask(TaskId id, TaskTitle title, TaskDifficulty difficulty, DateTimeOffset? dueDate,
         TaskPriority priority = TaskPriority.Medium,
         RecurringTaskId? sourceRecurringTaskId = null, DateOnly? scheduledDate = null,

@@ -9,18 +9,27 @@ public sealed class RecurringTask
     public TaskTitle Title { get; private set; }
     public RecurrencePattern Pattern { get; private set; }
     public bool IsActive { get; private set; }
+    public DateOnly? EndDate { get; }
 
-    private RecurringTask(RecurringTaskId id, TaskTitle title, RecurrencePattern pattern)
+    private RecurringTask(RecurringTaskId id, TaskTitle title, RecurrencePattern pattern,
+        DateOnly? endDate = null)
     {
         Id = id;
         Title = title;
         Pattern = pattern;
         IsActive = true;
+        EndDate = endDate;
     }
 
-    public static RecurringTask Create(TaskTitle title, RecurrencePattern pattern)
+    public static RecurringTask Create(TaskTitle title, RecurrencePattern pattern,
+        DateOnly? endDate = null)
     {
-        return new RecurringTask(RecurringTaskId.New(), title, pattern);
+        if (endDate.HasValue && endDate.Value < DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            throw new DomainException("Cannot create a recurring task with an end date in the past.");
+        }
+
+        return new RecurringTask(RecurringTaskId.New(), title, pattern, endDate);
     }
 
     public TodoTask GenerateNextInstance(DateOnly scheduledDate)
@@ -28,6 +37,11 @@ public sealed class RecurringTask
         if (!IsActive)
         {
             throw new DomainException("Cannot generate instances for a paused recurring task.");
+        }
+
+        if (EndDate.HasValue && scheduledDate > EndDate.Value)
+        {
+            throw new DomainException("Cannot generate instances after the end date.");
         }
 
         return TodoTask.CreateFromRecurring(Title, Id, scheduledDate);
@@ -45,6 +59,11 @@ public sealed class RecurringTask
     public bool IsDueForGeneration(DateOnly? lastScheduledDate, DateOnly today)
     {
         if (!IsActive)
+        {
+            return false;
+        }
+
+        if (EndDate.HasValue && today > EndDate.Value)
         {
             return false;
         }

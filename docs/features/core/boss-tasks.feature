@@ -9,7 +9,7 @@ Feature: Boss Tasks
 
   Rule: Tasks are promoted to Boss Task status based on procrastination signals
 
-    @todo
+    @done
     Scenario: Task promoted after repeated rescheduling
       Given I have a task "Write architecture decision record"
       And I have rescheduled it 3 or more times
@@ -18,7 +18,7 @@ Feature: Boss Tasks
       And I should receive a notification about the promotion
       And the task should display a distinct Boss Task visual indicator
 
-    @todo
+    @done
     Scenario: Task promoted based on age and priority
       Given I have a task "Refactor authentication module" with priority "High"
       And the task has been open for more than 14 days
@@ -26,21 +26,21 @@ Feature: Boss Tasks
       When the system evaluates my task list
       Then the task should be flagged as a Boss Task
 
-    @todo
+    @done
     Scenario: Task promoted based on high difficulty and avoidance
       Given I have a task "Prepare annual tax filing" with difficulty "Hard"
       And I have viewed the task 5 or more times without completing any part of it
       When the system evaluates my task list
       Then the task should be flagged as a Boss Task
 
-    @todo
+    @done
     Scenario: User manually promotes a task to Boss Task
       Given I have a task "Have difficult conversation with manager"
       When I manually flag the task as a Boss Task
       Then the task should display the Boss Task indicator
       And I should be offered the Boss Task intervention flow
 
-    @todo
+    @done
     Scenario: Low-priority task is not promoted despite age
       Given I have a task "Reorganise bookshelf" with priority "Low"
       And the task has been open for 30 days
@@ -48,7 +48,7 @@ Feature: Boss Tasks
       Then the task should not be flagged as a Boss Task
       And it should be suggested for deletion or archival instead
 
-    @todo
+    @done
     Scenario: Boss Task is demoted when conditions no longer apply
       Given I have a Boss Task "Refactor authentication module" promoted due to age and priority
       When I change the priority to "Low"

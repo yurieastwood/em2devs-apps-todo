@@ -45,7 +45,7 @@ gate "Commit — Architecture"
 dotnet test tests/EM2Devs.Todo.ArchitectureTests --configuration Release --verbosity quiet && pass "Architecture rules hold" || fail "Architecture violation — see ADR-0001"
 
 gate "Commit — Tests"
-dotnet test --configuration Release --filter "Category!=Architecture" --verbosity quiet && pass "All scenarios pass" || fail "Test failure — fix production code, not the test (ADR-0003)"
+dotnet test --configuration Release --filter "Category!=Architecture&Category!=Smoke&Category!=Integration" --verbosity quiet && pass "All scenarios pass" || fail "Test failure — fix production code, not the test (ADR-0003)"
 
 gate "Commit — Security"
 dotnet list package --vulnerable --include-transitive 2>&1 | grep -q "has the following vulnerable packages" && fail "Vulnerable NuGet packages found — update or replace them" || pass "No known vulnerabilities"

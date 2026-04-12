@@ -25,6 +25,7 @@ public sealed class PlayerProfile
     public Streak Streak { get; private set; }
     public int LongestStreak { get; private set; }
     public TitleInventory TitleInventory { get; private set; }
+    public XpHistory XpHistory { get; private set; }
 
     private readonly List<SkillTree> _skillTrees = [];
 
@@ -40,6 +41,7 @@ public sealed class PlayerProfile
         Streak = streak;
         LongestStreak = longestStreak;
         TitleInventory = TitleInventory.Empty();
+        XpHistory = XpHistory.Empty();
     }
 
     /// <summary>
@@ -54,6 +56,7 @@ public sealed class PlayerProfile
         Streak = Streak.NewStreak();
         LongestStreak = longestStreak;
         TitleInventory = TitleInventory.Empty();
+        XpHistory = XpHistory.Empty();
     }
 
     public static PlayerProfile NewProfile() =>
@@ -66,6 +69,15 @@ public sealed class PlayerProfile
     {
         ArgumentNullException.ThrowIfNull(xp);
         Level = Level.AddXp(xp);
+    }
+
+    /// <summary>
+    /// Records an XP earning event in the player's history with date, amount, and source.
+    /// Used for displaying XP history over time with daily totals and source breakdowns.
+    /// </summary>
+    public void RecordXpEarning(DateOnly date, ExperiencePoints xp, string source)
+    {
+        XpHistory = XpHistory.RecordXpEarning(date, xp, source);
     }
 
     /// <summary>

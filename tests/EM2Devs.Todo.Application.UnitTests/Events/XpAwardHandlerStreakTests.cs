@@ -4,8 +4,10 @@ using EM2Devs.Todo.Application.Mediator;
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.ReadModels;
 using EM2Devs.Todo.Domain;
+using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
 using EM2Devs.Todo.Infrastructure.Persistence;
+using NSubstitute;
 using Xunit;
 
 namespace EM2Devs.Todo.Application.UnitTests.Events;
@@ -19,7 +21,10 @@ public sealed class XpAwardHandlerStreakTests
         // Given — fresh in-memory profile
         var profileRepo = new InMemoryPlayerProfileRepository(new LastXpBreakdownCache());
         var mediator = new NoopMediator();
-        var handler = new XpAwardHandler(profileRepo, mediator);
+        var questRepo = Substitute.For<IQuestRepository>();
+        questRepo.GetByTaskIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>())
+            .Returns(new List<Quest>().AsReadOnly());
+        var handler = new XpAwardHandler(profileRepo, mediator, questRepo);
 
         var taskId = TaskId.New();
         var title = new TaskTitle("Write report");
@@ -54,7 +59,10 @@ public sealed class XpAwardHandlerStreakTests
         (await profileRepo.GetProfileAsync()).CurrentStreak.ShouldBe(5);
 
         var mediator = new NoopMediator();
-        var handler = new XpAwardHandler(profileRepo, mediator);
+        var questRepo = Substitute.For<IQuestRepository>();
+        questRepo.GetByTaskIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>())
+            .Returns(new List<Quest>().AsReadOnly());
+        var handler = new XpAwardHandler(profileRepo, mediator, questRepo);
 
         var completedAt = new DateTimeOffset(2026, 4, 7, 9, 0, 0, TimeSpan.Zero);
         var evt = new TaskCompletedEvent(

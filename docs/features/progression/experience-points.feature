@@ -52,7 +52,7 @@ Feature: Experience Points
       And I should receive a streak consistency multiplier bonus
       And the multiplier should be displayed in the XP breakdown
 
-    @wip
+    @done
     Scenario: XP correctly attributed to parent quest
       Given I have a quest "Sprint work" containing the task "Fix login bug"
       When I complete the task "Fix login bug"
@@ -105,7 +105,7 @@ Feature: Experience Points
       Then the XP awarded should be less than the first trivial task
       And the diminishing rate should be visible in the XP breakdown
 
-    @wip
+    @done
     Scenario: Difficulty rating auto-adjusts for repeated identical tasks
       Given I have a recurring task "Check email" rated as "Normal"
       And I have consistently completed it in under 2 minutes
@@ -121,7 +121,7 @@ Feature: Experience Points
       And I should receive the corresponding XP for "Normal" difficulty
       And I should see a prompt suggesting I set a difficulty for more accurate XP
 
-    @wip
+    @done
     Scenario: XP for recurring task completions
       Given I have a recurring task "Morning standup" with difficulty "Easy"
       And I have completed this recurring task 5 times this week

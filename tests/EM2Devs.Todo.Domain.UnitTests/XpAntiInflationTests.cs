@@ -219,4 +219,154 @@ public sealed class XpAntiInflationTests
         // Then — default behavior: no diminishing returns
         breakdown.DiminishingReturnsFactor.ShouldBe(1.0);
     }
+
+    // --- Scenario: XP for recurring task completions follows diminishing returns ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AwardFullXp_When_RecurringTaskCompletedFewTimes()
+    {
+        // Given — recurring "Easy" task completed 3 times today (threshold is 5)
+        int dailyRecurringCount = 3;
+
+        // When
+        XpBreakdown breakdown = XpCalculator.Calculate(
+            TaskDifficulty.Easy, null, _now, 0,
+            dailyTrivialCompletionCount: 0,
+            dailyRecurringCompletionCount: dailyRecurringCount);
+
+        // Then — no diminishing returns yet
+        breakdown.DiminishingReturnsFactor.ShouldBe(1.0);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ApplyDiminishingReturns_When_RecurringTaskExceedsThreshold()
+    {
+        // Given — recurring "Easy" task completed 6 times today (threshold is 5)
+        int dailyRecurringCount = 5;
+
+        // When
+        XpBreakdown breakdown = XpCalculator.Calculate(
+            TaskDifficulty.Easy, null, _now, 0,
+            dailyTrivialCompletionCount: 0,
+            dailyRecurringCompletionCount: dailyRecurringCount);
+
+        // Then — 50% diminishing returns
+        breakdown.DiminishingReturnsFactor.ShouldBe(0.5);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ApplyRecurringDiminishingReturns_When_DifficultyIsNormal()
+    {
+        // Given — recurring "Normal" task completed 6 times today
+        int dailyRecurringCount = 6;
+
+        // When
+        XpBreakdown breakdown = XpCalculator.Calculate(
+            TaskDifficulty.Normal, null, _now, 0,
+            dailyTrivialCompletionCount: 0,
+            dailyRecurringCompletionCount: dailyRecurringCount);
+
+        // Then — diminishing returns apply regardless of difficulty for recurring tasks
+        breakdown.DiminishingReturnsFactor.ShouldBe(0.25);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_MultiplyDiminishingFactors_When_BothTrivialAndRecurring()
+    {
+        // Given — trivial recurring task beyond both thresholds
+        // trivial count=7 → factor = 0.5^((7-5)+1) = 0.5^3 = 0.125
+        // recurring count=6 → factor = 0.5^((6-5)+1) = 0.5^2 = 0.25
+        // combined = 0.125 * 0.25 = 0.03125
+        int dailyTrivialCount = 7;
+        int dailyRecurringCount = 6;
+
+        // When
+        XpBreakdown breakdown = XpCalculator.Calculate(
+            TaskDifficulty.Trivial, null, _now, 0,
+            dailyTrivialCompletionCount: dailyTrivialCount,
+            dailyRecurringCompletionCount: dailyRecurringCount);
+
+        // Then — factors are multiplied together
+        breakdown.DiminishingReturnsFactor.ShouldBe(0.03125, 0.0001);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NeverAwardZeroXp_When_RecurringDiminishingReturnsApplied()
+    {
+        // Given — extreme case: 50 recurring completions
+        int dailyRecurringCount = 50;
+
+        // When
+        XpBreakdown breakdown = XpCalculator.Calculate(
+            TaskDifficulty.Easy, null, _now, 0,
+            dailyTrivialCompletionCount: 0,
+            dailyRecurringCompletionCount: dailyRecurringCount);
+
+        // Then — XP floor of 1
+        breakdown.FinalXp.ShouldBeGreaterThanOrEqualTo(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotApplyRecurringDiminishing_When_RecurringCountNotProvided()
+    {
+        // Given — no recurring count provided (default 0)
+        // When
+        XpBreakdown breakdown = XpCalculator.Calculate(
+            TaskDifficulty.Normal, null, _now, 0);
+
+        // Then — no diminishing returns
+        breakdown.DiminishingReturnsFactor.ShouldBe(1.0);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnFactorOfOne_When_RecurringCountIsZeroForNonTrivialTask()
+    {
+        // Given — non-trivial task with no recurring or trivial counts
+        // When
+        XpBreakdown breakdown = XpCalculator.Calculate(
+            TaskDifficulty.Normal, null, _now, 0,
+            dailyTrivialCompletionCount: 0,
+            dailyRecurringCompletionCount: 0);
+
+        // Then — factor should be exactly 1.0 (trivial=1.0 * recurring=1.0)
+        breakdown.DiminishingReturnsFactor.ShouldBe(1.0);
+        breakdown.FinalXp.ShouldBe(breakdown.BaseXp);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnFactorOfOne_When_TrivialCountAtExactThresholdMinusOne()
+    {
+        // Given — trivial tasks at count 4 (just below threshold of 5)
+        // When
+        XpBreakdown breakdown = XpCalculator.Calculate(
+            TaskDifficulty.Trivial, null, _now, 0,
+            dailyTrivialCompletionCount: 4,
+            dailyRecurringCompletionCount: 0);
+
+        // Then — no diminishing returns applied
+        breakdown.DiminishingReturnsFactor.ShouldBe(1.0);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnFactorOfOne_When_RecurringCountAtExactThresholdMinusOne()
+    {
+        // Given — recurring tasks at count 4 (just below threshold of 5)
+        // When
+        XpBreakdown breakdown = XpCalculator.Calculate(
+            TaskDifficulty.Normal, null, _now, 0,
+            dailyTrivialCompletionCount: 0,
+            dailyRecurringCompletionCount: 4);
+
+        // Then — no diminishing returns applied
+        breakdown.DiminishingReturnsFactor.ShouldBe(1.0);
+    }
 }

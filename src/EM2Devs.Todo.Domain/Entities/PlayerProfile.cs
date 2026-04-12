@@ -25,6 +25,13 @@ public sealed class PlayerProfile
     public Streak Streak { get; private set; }
     public int LongestStreak { get; private set; }
 
+    private readonly List<SkillTree> _skillTrees = [];
+
+    /// <summary>
+    /// The player's discovered skill trees. Progress is permanent and never decays.
+    /// </summary>
+    public IReadOnlyList<SkillTree> SkillTrees => _skillTrees.AsReadOnly();
+
     private PlayerProfile(PlayerProfileId id, Level level, Streak streak, int longestStreak)
     {
         Id = id;
@@ -67,5 +74,35 @@ public sealed class PlayerProfile
     public void ProcessDayEnd(DateOnly evaluationDate)
     {
         Streak = Streak.ProcessDayEnd(evaluationDate);
+    }
+
+    /// <summary>
+    /// Discovers (unlocks) a skill tree for the player. Idempotent — re-discovering
+    /// an already-unlocked tree type is a no-op.
+    /// </summary>
+    public void DiscoverSkillTree(SkillTreeType type)
+    {
+        if (_skillTrees.Any(t => t.Type == type))
+        {
+            return;
+        }
+
+        _skillTrees.Add(SkillTree.Discover(type));
+    }
+
+    /// <summary>
+    /// Records a qualifying task completion for the given skill tree type,
+    /// advancing tier progress. The tree must already be discovered.
+    /// </summary>
+    public void RecordSkillTreeProgress(SkillTreeType type)
+    {
+        int index = _skillTrees.FindIndex(t => t.Type == type);
+        if (index < 0)
+        {
+            throw new Exceptions.DomainException(
+                $"Skill tree '{type}' has not been discovered yet.");
+        }
+
+        _skillTrees[index] = _skillTrees[index].RecordTaskCompletion();
     }
 }

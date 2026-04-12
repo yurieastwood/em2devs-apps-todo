@@ -46,7 +46,7 @@ Feature: Levelling System
       And I should receive a tutorial prompt for the new feature
       And the feature should be accessible from that point forward
 
-    @wip
+    @done
     Scenario Outline: Progressive feature unlocks by level
       When I reach level <level>
       Then I should unlock "<feature>"
@@ -79,7 +79,7 @@ Feature: Levelling System
       Then they should see my level badge showing "Level 12"
       And the badge style should reflect my level tier
 
-    @wip
+    @done
     Scenario: Level milestones are celebrated
       Given I am about to reach level 10
       When I earn enough XP to reach level 10
@@ -98,7 +98,7 @@ Feature: Levelling System
       And I should see a "Max Level" badge on my profile
       And I should still earn seasonal XP and rewards
 
-    @wip
+    @done
     Scenario: Existing users retain levels when XP thresholds are rebalanced
       Given I am level 15 with 3,500 XP
       And the XP thresholds have been rebalanced

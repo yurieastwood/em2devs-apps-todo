@@ -228,4 +228,26 @@ public sealed class PlayerProfileTests
         // Then — still zero
         profile.Streak.CurrentDays.ShouldBe(0);
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_InitialiseDefaults_When_EfCoreConstructorUsed()
+    {
+        // Given — EF Core uses the private (PlayerProfileId, int) constructor
+        var ctor = typeof(PlayerProfile).GetConstructor(
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
+            null,
+            new[] { typeof(PlayerProfileId), typeof(int) },
+            null);
+
+        // When
+        ctor.ShouldNotBeNull();
+        var profile = (PlayerProfile)ctor!.Invoke(new object[] { PlayerProfileId.New(), 5 });
+
+        // Then — defaults are initialised for Level and Streak
+        profile.Level.Value.ShouldBe(1);
+        profile.Level.CurrentXp.Value.ShouldBe(0);
+        profile.Streak.CurrentDays.ShouldBe(0);
+        profile.LongestStreak.ShouldBe(5);
+    }
 }

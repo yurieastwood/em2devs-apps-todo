@@ -106,4 +106,37 @@ public sealed class LevelRebalanceTests
         result.Value.ShouldBe(1);
         result.CurrentXp.Value.ShouldBe(10);
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_LevelUp_When_CumulativeXpExactlyMatchesThreshold()
+    {
+        // Given — level 1 with 0 XP
+        var level = new Level(1, new ExperiencePoints(0));
+
+        // When — cumulative XP exactly equals the threshold for level 2
+        int exactThreshold = Level.CumulativeXpRequired(2);
+        var result = level.ReapplyThresholds(exactThreshold);
+
+        // Then — should level up to exactly level 2 with 0 remaining XP
+        result.Value.ShouldBe(2);
+        result.CurrentXp.Value.ShouldBe(0);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_PreserveCurrentLevel_When_RecalculatedLevelEqualsCurrentLevel()
+    {
+        // Given — level 5 with 30 XP
+        var level = new Level(5, new ExperiencePoints(30));
+
+        // When — cumulative XP yields exactly level 5 (same level, different remaining XP)
+        int cumulativeXp = Level.CumulativeXpRequired(5) + 10;
+        var result = level.ReapplyThresholds(cumulativeXp);
+
+        // Then — level stays at 5 (recalculated == current, so NOT preserved from old)
+        //   and remaining XP comes from the recalculation, not the original
+        result.Value.ShouldBe(5);
+        result.CurrentXp.Value.ShouldBe(10);
+    }
 }

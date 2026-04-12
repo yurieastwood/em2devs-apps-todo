@@ -378,4 +378,24 @@ public sealed class LevelTests
             previousThreshold = threshold;
         }
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_InitialiseDefaults_When_EfCoreConstructorUsed()
+    {
+        // Given — EF Core uses the private Level(int) constructor
+        var ctor = typeof(Level).GetConstructor(
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
+            null,
+            new[] { typeof(int) },
+            null);
+
+        // When
+        ctor.ShouldNotBeNull();
+        var level = (Level)ctor!.Invoke(new object[] { 7 });
+
+        // Then — Value set, CurrentXp defaulted to 0
+        level.Value.ShouldBe(7);
+        level.CurrentXp.Value.ShouldBe(0);
+    }
 }

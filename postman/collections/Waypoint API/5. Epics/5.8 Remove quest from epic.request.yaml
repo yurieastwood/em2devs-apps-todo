@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/api/epics/{{epicId}}/quests/{{questId}}"
+method: DELETE
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('Status is 200', () => pm.response.to.have.status(200));
+
+      pm.test('Quest removed', () =>
+      pm.expect(pm.response.json().quests.length).to.eql(0));
+    language: text/javascript
+order: 8000

@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/api/tasks/{{taskId2}}/status"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: ""
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('Status is 409 (already in status)', () =>
+      pm.response.to.have.status(409));
+
+      const problem = pm.response.json();pm.test('Problem Details format', () =>
+      { pm.expect(problem).to.have.property('type');
+      pm.expect(problem).to.have.property('title');
+      pm.expect(problem).to.have.property('status');});
+    language: text/javascript
+order: 4000

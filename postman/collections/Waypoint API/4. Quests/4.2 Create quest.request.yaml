@@ -1,0 +1,30 @@
+$kind: http-request
+url: "{{baseUrl}}/api/quests"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: ""
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('Status is 201', () => pm.response.to.have.status(201));
+
+      const quest = pm.response.json();
+
+      pm.test('Has id', () => pm.expect(quest.id).to.be.a('string'));
+
+      pm.test('Title matches', () => pm.expect(quest.title).to.eql('Complete
+      onboarding'));
+
+      pm.test('Progress is 0', () => pm.expect(quest.progress).to.eql(0));
+
+      pm.test('Not completed', () => pm.expect(quest.isCompleted).to.be.false);
+
+      pm.collectionVariables.set('questId', quest.id);
+
+      pm.test('Location header present', () =>
+      pm.expect(pm.response.headers.has('Location')).to.be.true);
+    language: text/javascript
+order: 2000

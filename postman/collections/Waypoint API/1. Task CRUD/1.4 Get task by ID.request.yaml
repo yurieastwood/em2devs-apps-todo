@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/api/tasks/{{taskId}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('Status is 200', () => pm.response.to.have.status(200));
+
+      const task = pm.response.json();
+
+      pm.test('Correct task returned', () =>
+      pm.expect(task.id).to.eql(pm.collectionVariables.get('taskId')));
+
+      pm.test('Title matches', () => pm.expect(task.title).to.eql('Write
+      architecture tests'));
+    language: text/javascript
+order: 4000

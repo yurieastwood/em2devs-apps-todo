@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/api/tasks/{{taskId}}/status"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: ""
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('Status is 200', () => pm.response.to.have.status(200));
+
+      pm.test('Status is Done', () =>
+      pm.expect(pm.response.json().status).to.eql('Done'));
+    language: text/javascript
+order: 2000

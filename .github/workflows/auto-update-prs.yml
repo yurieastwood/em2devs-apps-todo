@@ -1,0 +1,15 @@
+name: Auto-update PRs
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  autoupdate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: castastrophe/actions-pr-auto-update@7dab41fbcdc451da77548ac8f5899c040bc5c801 # v2.0.0
+        with:
+          token: ${{ secrets.PR_UPDATE_TOKEN }}
+          include_drafts: true

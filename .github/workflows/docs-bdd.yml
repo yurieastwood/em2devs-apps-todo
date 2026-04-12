@@ -1,0 +1,46 @@
+name: BDD Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/features/**'
+      - '.github/workflows/docs-bdd.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy BDD Documentation
+    runs-on: ubuntu-latest
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            6.0.x
+            9.0.x
+      - name: Install Pickles
+        run: dotnet tool install Pickles.CommandLine --version 4.0.3 --tool-path ./tools
+      - name: "Preprocess feature files (strip Rule keyword unsupported by Pickles)"
+        run: |
+          mkdir -p .pickles/features
+          cp -R docs/features/. .pickles/features/
+          find .pickles/features -name '*.feature' -exec sed -i '/^[[:space:]]*Rule:/d' {} +
+      - name: Generate living documentation
+        run: |
+          ./tools/pickles --feature-directory=.pickles/features --output-directory=.pickles/out --documentation-format=dhtml || true
+          test -f .pickles/out/Index.html || (echo "Pickles failed to generate any output" && exit 1)
+          mv .pickles/out/Index.html .pickles/out/index.html
+      - name: Deploy features to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .pickles/out
+          destination_dir: features
+          keep_files: true

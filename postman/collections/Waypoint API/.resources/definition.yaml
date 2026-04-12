@@ -1,0 +1,17 @@
+$kind: collection
+description: >-
+  Postman collection for validating the Waypoint PoC API.
+
+
+  Run requests in order — the collection uses variables captured from previous
+  responses.
+
+
+  Order: Auth → Tasks → Status Transitions → Filtering → Quests → Epics →
+  Profile → Deletion → Validation → API Versioning
+variables:
+  baseUrl: ""
+  taskId: ""
+  taskId2: ""
+  questId: ""
+  epicId: ""

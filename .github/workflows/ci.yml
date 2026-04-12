@@ -1,0 +1,299 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  hygiene-branch:
+    name: "Hygiene|Branch Name"
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch name
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if echo "$BRANCH" | grep -qE "^(feat|fix|chore|hotfix)/.+$"; then
+            echo "✓ Branch '${BRANCH}' follows conventional naming"
+          elif echo "$BRANCH" | grep -qE "^release/.+$"; then
+            echo "✓ Branch '${BRANCH}' follows conventional naming"
+          else
+            echo "::error::Invalid branch name: '${BRANCH}'"
+            echo ""
+            echo "Expected: <type>/<description>"
+            echo "Allowed: feat/, fix/, chore/, hotfix/, release/"
+            exit 1
+          fi
+
+  hygiene-commits:
+    name: "Hygiene|Commit Messages"
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate commit messages
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch origin "$BASE_REF"
+          PATTERN="^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?!?: .{1,}"
+          SKIP="^(Merge |Revert |Initial commit|fixup! |squash! )"
+          FAILED=0
+          while IFS= read -r msg; do
+            if echo "$msg" | grep -qE "$SKIP"; then
+              echo "✓ (skip) $msg"
+              continue
+            fi
+            if echo "$msg" | grep -qE "$PATTERN"; then
+              echo "✓ $msg"
+            else
+              echo "✗ $msg"
+              FAILED=1
+            fi
+          done < <(git log --format="%s" "origin/${BASE_REF}..HEAD")
+          if [ "$FAILED" -eq 1 ]; then
+            echo ""
+            echo "::error::One or more commit messages do not follow Conventional Commits"
+            echo "Expected: <type>[optional scope]: <description>"
+            echo "Valid types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+            exit 1
+          fi
+
+  commit-build:
+    name: "Commit|Build"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet build --configuration Release /p:TreatWarningsAsErrors=true
+
+  commit-format:
+    name: "Commit|Format"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet format --verify-no-changes --verbosity diagnostic
+
+  commit-frontend-lint:
+    name: "Commit|Frontend Lint"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/EM2Devs.Todo.Web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/EM2Devs.Todo.Web/.nvmrc
+      - run: npm ci
+      - run: npm run check
+      - run: npm run lint
+      - run: npm run format:check
+
+  commit-frontend-tests:
+    name: "Commit|Frontend Tests"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/EM2Devs.Todo.Web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/EM2Devs.Todo.Web/.nvmrc
+      - run: npm ci
+      - run: npm run test
+
+  commit-contract-lint:
+    name: "Commit|Contract Lint"
+    needs: commit-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/EM2Devs.Todo.Web/.nvmrc
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Static validation (Spectral)
+        run: npx --yes @stoplight/spectral-cli lint docs/contracts/openapi.yaml --ruleset .spectral.yaml
+      - name: Build API (for generated spec)
+        run: dotnet build src/EM2Devs.Todo.Api --configuration Release
+      - name: OpenAPI coverage check
+        run: |
+          pip install pyyaml
+          bash scripts/check-openapi-coverage.sh docs/contracts/openapi.yaml src/EM2Devs.Todo.Api/EM2Devs.Todo.Api.json
+
+  commit-architecture:
+    name: "Commit|Architecture"
+    needs: commit-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet test tests/EM2Devs.Todo.ArchitectureTests --configuration Release --logger "console;verbosity=detailed"
+
+  commit-tests:
+    name: "Commit|Tests"
+    needs: commit-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet test --configuration Release --filter "Category!=Architecture" --logger "console;verbosity=detailed"
+
+  commit-security:
+    name: "Commit|Security"
+    needs: commit-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet restore
+      - name: Check for vulnerable packages
+        run: |
+          OUTPUT=$(dotnet list package --vulnerable --include-transitive 2>&1)
+          echo "$OUTPUT"
+          if echo "$OUTPUT" | grep -q "has the following vulnerable packages"; then
+            echo "::error::Vulnerable NuGet packages found|update or replace them"
+            exit 1
+          fi
+
+  accept-contract-test:
+    name: "Acceptance|Contract Test"
+    needs: commit-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/EM2Devs.Todo.Web/.nvmrc
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Install Schemathesis
+        run: pip install "schemathesis==4.14.3"
+      - name: Build API
+        run: dotnet build src/EM2Devs.Todo.Api --configuration Release
+      - name: Start API
+        run: |
+          nohup dotnet run --project src/EM2Devs.Todo.Api --configuration Release --no-build \
+            --urls "http://localhost:5001" > /tmp/api.log 2>&1 &
+          echo $! > /tmp/api.pid
+          for i in $(seq 1 30); do
+            curl -s http://localhost:5001/api/tasks > /dev/null 2>&1 && break || sleep 1
+          done
+      - name: Dynamic validation (Schemathesis)
+        run: schemathesis run docs/contracts/openapi.yaml --url http://localhost:5001 --checks all --phases examples,coverage,stateful
+      - name: Stop API
+        if: always()
+        run: kill $(cat /tmp/api.pid) 2>/dev/null || true
+
+  accept-mutation:
+    name: "Acceptance|Mutation"
+    needs: commit-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet tool restore
+      - name: Run mutation testing (since mode on PRs)
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin ${{ github.base_ref }}
+            dotnet stryker -f stryker-config.json --since:origin/${{ github.base_ref }}
+          else
+            dotnet stryker -f stryker-config.json
+          fi
+
+  accept-e2e:
+    name: "Acceptance|E2E"
+    needs: [commit-build, commit-frontend-tests]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: tododb
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    defaults:
+      run:
+        working-directory: src/EM2Devs.Todo.Web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: src/EM2Devs.Todo.Web/.nvmrc
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Apply database migrations
+        working-directory: .
+        run: |
+          dotnet tool restore
+          dotnet ef database update --project src/EM2Devs.Todo.Infrastructure --startup-project src/EM2Devs.Todo.Api
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__tododb: "Host=localhost;Port=5432;Database=tododb;Username=postgres;Password=postgres"
+      - name: Start API
+        working-directory: .
+        run: |
+          nohup dotnet run --project src/EM2Devs.Todo.Api \
+            --urls "http://localhost:5001" > /tmp/api.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:5001/api/tasks > /dev/null 2>&1 && break || sleep 1
+          done
+          curl -sf http://localhost:5001/api/tasks > /dev/null || (cat /tmp/api.log && exit 1)
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__tododb: "Host=localhost;Port=5432;Database=tododb;Username=postgres;Password=postgres"
+      - run: npx playwright test
+        env:
+          API_BASE_URL: http://localhost:5001
+      - name: Show API logs on failure
+        if: failure()
+        working-directory: .
+        run: cat /tmp/api.log || true
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: src/EM2Devs.Todo.Web/test-results/
+          retention-days: 7

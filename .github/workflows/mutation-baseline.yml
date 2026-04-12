@@ -1,0 +1,18 @@
+name: Mutation Baseline|Weekly Full Run
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+jobs:
+  mutation-baseline:
+    name: "Full Mutation Testing"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - run: dotnet tool restore
+      - run: dotnet stryker -f stryker-config.json

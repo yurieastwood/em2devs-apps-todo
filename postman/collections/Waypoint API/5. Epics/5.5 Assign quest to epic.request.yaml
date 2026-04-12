@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/api/epics/{{epicId}}/quests"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: ""
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('Status is 200', () => pm.response.to.have.status(200));
+
+      const epic = pm.response.json();
+
+      pm.test('Epic has quest', () =>
+      pm.expect(epic.quests.length).to.be.at.least(1));
+    language: text/javascript
+order: 5000

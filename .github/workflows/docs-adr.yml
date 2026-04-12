@@ -1,0 +1,50 @@
+name: ADR Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/decisions/**'
+      - '.log4brains.yml'
+      - '.github/workflows/docs-adr.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy ADR Site
+    runs-on: ubuntu-latest
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install log4brains
+        run: npm install -g log4brains@1.1.0
+
+      - name: Build static site
+        run: log4brains build --basePath /${{ github.event.repository.name }}/decisions
+
+      - name: Fix client-side routing for subdirectory deployment
+        run: |
+          find .log4brains/out -name '*.html' -exec sed -i \
+            's|"buildId":|"basePath":"/${{ github.event.repository.name }}/decisions","buildId":|g' {} +
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .log4brains/out
+          destination_dir: decisions
+          keep_files: true

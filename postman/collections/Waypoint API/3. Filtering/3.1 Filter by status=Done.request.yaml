@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/api/tasks?status=Done"
+method: GET
+queryParams:
+  status: Done
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('Status is 200', () => pm.response.to.have.status(200));
+
+      const tasks = pm.response.json();
+
+      pm.test('All tasks are Done', () => tasks.forEach(t =>
+      pm.expect(t.status).to.eql('Done')));
+
+      pm.test('Has at least 1 task', () =>
+      pm.expect(tasks.length).to.be.at.least(1));
+    language: text/javascript
+order: 1000

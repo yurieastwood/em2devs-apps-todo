@@ -1,0 +1,19 @@
+{
+  "stryker-config": {
+    "project": "EM2Devs.Todo.Domain.csproj",
+    "test-projects": [
+      "tests/EM2Devs.Todo.Domain.UnitTests/EM2Devs.Todo.Domain.UnitTests.csproj"
+    ],
+    "mutation-level": "Standard",
+    "concurrency": 4,
+    "thresholds": {
+      "high": 100,
+      "low": 100,
+      "break": 100
+    },
+    "reporters": [
+      "cleartext",
+      "html"
+    ]
+  }
+}

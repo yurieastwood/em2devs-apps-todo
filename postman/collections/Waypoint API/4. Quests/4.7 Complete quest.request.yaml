@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/api/quests/{{questId}}/complete"
+method: POST
+scripts:
+  - type: afterResponse
+    code: >-
+      pm.test('Status is 200', () => pm.response.to.have.status(200));
+
+      pm.test('Quest completed', () =>
+      pm.expect(pm.response.json().isCompleted).to.be.true);
+    language: text/javascript
+order: 7000

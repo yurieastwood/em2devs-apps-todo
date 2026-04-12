@@ -9,7 +9,7 @@ Feature: Energy-Aware Scheduling
 
   Rule: Users can report or have their energy level inferred
 
-    @wip
+    @done
     Scenario: Manually set energy level at start of session
       When I open Waypoint for my first session of the day
       Then I should see an optional energy check-in prompt
@@ -25,7 +25,7 @@ Feature: Energy-Aware Scheduling
       Then the system should infer my energy from historical patterns
       And the prompt should not appear again until the next session
 
-    @wip
+    @done
     Scenario: Skip energy check-in on day 1 with no historical data
       Given I have no task completion history
       When I open Waypoint for my first session of the day
@@ -34,7 +34,7 @@ Feature: Energy-Aware Scheduling
       And tasks should be shown in standard priority order
       And the prompt should not appear again until the next session
 
-    @wip
+    @done
     Scenario Outline: Energy level affects task surfacing
       Given my current energy level is "<energy>"
       When I view my Today tasks
@@ -46,7 +46,7 @@ Feature: Energy-Aware Scheduling
         | Medium  | Normal difficulty tasks                |
         | Low     | Easy, routine, and administrative tasks |
 
-    @wip
+    @done
     Scenario: New user with insufficient data for pattern inference
       Given I have fewer than 14 days of task completion data
       When I dismiss the energy check-in prompt
@@ -95,7 +95,7 @@ Feature: Energy-Aware Scheduling
       Then the system should suggest switching to easier tasks
       And a gentle prompt should say something like "Energy usually dips around now — lighter tasks might be a good fit"
 
-    @wip
+    @done
     Scenario: Mid-day re-check-in after rapid energy fluctuation
       Given my energy was "High" this morning at 9 AM
       And it is now 11 AM
@@ -104,7 +104,7 @@ Feature: Energy-Aware Scheduling
       And my task suggestions should immediately reprioritise to show easier tasks first
       And the system should record the rapid fluctuation for future pattern analysis
 
-    @wip
+    @done
     Scenario: Energy-aware reordering does not hide tasks
       Given my energy level is "Low"
       When I view my Today tasks

@@ -2,7 +2,8 @@ namespace EM2Devs.Todo.Domain;
 
 public enum EnergyLevel
 {
-    High,
+    Low,
     Medium,
-    Low
+    High,
+    Peak
 }

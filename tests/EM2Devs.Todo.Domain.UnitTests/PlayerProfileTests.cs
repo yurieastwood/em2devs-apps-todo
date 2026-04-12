@@ -162,6 +162,61 @@ public sealed class PlayerProfileTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_NotDeductXpOrRevokeTitles_When_StreakResets()
+    {
+        // Given — profile with streak of 20, some XP earned, at level 3
+        var profile = PlayerProfile.NewProfile();
+        profile.AwardXp(new ExperiencePoints(150)); // Enough for level 3
+        int levelBeforeReset = profile.Level.Value;
+        int xpBeforeReset = profile.Level.CurrentXp.Value;
+
+        // Build a streak of 20 days
+        DateOnly startDate = new(2026, 3, 1);
+        for (int i = 0; i < 20; i++)
+        {
+            profile.RecordCompletion(startDate.AddDays(i));
+        }
+        profile.Streak.CurrentDays.ShouldBe(20);
+        profile.LongestStreak.ShouldBe(20);
+
+        // When — streak breaks (day ends without completion and no grace days)
+        profile.ProcessDayEnd(startDate.AddDays(21));
+
+        // Then — no XP deducted, no level lost
+        profile.Streak.CurrentDays.ShouldBe(0);
+        profile.Level.Value.ShouldBe(levelBeforeReset);
+        profile.Level.CurrentXp.Value.ShouldBe(xpBeforeReset);
+
+        // And — longest streak preserved as historical record
+        profile.LongestStreak.ShouldBe(20);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_DetectStreakMilestone_When_RecordingCompletionAtMilestoneDay()
+    {
+        // Given — profile with streak of 6 days
+        var profile = PlayerProfile.NewProfile();
+        DateOnly startDate = new(2026, 3, 1);
+        for (int i = 0; i < 6; i++)
+        {
+            profile.RecordCompletion(startDate.AddDays(i));
+        }
+        profile.Streak.CurrentDays.ShouldBe(6);
+
+        // When — complete a task and streak reaches 7
+        profile.RecordCompletion(startDate.AddDays(6));
+
+        // Then — streak milestone detectable
+        profile.Streak.CurrentDays.ShouldBe(7);
+        var milestone = profile.Streak.CheckMilestone();
+        milestone.ShouldNotBeNull();
+        milestone.Days.ShouldBe(7);
+        milestone.Label.ShouldBe("One Week");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_NoOp_When_ProcessDayEndCalledWithNoActiveStreak()
     {
         // Given — fresh profile, no streak at all

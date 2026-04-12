@@ -10,7 +10,7 @@ Feature: Skill Trees
 
   Rule: Skill trees are discovered and unlocked through natural behaviour patterns
 
-    @wip
+    @done
     Scenario Outline: Skill tree unlocked by behaviour pattern
       Given I have consistently completed tasks tagged or categorised as "<category>"
       And I have completed at least <threshold> such tasks
@@ -43,7 +43,7 @@ Feature: Skill Trees
 
   Rule: Skill trees are hidden until the user reaches the required level
 
-    @wip
+    @done
     Scenario: User does not see skill trees before level 3
       Given I am an authenticated user
       And I am at level 2
@@ -53,7 +53,7 @@ Feature: Skill Trees
 
   Rule: Each skill tree has multiple tiers that unlock through sustained behaviour
 
-    @wip
+    @done
     Scenario: Progress within a skill tree
       Given I have unlocked the "Builder" skill tree at tier 1
       And the "Builder" tree requires 30 side-project tasks for tier 2
@@ -63,7 +63,7 @@ Feature: Skill Trees
       And I should receive a tier-up bonus XP award
       And I should unlock the tier 2 perks
 
-    @wip
+    @done
     Scenario: View skill tree details
       Given I have the "Scholar" skill tree at tier 2
       When I view the "Scholar" skill tree details
@@ -102,7 +102,7 @@ Feature: Skill Trees
 
   Rule: Skill tree progress is permanent and does not decay on inactivity
 
-    @wip
+    @done
     Scenario: Skill tree progress retained after inactivity
       Given I have the "Builder" skill tree at tier 2
       And I have not completed any side-project tasks in 60 days

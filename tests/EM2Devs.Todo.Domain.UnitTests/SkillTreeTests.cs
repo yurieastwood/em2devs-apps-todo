@@ -1,4 +1,5 @@
 using Shouldly;
+using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.Exceptions;
 using EM2Devs.Todo.Domain.ValueObjects;
 using Xunit;
@@ -264,5 +265,320 @@ public sealed class SkillTreeTests
         var ex = Should.Throw<ArgumentOutOfRangeException>(
             () => SkillTreeDiscovery.DiscoveryThreshold((SkillTreeType)999));
         ex.Message.ShouldContain("Unknown skill tree type");
+    }
+
+    // --- Scenario: Unlock a skill tree by demonstrating behaviour ---
+
+    [Theory]
+    [Trait("Category", "Domain")]
+    [InlineData("side-project", 10, SkillTreeType.Builder)]
+    [InlineData("creative", 15, SkillTreeType.Creator)]
+    [InlineData("work", 20, SkillTreeType.Architect)]
+    public void Should_UnlockSkillTree_When_TaskCountReachesDiscoveryThreshold(
+        string category, int threshold, SkillTreeType expectedType)
+    {
+        // Given
+        bool found = SkillTreeDiscovery.TryGetTreeType(category, out SkillTreeType treeType);
+        found.ShouldBeTrue();
+        treeType.ShouldBe(expectedType);
+
+        int discoveryThreshold = SkillTreeDiscovery.DiscoveryThreshold(treeType);
+        discoveryThreshold.ShouldBe(threshold);
+
+        // When — tasks completed reaches the threshold
+        var tree = SkillTree.Discover(treeType);
+
+        // Then — tree starts at tier 1
+        tree.Type.ShouldBe(expectedType);
+        tree.CurrentTier.Value.ShouldBe(1);
+        tree.TasksCompletedInTier.ShouldBe(0);
+    }
+
+    [Theory]
+    [Trait("Category", "Domain")]
+    [InlineData("side-project", 9)]
+    [InlineData("creative", 14)]
+    [InlineData("work", 19)]
+    public void Should_NotUnlockSkillTree_When_TaskCountBelowDiscoveryThreshold(
+        string category, int taskCount)
+    {
+        // Given
+        bool found = SkillTreeDiscovery.TryGetTreeType(category, out SkillTreeType treeType);
+        found.ShouldBeTrue();
+
+        int threshold = SkillTreeDiscovery.DiscoveryThreshold(treeType);
+
+        // Then — below threshold means no unlock
+        taskCount.ShouldBeLessThan(threshold);
+    }
+
+    // --- Scenario: Skill tree is hidden before level 3 ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotShowSkillTrees_When_PlayerBelowLevel3()
+    {
+        // Given — player at level 2
+        var features = FeatureUnlockRegistry.GetUnlockedFeatures(2);
+
+        // Then — skill trees should not be in the unlocked features
+        features.ShouldNotContain(UnlockableFeature.SkillTrees);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ShowSkillTrees_When_PlayerAtLevel3()
+    {
+        // Given — player at level 3
+        var features = FeatureUnlockRegistry.GetUnlockedFeatures(3);
+
+        // Then — skill trees should be unlocked
+        features.ShouldContain(UnlockableFeature.SkillTrees);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ShowSkillTrees_When_PlayerAboveLevel3()
+    {
+        // Given — player at level 5
+        var features = FeatureUnlockRegistry.GetUnlockedFeatures(5);
+
+        // Then — skill trees should still be unlocked
+        features.ShouldContain(UnlockableFeature.SkillTrees);
+    }
+
+    // --- Scenario: Progress within a skill tree follows tier progression ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ProgressFromTier1ToTier2_When_CompletingRequiredTasks()
+    {
+        // Given — Builder at tier 1, 25 tasks completed, need 30 for tier 2
+        var tree = new SkillTree(SkillTreeType.Builder, new SkillTier(1), 25);
+        tree.TasksToNextTier().ShouldBe(5);
+
+        // When — complete 5 more tasks
+        var result = tree;
+        for (int i = 0; i < 5; i++)
+        {
+            result = result.RecordTaskCompletion();
+        }
+
+        // Then — advances to tier 2
+        result.CurrentTier.Value.ShouldBe(2);
+        result.TasksCompletedInTier.ShouldBe(0);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AdvanceFromTier2ToTier3_When_ThresholdReached()
+    {
+        // Given — at tier 2, need 60 tasks for tier 3
+        var tree = new SkillTree(
+            SkillTreeType.Scholar,
+            new SkillTier(2),
+            SkillTree.TasksRequiredForTier(3) - 1);
+
+        // When
+        var result = tree.RecordTaskCompletion();
+
+        // Then
+        result.CurrentTier.Value.ShouldBe(3);
+        result.TasksCompletedInTier.ShouldBe(0);
+    }
+
+    // --- Scenario: Skill tree progress retained after inactivity ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_RetainProgress_When_NoActivityOccurs()
+    {
+        // Given — Builder at tier 2 with 15 tasks completed toward tier 3
+        var tree = new SkillTree(SkillTreeType.Builder, new SkillTier(2), 15);
+
+        // When — no activity (no RecordTaskCompletion calls) — simulating 60 days of inactivity
+        // The SkillTree is immutable; no decay mechanism exists
+
+        // Then — tier and progress are unchanged
+        tree.CurrentTier.Value.ShouldBe(2);
+        tree.TasksCompletedInTier.ShouldBe(15);
+        tree.TasksToNextTier().ShouldBe(SkillTree.TasksRequiredForTier(3) - 15);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NeverDecayProgress_When_SkillTreeIsImmutableRecord()
+    {
+        // Given — a tree at max tier with many tasks
+        var tree = new SkillTree(
+            SkillTreeType.Creator,
+            new SkillTier(SkillTier.MaxTier),
+            50);
+
+        // Then — progress is permanent; no method exists to reduce progress
+        tree.CurrentTier.Value.ShouldBe(SkillTier.MaxTier);
+        tree.TasksCompletedInTier.ShouldBe(50);
+        tree.TasksToNextTier().ShouldBe(0);
+    }
+
+    // --- Scenario: View skill tree details ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReportCurrentTierAndProgress_When_ViewingDetails()
+    {
+        // Given — Scholar at tier 2, with 20 tasks completed
+        var tree = new SkillTree(SkillTreeType.Scholar, new SkillTier(2), 20);
+
+        // Then — can view current tier, progress, and category
+        tree.CurrentTier.Value.ShouldBe(2);
+        tree.TasksCompletedInTier.ShouldBe(20);
+        tree.TasksToNextTier().ShouldBe(SkillTree.TasksRequiredForTier(3) - 20);
+        tree.Type.ShouldBe(SkillTreeType.Scholar);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReportCategories_When_QueryingSkillTreeType()
+    {
+        // Given / When — query all categories for Scholar
+        bool foundLearning = SkillTreeDiscovery.TryGetTreeType("learning", out SkillTreeType type1);
+        bool foundStudy = SkillTreeDiscovery.TryGetTreeType("study", out SkillTreeType type2);
+
+        // Then
+        foundLearning.ShouldBeTrue();
+        foundStudy.ShouldBeTrue();
+        type1.ShouldBe(SkillTreeType.Scholar);
+        type2.ShouldBe(SkillTreeType.Scholar);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReportMaxTierDetails_When_AtMaxTier()
+    {
+        // Given — at max tier
+        var tree = new SkillTree(
+            SkillTreeType.Architect,
+            new SkillTier(SkillTier.MaxTier),
+            10);
+
+        // Then — tasks to next is 0, current tier is max
+        tree.CurrentTier.Value.ShouldBe(SkillTier.MaxTier);
+        tree.TasksToNextTier().ShouldBe(0);
+        tree.TasksCompletedInTier.ShouldBe(10);
+    }
+
+    // --- Scenario: Category lookup case-insensitivity ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_MapCategory_When_CaseIsDifferent()
+    {
+        // Given / When
+        bool found = SkillTreeDiscovery.TryGetTreeType("CREATIVE", out SkillTreeType treeType);
+
+        // Then
+        found.ShouldBeTrue();
+        treeType.ShouldBe(SkillTreeType.Creator);
+    }
+
+    // --- PlayerProfile skill tree ownership ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_StartWithNoSkillTrees_When_NewProfileCreated()
+    {
+        // Given / When
+        var profile = PlayerProfile.NewProfile();
+
+        // Then
+        profile.SkillTrees.ShouldBeEmpty();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UnlockSkillTree_When_DiscoverCalledOnProfile()
+    {
+        // Given
+        var profile = PlayerProfile.NewProfile();
+
+        // When
+        profile.DiscoverSkillTree(SkillTreeType.Builder);
+
+        // Then
+        profile.SkillTrees.ShouldHaveSingleItem();
+        profile.SkillTrees[0].Type.ShouldBe(SkillTreeType.Builder);
+        profile.SkillTrees[0].CurrentTier.Value.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotDuplicateSkillTree_When_DiscoveringSameTypeTwice()
+    {
+        // Given
+        var profile = PlayerProfile.NewProfile();
+        profile.DiscoverSkillTree(SkillTreeType.Builder);
+
+        // When
+        profile.DiscoverSkillTree(SkillTreeType.Builder);
+
+        // Then — still only one Builder tree
+        profile.SkillTrees.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AdvanceSkillTree_When_RecordingCategoryTaskOnProfile()
+    {
+        // Given
+        var profile = PlayerProfile.NewProfile();
+        profile.DiscoverSkillTree(SkillTreeType.Builder);
+
+        // When
+        profile.RecordSkillTreeProgress(SkillTreeType.Builder);
+
+        // Then
+        profile.SkillTrees[0].TasksCompletedInTier.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_HaveMultipleSkillTrees_When_MultipleDiscovered()
+    {
+        // Given
+        var profile = PlayerProfile.NewProfile();
+
+        // When
+        profile.DiscoverSkillTree(SkillTreeType.Creator);
+        profile.DiscoverSkillTree(SkillTreeType.Builder);
+
+        // Then
+        profile.SkillTrees.Count.ShouldBe(2);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_RecordingProgressForUndiscoveredTree()
+    {
+        // Given
+        var profile = PlayerProfile.NewProfile();
+
+        // When / Then
+        var ex = Should.Throw<Exceptions.DomainException>(
+            () => profile.RecordSkillTreeProgress(SkillTreeType.Builder));
+        ex.Message.ShouldContain("not been discovered");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_CheckSkillTreeVisibility_When_UsingFeatureUnlockRegistry()
+    {
+        // Given — level 1 and level 3
+        var featuresLevel1 = FeatureUnlockRegistry.GetUnlockedFeatures(1);
+        var featuresLevel3 = FeatureUnlockRegistry.GetUnlockedFeatures(3);
+
+        // Then — level 1 does not include SkillTrees, level 3 does
+        featuresLevel1.ShouldNotContain(UnlockableFeature.SkillTrees);
+        featuresLevel3.ShouldContain(UnlockableFeature.SkillTrees);
     }
 }

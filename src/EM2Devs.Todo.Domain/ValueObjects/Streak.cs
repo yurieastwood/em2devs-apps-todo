@@ -157,4 +157,32 @@ public sealed record Streak
 
         return new Streak(CurrentDays, LastActiveDate, GraceDaysAvailable + 1);
     }
+
+    /// <summary>
+    /// Earns a grace day as a reward for sustained activity (e.g., completing a weekly review
+    /// or reaching a streak milestone). Grace days accumulate up to <see cref="MaxGraceDays"/>.
+    /// Returns the same instance if already at the cap.
+    /// </summary>
+    public Streak EarnGraceDay()
+    {
+        if (GraceDaysAvailable >= MaxGraceDays)
+        {
+            return this;
+        }
+
+        return new Streak(CurrentDays, LastActiveDate, GraceDaysAvailable + 1, ActiveFreeze);
+    }
+
+    /// <summary>
+    /// Converts a UTC timestamp to the user's local date, enabling timezone-aware
+    /// streak day boundary evaluation. Callers should use this to derive the
+    /// <see cref="DateOnly"/> parameter for <see cref="RecordCompletion"/> and
+    /// <see cref="ProcessDayEnd"/>.
+    /// </summary>
+    public static DateOnly ToUserLocalDate(DateTimeOffset utcTimestamp, TimeZoneInfo userTimeZone)
+    {
+        ArgumentNullException.ThrowIfNull(userTimeZone);
+        var localTime = TimeZoneInfo.ConvertTime(utcTimestamp, userTimeZone);
+        return DateOnly.FromDateTime(localTime.DateTime);
+    }
 }

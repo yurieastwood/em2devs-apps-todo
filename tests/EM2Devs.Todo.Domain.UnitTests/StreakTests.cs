@@ -561,4 +561,171 @@ public sealed class StreakTests
         result.GraceDaysAvailable.ShouldBe(2);
         result.CurrentDays.ShouldBe(30);
     }
+
+    // --- Rule: Grace days accumulate over time ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_EarnOneGraceDay_When_CompletingWeeklyReview()
+    {
+        // Given — 0 grace days
+        var streak = new Streak(5, _today, 0);
+
+        // When — earn a grace day (e.g., weekly review completed)
+        var result = streak.EarnGraceDay();
+
+        // Then — 1 grace day earned
+        result.GraceDaysAvailable.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AccumulateGraceDays_When_EarningMultipleOverTime()
+    {
+        // Given — 0 grace days
+        var streak = new Streak(5, _today, 0);
+
+        // When — earn grace days over multiple weeks
+        var result = streak.EarnGraceDay().EarnGraceDay().EarnGraceDay();
+
+        // Then — accumulated to max (3)
+        result.GraceDaysAvailable.ShouldBe(Streak.MaxGraceDays);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotExceedMaxGraceDays_When_EarningBeyondCap()
+    {
+        // Given — already at max grace days (3)
+        var streak = new Streak(5, _today, Streak.MaxGraceDays);
+
+        // When — attempt to earn another grace day
+        var result = streak.EarnGraceDay();
+
+        // Then — stays at max, no change
+        result.GraceDaysAvailable.ShouldBe(Streak.MaxGraceDays);
+        result.ShouldBe(streak);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_EarnGraceDayFromOneToTwo_When_AlreadyHasOne()
+    {
+        // Given — 1 grace day
+        var streak = new Streak(5, _today, 1);
+
+        // When — earn another grace day
+        var result = streak.EarnGraceDay();
+
+        // Then — now has 2
+        result.GraceDaysAvailable.ShouldBe(2);
+    }
+
+    // --- Rule: Streak day boundaries are determined by the user's configured timezone ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_CountTowardTodayStreak_When_CompletingTaskInUserTimezone()
+    {
+        // Given — timezone is "Australia/Sydney" (UTC+11), streak of 5 days
+        // It is 11:30 PM in user's timezone (which is next day in UTC)
+        var userTimezone = TimeZoneInfo.FindSystemTimeZoneById("Australia/Sydney");
+        // Create a UTC time that is 11:30 PM in Sydney
+        // If Sydney is UTC+11, then 11:30 PM Sydney = 12:30 PM UTC same day
+        var utcNow = new DateTimeOffset(2026, 3, 15, 12, 30, 0, TimeSpan.Zero);
+        var userLocalDate = Streak.ToUserLocalDate(utcNow, userTimezone);
+
+        // The user's local date should be March 15
+        userLocalDate.ShouldBe(new DateOnly(2026, 3, 15));
+
+        var streak = new Streak(5, userLocalDate.AddDays(-1), 0);
+
+        // When — complete a task using the user's local date
+        var result = streak.RecordCompletion(userLocalDate);
+
+        // Then — streak increments based on user's local date
+        result.CurrentDays.ShouldBe(6);
+        result.LastActiveDate.ShouldBe(userLocalDate);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_RemainAtCurrentStreak_When_AlreadyCompletedTodayInUserTimezone()
+    {
+        // Given — timezone is "Australia/Sydney" (UTC+11), streak of 5 days
+        // Already completed a task today in user's timezone
+        var userTimezone = TimeZoneInfo.FindSystemTimeZoneById("Australia/Sydney");
+        var utcNow = new DateTimeOffset(2026, 3, 15, 14, 0, 0, TimeSpan.Zero);
+        var userLocalDate = Streak.ToUserLocalDate(utcNow, userTimezone);
+
+        var streak = new Streak(5, userLocalDate, 0);
+
+        // When — complete another task same user-local day
+        var result = streak.RecordCompletion(userLocalDate);
+
+        // Then — streak should remain at 5 (already counted today)
+        result.CurrentDays.ShouldBe(5);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ConvertUtcToCorrectUserDate_When_CrossingDayBoundary()
+    {
+        // Given — it's 11:30 PM March 15 in Sydney (UTC+11)
+        // That means it's 12:30 PM March 15 UTC
+        var sydneyTz = TimeZoneInfo.FindSystemTimeZoneById("Australia/Sydney");
+        var utcTime = new DateTimeOffset(2026, 3, 15, 12, 30, 0, TimeSpan.Zero);
+
+        // When
+        var userDate = Streak.ToUserLocalDate(utcTime, sydneyTz);
+
+        // Then — should be March 15 in Sydney (same calendar day despite late hour)
+        userDate.ShouldBe(new DateOnly(2026, 3, 15));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ConvertUtcToNextDay_When_PastMidnightInUserTimezone()
+    {
+        // Given — it's 1:00 AM March 16 in Sydney (UTC+11)
+        // That means it's 2:00 PM March 15 UTC
+        var sydneyTz = TimeZoneInfo.FindSystemTimeZoneById("Australia/Sydney");
+        var utcTime = new DateTimeOffset(2026, 3, 15, 14, 0, 0, TimeSpan.Zero);
+
+        // When
+        var userDate = Streak.ToUserLocalDate(utcTime, sydneyTz);
+
+        // Then — should be March 16 in Sydney (crossed midnight)
+        userDate.ShouldBe(new DateOnly(2026, 3, 16));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_HandleNegativeUtcOffset_When_ConvertingToUserDate()
+    {
+        // Given — timezone is US Eastern (UTC-5 in standard time)
+        // It's 11:30 PM March 15 in New York (UTC-4 EDT in March)
+        var easternTz = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
+        // March 16, 2026, 03:30 UTC = March 15 11:30 PM EDT
+        var utcTime = new DateTimeOffset(2026, 3, 16, 3, 30, 0, TimeSpan.Zero);
+
+        // When
+        var userDate = Streak.ToUserLocalDate(utcTime, easternTz);
+
+        // Then — should be March 15 in New York
+        userDate.ShouldBe(new DateOnly(2026, 3, 15));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_UserTimeZoneIsNull()
+    {
+        // Given — null timezone
+        var utcTime = new DateTimeOffset(2026, 3, 15, 12, 0, 0, TimeSpan.Zero);
+
+        // When / Then
+        var ex = Should.Throw<ArgumentNullException>(
+            () => Streak.ToUserLocalDate(utcTime, null!));
+        ex.ParamName.ShouldBe("userTimeZone");
+    }
 }

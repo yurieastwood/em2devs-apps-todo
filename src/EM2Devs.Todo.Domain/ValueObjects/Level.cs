@@ -46,11 +46,13 @@ public sealed record Level
     /// be bound via constructor parameters; EF assigns it through the private setter
     /// after materialisation. The scalar <see cref="Value"/> is bound here.
     /// </summary>
+    // Stryker disable all : EF Core materialisation constructor — not reachable from domain tests
     private Level(int value)
     {
         Value = value;
         CurrentXp = new ExperiencePoints(0);
     }
+    // Stryker restore all
 
     public static Level StartingLevel() => new(1, new ExperiencePoints(0));
 

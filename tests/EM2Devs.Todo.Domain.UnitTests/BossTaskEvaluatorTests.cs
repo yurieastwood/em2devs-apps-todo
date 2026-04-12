@@ -407,33 +407,41 @@ public sealed class BossTaskEvaluatorTests
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_ReturnFalse_When_TaskIsDone()
+    public void Should_ReturnFalse_When_TaskIsDoneEvenWithPromotionConditions()
     {
-        // Given
+        // Given — task meets promotion criteria (3+ reschedules) but is Done
         var task = TodoTask.Create(new TaskTitle("Completed task"));
+        task.Reschedule();
+        task.Reschedule();
+        task.Reschedule();
         task.MoveToInProgress();
         task.MarkAsDone();
 
         // When
         bool changed = BossTaskEvaluator.Evaluate(task);
 
-        // Then
+        // Then — should not promote because task is Done
         changed.ShouldBeFalse();
+        task.IsBossTask.ShouldBeFalse();
     }
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_ReturnFalse_When_TaskIsSkipped()
+    public void Should_ReturnFalse_When_TaskIsSkippedEvenWithPromotionConditions()
     {
-        // Given
+        // Given — task meets promotion criteria (3+ reschedules) but is Skipped
         var task = TodoTask.Create(new TaskTitle("Skipped task"));
+        task.Reschedule();
+        task.Reschedule();
+        task.Reschedule();
         task.Skip();
 
         // When
         bool changed = BossTaskEvaluator.Evaluate(task);
 
-        // Then
+        // Then — should not promote because task is Skipped
         changed.ShouldBeFalse();
+        task.IsBossTask.ShouldBeFalse();
     }
 
     [Fact]

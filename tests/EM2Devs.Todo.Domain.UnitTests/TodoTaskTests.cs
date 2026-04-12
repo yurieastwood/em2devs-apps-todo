@@ -483,4 +483,141 @@ public sealed class TodoTaskTests
         task.Description.ShouldBe("Updated after completion");
         task.Status.ShouldBe(TaskStatus.Done);
     }
+
+    // --- Rescheduling ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_IncrementRescheduleCount_When_Rescheduled()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Reschedule me"));
+        task.RescheduleCount.ShouldBe(0);
+
+        // When
+        task.Reschedule();
+
+        // Then
+        task.RescheduleCount.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_TrackMultipleReschedules_When_RescheduledRepeatedly()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Keep rescheduling"));
+
+        // When
+        task.Reschedule();
+        task.Reschedule();
+        task.Reschedule();
+
+        // Then
+        task.RescheduleCount.ShouldBe(3);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_ReschedulingCompletedTask()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Done"));
+        task.MoveToInProgress();
+        task.MarkAsDone();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => task.Reschedule());
+        ex.Message.ShouldContain("Cannot reschedule");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_ReschedulingSkippedTask()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Skipped"));
+        task.Skip();
+
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() => task.Reschedule());
+        ex.Message.ShouldContain("Cannot reschedule");
+    }
+
+    // --- View tracking ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_IncrementViewCount_When_ViewRecorded()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("View me"));
+        task.ViewCount.ShouldBe(0);
+
+        // When
+        task.RecordView();
+
+        // Then
+        task.ViewCount.ShouldBe(1);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_TrackMultipleViews_When_ViewedRepeatedly()
+    {
+        // Given
+        TodoTask task = TodoTask.Create(new TaskTitle("Popular task"));
+
+        // When
+        for (int i = 0; i < 5; i++)
+        {
+            task.RecordView();
+        }
+
+        // Then
+        task.ViewCount.ShouldBe(5);
+    }
+
+    // --- CreatedAt ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_SetCreatedAt_When_TaskCreated()
+    {
+        // Given / When
+        DateTimeOffset before = DateTimeOffset.UtcNow;
+        TodoTask task = TodoTask.Create(new TaskTitle("New task"));
+        DateTimeOffset after = DateTimeOffset.UtcNow;
+
+        // Then
+        task.CreatedAt.ShouldBeGreaterThanOrEqualTo(before);
+        task.CreatedAt.ShouldBeLessThanOrEqualTo(after);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UseProvidedCreatedAt_When_Specified()
+    {
+        // Given
+        DateTimeOffset customDate = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
+        // When
+        TodoTask task = TodoTask.Create(new TaskTitle("Old task"), createdAt: customDate);
+
+        // Then
+        task.CreatedAt.ShouldBe(customDate);
+    }
+
+    // --- Priority in Create ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_CreateWithSpecifiedPriority_When_PriorityProvided()
+    {
+        // When
+        TodoTask task = TodoTask.Create(new TaskTitle("High priority"), priority: TaskPriority.High);
+
+        // Then
+        task.Priority.ShouldBe(TaskPriority.High);
+    }
 }

@@ -15,8 +15,11 @@ public sealed class TodoTask
     public TimeEstimate? EstimatedTime { get; private set; }
     public DateTimeOffset? DueDate { get; private set; }
     public DateTimeOffset? CompletedAt { get; private set; }
+    public DateTimeOffset CreatedAt { get; private set; }
     public RecurringTaskId? SourceRecurringTaskId { get; private set; }
     public DateOnly? ScheduledDate { get; private set; }
+    public int RescheduleCount { get; private set; }
+    public int ViewCount { get; private set; }
 
     public bool IsOverdue => ScheduledDate.HasValue
         && ScheduledDate.Value < DateOnly.FromDateTime(DateTime.UtcNow)
@@ -25,7 +28,8 @@ public sealed class TodoTask
 
     private TodoTask(TaskId id, TaskTitle title, TaskDifficulty difficulty, DateTimeOffset? dueDate,
         TaskPriority priority = TaskPriority.Medium,
-        RecurringTaskId? sourceRecurringTaskId = null, DateOnly? scheduledDate = null)
+        RecurringTaskId? sourceRecurringTaskId = null, DateOnly? scheduledDate = null,
+        DateTimeOffset? createdAt = null)
     {
         Id = id;
         Title = title;
@@ -33,13 +37,16 @@ public sealed class TodoTask
         Difficulty = difficulty;
         Priority = priority;
         DueDate = dueDate;
+        CreatedAt = createdAt ?? DateTimeOffset.UtcNow;
         SourceRecurringTaskId = sourceRecurringTaskId;
         ScheduledDate = scheduledDate;
     }
 
-    public static TodoTask Create(TaskTitle title, TaskDifficulty difficulty = TaskDifficulty.Normal, DateTimeOffset? dueDate = null)
+    public static TodoTask Create(TaskTitle title, TaskDifficulty difficulty = TaskDifficulty.Normal,
+        DateTimeOffset? dueDate = null, TaskPriority priority = TaskPriority.Medium,
+        DateTimeOffset? createdAt = null)
     {
-        return new TodoTask(TaskId.New(), title, difficulty, dueDate);
+        return new TodoTask(TaskId.New(), title, difficulty, dueDate, priority, createdAt: createdAt);
     }
 
     public static TodoTask CreateFromRecurring(TaskTitle title, RecurringTaskId sourceId, DateOnly scheduledDate,
@@ -127,6 +134,26 @@ public sealed class TodoTask
     public void DemoteFromBossTask()
     {
         IsBossTask = false;
+    }
+
+    public void Reschedule()
+    {
+        if (Status == TaskStatus.Done)
+        {
+            throw new DomainException("Cannot reschedule a completed task.");
+        }
+
+        if (Status == TaskStatus.Skipped)
+        {
+            throw new DomainException("Cannot reschedule a skipped task.");
+        }
+
+        RescheduleCount++;
+    }
+
+    public void RecordView()
+    {
+        ViewCount++;
     }
 
     public void Skip()

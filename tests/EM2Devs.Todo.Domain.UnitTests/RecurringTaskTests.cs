@@ -403,4 +403,207 @@ public sealed class RecurringTaskTests
             () => recurring.UpdatePattern((RecurrencePattern)999));
         ex.Message.ShouldContain("Invalid recurrence pattern");
     }
+
+    // --- Scenario: Create a recurring task with an end date ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_StoreEndDate_When_CreatedWithEndDate()
+    {
+        // Given
+        var endDate = new DateOnly(2026, 6, 30);
+
+        // When
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Sprint retrospective"),
+            RecurrencePattern.Weekly,
+            endDate);
+
+        // Then
+        recurring.EndDate.ShouldBe(endDate);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_HaveNullEndDate_When_CreatedWithoutEndDate()
+    {
+        // When
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Endless task"),
+            RecurrencePattern.Daily);
+
+        // Then
+        recurring.EndDate.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_GenerateInstance_When_ScheduledDateIsBeforeEndDate()
+    {
+        // Given
+        var endDate = new DateOnly(2026, 6, 30);
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Sprint retrospective"),
+            RecurrencePattern.Weekly,
+            endDate);
+
+        // When
+        var scheduledDate = new DateOnly(2026, 6, 29);
+        var instance = recurring.GenerateNextInstance(scheduledDate);
+
+        // Then
+        instance.ShouldNotBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_GenerateInstance_When_ScheduledDateEqualsEndDate()
+    {
+        // Given
+        var endDate = new DateOnly(2026, 6, 30);
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Sprint retrospective"),
+            RecurrencePattern.Weekly,
+            endDate);
+
+        // When
+        var instance = recurring.GenerateNextInstance(endDate);
+
+        // Then
+        instance.ShouldNotBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_ScheduledDateIsAfterEndDate()
+    {
+        // Given
+        var endDate = new DateOnly(2026, 6, 30);
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Sprint retrospective"),
+            RecurrencePattern.Weekly,
+            endDate);
+
+        // When / Then
+        var scheduledDate = new DateOnly(2026, 7, 1);
+        var ex = Should.Throw<DomainException>(() => recurring.GenerateNextInstance(scheduledDate));
+        ex.Message.ShouldContain("end date");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_EndDateIsInThePast()
+    {
+        // Given
+        var pastDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+
+        // When / Then
+        var ex = Should.Throw<DomainException>(() =>
+            RecurringTask.Create(
+                new TaskTitle("Past end date"),
+                RecurrencePattern.Daily,
+                pastDate));
+        ex.Message.ShouldContain("end date");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AllowCreation_When_EndDateIsToday()
+    {
+        // Given — end date is today (boundary: should NOT throw)
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // When
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Today end date"),
+            RecurrencePattern.Daily,
+            today);
+
+        // Then
+        recurring.EndDate.ShouldBe(today);
+    }
+
+    // --- Scenario: Complete a recurring task instance late ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_BeCompletedLate_When_CompletedAfterScheduledDate()
+    {
+        // Given — a recurring task instance scheduled for yesterday
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Morning standup prep"),
+            RecurrencePattern.Daily);
+        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        var instance = recurring.GenerateNextInstance(yesterday);
+
+        // When — complete it today (late)
+        instance.MoveToInProgress();
+        instance.MarkAsDone();
+
+        // Then — it should be flagged as completed late
+        instance.WasCompletedLate.ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeCompletedLate_When_CompletedOnScheduledDate()
+    {
+        // Given — a recurring task instance scheduled for today
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Morning standup prep"),
+            RecurrencePattern.Daily);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var instance = recurring.GenerateNextInstance(today);
+
+        // When — complete it today (on time)
+        instance.MoveToInProgress();
+        instance.MarkAsDone();
+
+        // Then
+        instance.WasCompletedLate.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeCompletedLate_When_ManualTaskCompleted()
+    {
+        // Given — a manual task with no scheduled date
+        var task = TodoTask.Create(new TaskTitle("Manual task"));
+
+        // When
+        task.MoveToInProgress();
+        task.MarkAsDone();
+
+        // Then — no scheduled date means not late
+        task.WasCompletedLate.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeCompletedLate_When_NotYetCompleted()
+    {
+        // Given
+        var recurring = RecurringTask.Create(
+            new TaskTitle("Morning standup prep"),
+            RecurrencePattern.Daily);
+        var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        var instance = recurring.GenerateNextInstance(yesterday);
+
+        // Then — not completed yet, so WasCompletedLate is false
+        instance.WasCompletedLate.ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_BreakStreak_When_RecurringTaskCompletedLate()
+    {
+        // Given — a streak with 5 consecutive days
+        var streak = new Streak(5, DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1), 0);
+
+        // When — late completion resets the streak
+        var broken = streak.BreakStreak();
+
+        // Then
+        broken.CurrentDays.ShouldBe(0);
+    }
 }

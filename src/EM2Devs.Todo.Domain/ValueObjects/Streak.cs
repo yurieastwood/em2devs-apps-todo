@@ -139,6 +139,15 @@ public sealed record Streak
         return StreakMilestone.ForDays(CurrentDays);
     }
 
+    /// <summary>
+    /// Explicitly breaks the streak, resetting the day count to zero.
+    /// Used when a recurring task instance is completed late.
+    /// </summary>
+    public Streak BreakStreak()
+    {
+        return new Streak(0, LastActiveDate, 0);
+    }
+
     public Streak AddGraceDay()
     {
         if (GraceDaysAvailable >= MaxGraceDays)

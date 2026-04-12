@@ -116,4 +116,54 @@ public sealed class RecurringTaskGenerationDueTests
             .IsDueForGeneration(lastScheduledDate: _today.AddDays(-30), today: _today)
             .ShouldBeFalse();
     }
+
+    // --- Scenario: Create a recurring task with an end date ---
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeDue_When_TodayIsAfterEndDate()
+    {
+        // Given — end date is in the future from now, but we test with a "today" past it
+        var endDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(10);
+        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily, endDate: endDate);
+
+        // Then — evaluating at a date past end date → not due
+        recurring.IsDueForGeneration(lastScheduledDate: null, today: endDate.AddDays(1)).ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_BeDue_When_TodayEqualsEndDate()
+    {
+        // Given
+        var endDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(10);
+        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily, endDate: endDate);
+
+        // Then — today equals end date → still due
+        recurring.IsDueForGeneration(lastScheduledDate: endDate.AddDays(-1), today: endDate).ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_BeDue_When_TodayIsBeforeEndDate()
+    {
+        // Given
+        var endDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30);
+        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily, endDate: endDate);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Then
+        recurring.IsDueForGeneration(lastScheduledDate: today.AddDays(-1), today: today).ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_BeDue_When_NoEndDateSet()
+    {
+        // Given — no end date, should behave as before
+        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily);
+
+        // Then
+        recurring.IsDueForGeneration(lastScheduledDate: _today.AddDays(-1), today: _today).ShouldBeTrue();
+    }
 }

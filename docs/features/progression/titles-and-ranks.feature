@@ -10,7 +10,7 @@ Feature: Titles and Ranks
 
   Rule: Titles are earned through sustained behaviour, not one-off achievements
 
-    @wip
+    @done
     Scenario Outline: Earn a title through sustained behaviour
       Given I have met the sustained requirement for the title "<title>"
       When I check my title progress
@@ -30,7 +30,7 @@ Feature: Titles and Ranks
         | Consistent Planner | Completed 12+ weekly reviews                                 |
         | Team Anchor        | Contributed to guild quests every week for 8+ weeks           |
 
-    @wip
+    @done
     Scenario: Title requires sustained behaviour, not bursts
       Given I completed 50 tasks before 9 AM
       But they were all completed within a single week
@@ -38,7 +38,7 @@ Feature: Titles and Ranks
       Then I should not be awarded the title "Early Bird"
       And the system should show progress toward the sustained requirement
 
-    @wip
+    @done
     Scenario: Title progress is visible before earning
       Given I am working toward the "Streak Master" title
       And I need a 30-day streak and I am currently at 18 days
@@ -48,14 +48,14 @@ Feature: Titles and Ranks
 
   Rule: Users choose which title to display and titles are publicly visible
 
-    @wip
+    @done
     Scenario: Select an active title
       Given I have earned the titles "Early Bird" and "Boss Slayer"
       When I select "Boss Slayer" as my active title
       Then "Boss Slayer" should appear next to my name on my profile
       And "Boss Slayer" should appear on leaderboards and guild views
 
-    @wip
+    @done
     Scenario: View all earned titles
       Given I have earned 5 titles
       When I navigate to my titles collection
@@ -77,7 +77,7 @@ Feature: Titles and Ranks
 
   Rule: Titles are permanently earned and never revoked
 
-    @wip
+    @done
     Scenario: Title retained after behaviour change
       Given I earned the title "Early Bird" through consistent morning completions
       And I have not completed a task before 9 AM in the last 3 weeks

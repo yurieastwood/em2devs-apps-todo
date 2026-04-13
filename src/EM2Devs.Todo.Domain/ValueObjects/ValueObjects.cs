@@ -106,6 +106,22 @@ public sealed record TimelineEventId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed insight card identifier (ADR-0023).
+/// </summary>
+public sealed record InsightCardId(Guid Value)
+{
+    public static InsightCardId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
+/// Strongly-typed annual wrapped identifier (ADR-0023).
+/// </summary>
+public sealed record AnnualWrappedId(Guid Value)
+{
+    public static AnnualWrappedId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>

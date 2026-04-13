@@ -57,27 +57,27 @@ Feature: Notifications and Reminders
 
   Rule: Notifications are delivered through multiple channels
 
-    @wip
+    @done
     Scenario: Receive an in-app notification
       Given I have a task reminder triggered
       When the notification is delivered
       Then I should see an in-app notification badge
       And I should see the notification in my notification centre
 
-    @wip
+    @done
     Scenario: Receive a push notification
       Given I have push notifications enabled
       And a task reminder is triggered while I am not in the app
       When the notification is delivered
       Then I should receive a push notification on my device
 
-    @wip
+    @done
     Scenario: Tap a notification to navigate to the relevant item
       Given I have received a notification about the task "Submit report"
       When I tap the notification
       Then I should be navigated to the task detail view for "Submit report"
 
-    @wip
+    @done
     Scenario: Batch notifications when many arrive simultaneously
       Given 5 achievement notifications are triggered within 10 seconds
       Then the notifications should be grouped into a single summary notification
@@ -107,14 +107,14 @@ Feature: Notifications and Reminders
       Then no notifications should be delivered during that window
       And queued notifications should be delivered after 7 AM
 
-    @wip
+    @done
     Scenario: Quiet hours respect user timezone
       Given I have set quiet hours from 10 PM to 7 AM
       And my timezone is set to "Europe/London"
       When a notification is triggered at 11 PM London time
       Then the notification should be queued until 7 AM London time
 
-    @wip
+    @done
     Scenario: Disable all notifications
       When I disable all notifications
       Then I should receive no push notifications

@@ -11,8 +11,9 @@ public sealed record SeasonalQuestLine
     public int TotalStages { get; }
     public int CurrentStage { get; }
     public int TasksCompletedInStage { get; }
+    public bool IsLocked { get; }
 
-    public SeasonalQuestLine(int totalStages, int currentStage, int tasksCompletedInStage)
+    public SeasonalQuestLine(int totalStages, int currentStage, int tasksCompletedInStage, bool isLocked = false)
     {
         if (totalStages < 1 || totalStages > MaxStages)
         {
@@ -35,19 +36,20 @@ public sealed record SeasonalQuestLine
         TotalStages = totalStages;
         CurrentStage = currentStage;
         TasksCompletedInStage = tasksCompletedInStage;
+        IsLocked = isLocked;
     }
 
     public static SeasonalQuestLine Start(int totalStages) =>
         new(totalStages, 1, 0);
 
-    public bool IsCompleted => CurrentStage > TotalStages;
+    public bool IsCompleted => CurrentStage > TotalStages && !IsLocked;
 
     public bool IsStageAvailable(int stage) =>
-        stage == CurrentStage && !IsCompleted;
+        stage == CurrentStage && !IsCompleted && !IsLocked;
 
     public SeasonalQuestLine RecordTaskCompletion(int tasksRequiredForCurrentStage)
     {
-        if (IsCompleted)
+        if (IsCompleted || IsLocked)
         {
             return this;
         }
@@ -64,11 +66,17 @@ public sealed record SeasonalQuestLine
 
     public int TasksRemainingInStage(int tasksRequiredForCurrentStage)
     {
-        if (IsCompleted)
+        if (IsCompleted || IsLocked)
         {
             return 0;
         }
 
         return tasksRequiredForCurrentStage - TasksCompletedInStage;
     }
+
+    /// <summary>
+    /// Locks the quest line when the season ends, preventing further progression.
+    /// </summary>
+    public SeasonalQuestLine Lock() =>
+        new(TotalStages, CurrentStage, TasksCompletedInStage, true);
 }

@@ -74,6 +74,22 @@ public sealed record GuildId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed guild quest identifier (ADR-0023).
+/// </summary>
+public sealed record GuildQuestId(Guid Value)
+{
+    public static GuildQuestId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
+/// Strongly-typed guild task identifier (ADR-0023).
+/// </summary>
+public sealed record GuildTaskId(Guid Value)
+{
+    public static GuildTaskId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>

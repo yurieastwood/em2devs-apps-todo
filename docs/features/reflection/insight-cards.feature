@@ -12,7 +12,7 @@ Feature: Insight Cards
 
   Rule: Insights are generated from behavioural data and delivered as discoverable cards
 
-    @todo
+    @done
     Scenario Outline: System generates an insight card
       Given the system has detected the pattern "<pattern>"
       When an insight card is generated
@@ -28,14 +28,14 @@ Feature: Insight Cards
         | Estimation accuracy improving                    | Your time estimates are now within 15% of actual. That is up from 40% last month.  |
         | Side project consistency                         | You have worked on your side project 5 out of 7 days for 3 weeks straight.        |
 
-    @todo
+    @done
     Scenario: Insight cards are delivered periodically
       Given I meet the criteria for multiple insights
       When insights are generated
       Then I should receive a maximum of 1 insight card per day and 2-3 per week
       And the most impactful insights should be prioritised
 
-    @todo
+    @done
     Scenario: No insight card when insufficient data
       Given I have only 7 days of task history
       When the system evaluates potential insights
@@ -44,35 +44,35 @@ Feature: Insight Cards
 
   Rule: Users can view, dismiss, and save insight cards
 
-    @todo
+    @done
     Scenario: View an insight card
       Given I have an unread insight card
       When I open the insights section
       Then I should see the insight card with its message and data
       And I should be able to mark it as read
 
-    @todo
+    @done
     Scenario: Save an insight card
       Given I have an insight card about my morning productivity
       When I save the card to my collection
       Then it should appear in my saved insights
       And I should be able to reference it later
 
-    @todo
+    @done
     Scenario: Dismiss an insight card
       Given I have an insight card I find irrelevant
       When I dismiss the card
       Then the card should be removed from my active insights
       And the system should learn from my dismissal to adjust future insight relevance
 
-    @todo
+    @done
     Scenario: Dismissed insight type reduces future frequency
       Given I have dismissed 3 insight cards related to "morning productivity"
       When the system evaluates future insights
       Then the frequency of morning-related insights should be reduced
       And the system should prioritise other insight categories instead
 
-    @todo
+    @done
     Scenario: Insight must be validated against user data before delivery
       Given the system has detected the pattern "Morning productivity peak"
       But my task history shows I complete fewer than 10% of tasks before noon
@@ -80,14 +80,14 @@ Feature: Insight Cards
       Then the insight should not be generated
       And the system should only surface patterns consistent with my actual data
 
-    @todo
+    @done
     Scenario: Same insight type does not repeat within a quarter
       Given I received an insight about "quest completion time improving" on January 15
       When the system evaluates insights on February 20
       Then the system should not generate another "quest completion time improving" insight
       And the same insight type should not appear more than once per quarter
 
-    @todo
+    @done
     Scenario: Insight cards appear in weekly review
       Given I have received 2 insight cards this week
       When I complete my weekly review

@@ -98,6 +98,14 @@ public sealed record ChallengeId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed timeline event identifier (ADR-0023).
+/// </summary>
+public sealed record TimelineEventId(Guid Value)
+{
+    public static TimelineEventId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>

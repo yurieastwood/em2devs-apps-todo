@@ -174,4 +174,20 @@ public sealed class TodoTask
 
         Status = TaskStatus.Skipped;
     }
+
+    public void Delete()
+    {
+        if (Status == TaskStatus.Done)
+        {
+            throw new DomainException("Cannot delete a completed task.");
+        }
+
+        if (Status == TaskStatus.Deleted)
+        {
+            throw new DomainException("Task is already deleted.");
+        }
+
+        IsBossTask = false;
+        Status = TaskStatus.Deleted;
+    }
 }

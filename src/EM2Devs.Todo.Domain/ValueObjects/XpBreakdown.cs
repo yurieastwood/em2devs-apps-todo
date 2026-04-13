@@ -10,15 +10,24 @@ public sealed record XpBreakdown
     public double DeadlineModifier { get; }
     public double StreakMultiplier { get; }
     public double DiminishingReturnsFactor { get; }
+    public double BossTaskMultiplier { get; }
+    public double FocusModeMultiplier { get; }
     public int FinalXp { get; }
 
-    public XpBreakdown(int baseXp, double deadlineModifier, double streakMultiplier, double diminishingReturnsFactor = 1.0)
+    public XpBreakdown(int baseXp, double deadlineModifier, double streakMultiplier,
+        double diminishingReturnsFactor = 1.0,
+        double bossTaskMultiplier = 1.0,
+        double focusModeMultiplier = 1.0)
     {
         BaseXp = baseXp;
         DeadlineModifier = deadlineModifier;
         StreakMultiplier = streakMultiplier;
         DiminishingReturnsFactor = diminishingReturnsFactor;
-        FinalXp = Math.Max(1, (int)Math.Round(baseXp * deadlineModifier * streakMultiplier * diminishingReturnsFactor));
+        BossTaskMultiplier = bossTaskMultiplier;
+        FocusModeMultiplier = focusModeMultiplier;
+        FinalXp = Math.Max(1, (int)Math.Round(
+            baseXp * deadlineModifier * streakMultiplier * diminishingReturnsFactor
+            * bossTaskMultiplier * focusModeMultiplier));
     }
 
     public ExperiencePoints ToExperiencePoints() => new(FinalXp);
@@ -36,6 +45,12 @@ public static class XpCalculator
     private const double BaseStreakMultiplier = 1.0;
     private const double StreakBonusPerDay = 0.02;
     private const int MaxStreakBonusDays = 30;
+
+    /// <summary>Boss Task completion awards 2x XP.</summary>
+    internal const double BossTaskXpMultiplier = 2.0;
+
+    /// <summary>Focus Mode adds an additional 1.5x XP bonus.</summary>
+    internal const double FocusModeXpMultiplier = 1.5;
 
     /// <summary>
     /// Maximum number of trivial task completions per day before diminishing returns apply.
@@ -58,7 +73,9 @@ public static class XpCalculator
         DateTimeOffset completedAt,
         int currentStreakDays,
         int dailyTrivialCompletionCount = 0,
-        int dailyRecurringCompletionCount = 0)
+        int dailyRecurringCompletionCount = 0,
+        bool isBossTask = false,
+        bool isInFocusMode = false)
     {
         TaskDifficulty effectiveDifficulty = difficulty ?? TaskDifficulty.Normal;
         int baseXp = ExperiencePoints.BaseForDifficulty(effectiveDifficulty).Value;
@@ -68,8 +85,11 @@ public static class XpCalculator
         double trivialFactor = CalculateDiminishingReturnsFactor(effectiveDifficulty, dailyTrivialCompletionCount);
         double recurringFactor = CalculateRecurringDiminishingReturnsFactor(dailyRecurringCompletionCount);
         double diminishingFactor = trivialFactor * recurringFactor;
+        double bossMultiplier = isBossTask ? BossTaskXpMultiplier : 1.0;
+        double focusMultiplier = isInFocusMode ? FocusModeXpMultiplier : 1.0;
 
-        return new XpBreakdown(baseXp, deadlineModifier, streakMultiplier, diminishingFactor);
+        return new XpBreakdown(baseXp, deadlineModifier, streakMultiplier, diminishingFactor,
+            bossMultiplier, focusMultiplier);
     }
 
     /// <summary>

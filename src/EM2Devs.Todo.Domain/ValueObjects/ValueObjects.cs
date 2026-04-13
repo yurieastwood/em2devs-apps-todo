@@ -90,6 +90,14 @@ public sealed record GuildTaskId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed challenge identifier (ADR-0023).
+/// </summary>
+public sealed record ChallengeId(Guid Value)
+{
+    public static ChallengeId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>

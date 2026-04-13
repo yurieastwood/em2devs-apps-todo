@@ -9,16 +9,34 @@ public sealed record Guild
     public const int MaxMembers = 12;
     public const int MaxGuildsPerLeader = 3;
 
+    /// <summary>XP bonus awarded to each contributor when a guild quest is completed.</summary>
+    public const int QuestCompletionBonusXp = 100;
+
+    /// <summary>XP awarded per individual guild task completion.</summary>
+    public const int TaskCompletionXp = 25;
+
     private readonly List<GuildMember> _members;
+    private readonly List<GuildQuest> _quests;
+    private readonly List<GuildFeedItem> _feedItems;
 
     public GuildId Id { get; }
     public string Name { get; }
     public string Description { get; }
     public bool IsDisbanded { get; }
+    public GuildXp Xp { get; }
+    public GuildLevel Level { get; }
     public IReadOnlyList<GuildMember> Members => _members.AsReadOnly();
+    public IReadOnlyList<GuildQuest> Quests => _quests.AsReadOnly();
+    public IReadOnlyList<GuildFeedItem> FeedItems => _feedItems.AsReadOnly();
     public int MemberCount => _members.Count;
+    public IReadOnlyList<GuildQuest> ActiveQuests => _quests.Where(q => !q.IsCompleted).ToList().AsReadOnly();
 
-    public Guild(GuildId id, string name, string description, IEnumerable<GuildMember> members, bool isDisbanded = false)
+    public Guild(GuildId id, string name, string description, IEnumerable<GuildMember> members,
+        bool isDisbanded = false,
+        GuildXp? xp = null,
+        GuildLevel? level = null,
+        IEnumerable<GuildQuest>? quests = null,
+        IEnumerable<GuildFeedItem>? feedItems = null)
     {
         Id = id ?? throw new ArgumentNullException(nameof(id));
 
@@ -49,6 +67,10 @@ public sealed record Guild
         Name = name;
         Description = description ?? string.Empty;
         IsDisbanded = isDisbanded;
+        Xp = xp ?? GuildXp.Zero();
+        Level = level ?? GuildLevel.Starting();
+        _quests = quests?.ToList() ?? [];
+        _feedItems = feedItems?.ToList() ?? [];
     }
 
     /// <summary>
@@ -80,7 +102,7 @@ public sealed record Guild
 
         var newMember = new GuildMember(userId, GuildRole.Member, today, activeTitle);
         List<GuildMember> updated = [.. _members, newMember];
-        return new Guild(Id, Name, Description, updated);
+        return new Guild(Id, Name, Description, updated, xp: Xp, level: Level, quests: _quests, feedItems: _feedItems);
     }
 
     public Guild RemoveMember(Guid userId)
@@ -99,7 +121,13 @@ public sealed record Guild
         }
 
         List<GuildMember> updated = _members.Where(m => m.UserId != userId).ToList();
-        return new Guild(Id, Name, Description, updated);
+
+        // Unassign the removed member's in-progress quest tasks
+        List<GuildQuest> updatedQuests = _quests
+            .Select(q => q.UnassignTasksForUser(userId))
+            .ToList();
+
+        return new Guild(Id, Name, Description, updated, xp: Xp, level: Level, quests: updatedQuests, feedItems: _feedItems);
     }
 
     public Guild TransferLeadership(Guid newLeaderId)
@@ -130,7 +158,7 @@ public sealed record Guild
             }
         }
 
-        return new Guild(Id, Name, Description, updated);
+        return new Guild(Id, Name, Description, updated, xp: Xp, level: Level, quests: _quests, feedItems: _feedItems);
     }
 
     /// <summary>
@@ -152,7 +180,7 @@ public sealed record Guild
         }
 
         List<GuildMember> updated = _members.Where(m => m.UserId != userId).ToList();
-        return new Guild(Id, Name, Description, updated);
+        return new Guild(Id, Name, Description, updated, xp: Xp, level: Level, quests: _quests, feedItems: _feedItems);
     }
 
     /// <summary>
@@ -191,7 +219,7 @@ public sealed record Guild
             }
         }
 
-        return new Guild(Id, Name, Description, updated);
+        return new Guild(Id, Name, Description, updated, xp: Xp, level: Level, quests: _quests, feedItems: _feedItems);
     }
 
     /// <summary>
@@ -205,7 +233,7 @@ public sealed record Guild
                 "Only the guild leader can disband the guild.");
         }
 
-        return new Guild(Id, Name, Description, _members, isDisbanded: true);
+        return new Guild(Id, Name, Description, _members, isDisbanded: true, xp: Xp, level: Level, quests: _quests, feedItems: _feedItems);
     }
 
     /// <summary>
@@ -219,7 +247,7 @@ public sealed record Guild
                 "Only the guild leader can edit guild details.");
         }
 
-        return new Guild(Id, newName, newDescription, _members);
+        return new Guild(Id, newName, newDescription, _members, xp: Xp, level: Level, quests: _quests, feedItems: _feedItems);
     }
 
     /// <summary>
@@ -257,4 +285,105 @@ public sealed record Guild
         _members.Exists(m => m.UserId == userId);
 
     public bool IsAtCapacity => _members.Count >= MaxMembers;
+
+    /// <summary>
+    /// Create a guild quest and add it to the quest board.
+    /// </summary>
+    public Guild CreateQuest(string title, string description, DateOnly? dueDate, IEnumerable<GuildTask> tasks)
+    {
+        var quest = new GuildQuest(GuildQuestId.New(), title, description, dueDate, tasks);
+        List<GuildQuest> updatedQuests = [.. _quests, quest];
+        return new Guild(Id, Name, Description, _members, xp: Xp, level: Level, quests: updatedQuests, feedItems: _feedItems);
+    }
+
+    /// <summary>
+    /// Complete a task within a guild quest. Awards guild XP and updates the feed.
+    /// If the quest is fully completed, awards bonus XP and a quest completion feed item.
+    /// </summary>
+    public Guild CompleteQuestTask(GuildQuestId questId, GuildTaskId taskId, Guid completedByUserId, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(questId);
+
+        GuildQuest? quest = _quests.Find(q => q.Id == questId);
+        if (quest is null)
+        {
+            throw new Exceptions.DomainException("Quest not found in this guild.");
+        }
+
+        GuildQuest updatedQuest = quest.CompleteTask(taskId);
+        List<GuildQuest> updatedQuests = _quests
+            .Select(q => q.Id == questId ? updatedQuest : q)
+            .ToList();
+
+        // Award task completion XP
+        GuildXp updatedXp = Xp.AddXp(TaskCompletionXp, completedByUserId);
+
+        List<GuildFeedItem> updatedFeed = [.. _feedItems];
+        updatedFeed.Add(new GuildFeedItem(
+            GuildFeedEventType.TaskCompleted,
+            completedByUserId,
+            $"Completed task in quest \"{quest.Title}\"",
+            now));
+
+        // Check if quest is now complete
+        GuildLevel updatedLevel = Level;
+        if (updatedQuest.IsCompleted)
+        {
+            // Award bonus XP to the guild for quest completion
+            updatedXp = updatedXp.AddXp(QuestCompletionBonusXp, completedByUserId);
+
+            updatedFeed.Add(new GuildFeedItem(
+                GuildFeedEventType.QuestCompleted,
+                completedByUserId,
+                $"Guild quest \"{quest.Title}\" completed!",
+                now));
+        }
+
+        // Check for level up
+        (GuildLevel newLevel, bool levelledUp) = updatedLevel.AddXp(updatedXp.TotalXp - Xp.TotalXp);
+        updatedLevel = newLevel;
+
+        if (levelledUp)
+        {
+            updatedFeed.Add(new GuildFeedItem(
+                GuildFeedEventType.GuildLevelUp,
+                completedByUserId,
+                $"Guild levelled up to level {updatedLevel.Value}!",
+                now));
+        }
+
+        return new Guild(Id, Name, Description, _members, xp: updatedXp, level: updatedLevel, quests: updatedQuests, feedItems: updatedFeed);
+    }
+
+    /// <summary>
+    /// Add a feed item for member joining.
+    /// </summary>
+    public Guild AddMemberWithFeed(Guid userId, DateOnly today, DateTimeOffset now, TitleType? activeTitle = null)
+    {
+        Guild updated = AddMember(userId, today, activeTitle);
+        List<GuildFeedItem> updatedFeed = [.. updated._feedItems];
+        updatedFeed.Add(new GuildFeedItem(
+            GuildFeedEventType.MemberJoined,
+            userId,
+            "Joined the guild",
+            now));
+        return new Guild(updated.Id, updated.Name, updated.Description, updated._members,
+            xp: updated.Xp, level: updated.Level, quests: updated._quests, feedItems: updatedFeed);
+    }
+
+    /// <summary>
+    /// Remove a member and add feed item.
+    /// </summary>
+    public Guild RemoveMemberWithFeed(Guid userId, DateTimeOffset now)
+    {
+        Guild updated = RemoveMember(userId);
+        List<GuildFeedItem> updatedFeed = [.. updated._feedItems];
+        updatedFeed.Add(new GuildFeedItem(
+            GuildFeedEventType.MemberRemoved,
+            userId,
+            "Was removed from the guild",
+            now));
+        return new Guild(updated.Id, updated.Name, updated.Description, updated._members,
+            xp: updated.Xp, level: updated.Level, quests: updated._quests, feedItems: updatedFeed);
+    }
 }

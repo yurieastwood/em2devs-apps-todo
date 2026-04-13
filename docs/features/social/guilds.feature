@@ -93,7 +93,7 @@ Feature: Guilds
       Then the guild details should be updated
       And all members should be notified of the changes
 
-    @wip
+    @done
     Scenario: Remove a member with in-progress guild quest tasks
       Given I am the leader of "Side Project Squad"
       And "Alex" has 3 in-progress tasks on the guild quest "Ship landing page"
@@ -102,7 +102,7 @@ Feature: Guilds
       And their in-progress tasks should become unassigned on the guild quest board
       And the remaining members should be notified of the unassigned tasks
 
-    @wip
+    @done
     Scenario: Leader transfer is declined
       Given I am the leader of "Side Project Squad" with 3 members
       When I choose to leave the guild
@@ -111,7 +111,7 @@ Feature: Guilds
       Then I should be prompted to select another member for leadership
       And I should remain the guild leader until the transfer is accepted
 
-    @wip
+    @done
     Scenario: Last non-leader member leaves the guild
       Given I am the leader of "Side Project Squad" with 2 members
       And the only other member is "Jordan"
@@ -122,7 +122,7 @@ Feature: Guilds
 
   Rule: Guilds have shared quest boards where members collaborate
 
-    @wip
+    @done
     Scenario: Create a guild quest
       Given I am a member of "Side Project Squad"
       When I create a guild quest with the following details:
@@ -139,7 +139,7 @@ Feature: Guilds
       Then the guild quest should appear on the shared quest board
       And each member should see their assigned tasks
 
-    @wip
+    @done
     Scenario: View guild quest board
       Given my guild has 3 active quests
       When I view the guild quest board
@@ -147,7 +147,7 @@ Feature: Guilds
       And I should see which tasks are assigned to which members
       And I should see the overall guild activity feed
 
-    @wip
+    @done
     Scenario: Complete an assigned guild task
       Given I have a guild task "Write copy" assigned to me
       When I complete the task
@@ -155,7 +155,7 @@ Feature: Guilds
       And I should receive XP (both personal and guild contribution)
       And guild members should see the completion in the guild feed
 
-    @wip
+    @done
     Scenario: Guild quest completion
       Given all tasks in the guild quest "Ship landing page" are complete
       When the final task is completed
@@ -165,21 +165,21 @@ Feature: Guilds
 
   Rule: Guilds have collective XP and shared milestones
 
-    @wip
+    @done
     Scenario: View guild XP and level
       When I view my guild's profile
       Then I should see the guild's collective XP total
       And I should see the guild level
       And I should see each member's contribution to guild XP
 
-    @wip
+    @done
     Scenario: Guild levels up
       Given my guild has accumulated enough collective XP
       When the guild XP threshold for the next level is reached
       Then all guild members should receive a guild level-up notification
       And the guild should unlock the next tier of guild perks
 
-    @wip
+    @done
     Scenario: View guild activity feed
       When I view the guild feed
       Then I should see recent task completions by guild members

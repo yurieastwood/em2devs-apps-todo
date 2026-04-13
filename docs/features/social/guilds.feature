@@ -10,7 +10,7 @@ Feature: Guilds
 
   Rule: Users can create and manage guilds of 2-12 members
 
-    @todo
+    @done
     Scenario: Create a guild
       When I create a guild with the following details:
         | Field       | Value                        |
@@ -21,28 +21,28 @@ Feature: Guilds
       And I should be the guild leader
       And the guild should have 1 member (me)
 
-    @wip
+    @done
     Scenario: Generate an invite link for a guild
       Given I am the leader of "Side Project Squad"
       When I generate an invite link for the guild
       Then a shareable invite link should be created
       And the link should expire after 7 days by default
 
-    @wip
+    @done
     Scenario: Accept a guild invite via link
       Given a valid invite link exists for "Side Project Squad"
       When another user clicks the invite link and accepts
       Then they should be added to "Side Project Squad"
       And the guild should have 2 members
 
-    @todo
+    @done
     Scenario: Guild reaches maximum capacity
       Given my guild "Side Project Squad" has 12 members
       When a 13th user attempts to join via invite link
       Then they should see a message that the guild is at capacity
       And they should not be added to the guild
 
-    @todo
+    @done
     Scenario: Remove a member from a guild
       Given I am the leader of "Side Project Squad" with 5 members
       When I remove the member "Alex" from the guild
@@ -50,7 +50,7 @@ Feature: Guilds
       And "Alex" should receive a notification about the removal
       And their contributions to guild quests should remain in history
 
-    @wip
+    @done
     Scenario: Leave a guild
       Given I am a member of "Study Group Alpha"
       And I am not the guild leader
@@ -58,7 +58,7 @@ Feature: Guilds
       Then I should no longer be a member
       And my past contributions should remain visible in guild history
 
-    @wip
+    @done
     Scenario: Leader leaves the guild
       Given I am the leader of "Side Project Squad" with 3 members
       When I choose to leave the guild
@@ -67,7 +67,7 @@ Feature: Guilds
       Then "Jordan" should become the new guild leader
       And I should be removed from the guild
 
-    @wip
+    @done
     Scenario: Disband a guild
       Given I am the leader of "Side Project Squad"
       When I choose to disband the guild
@@ -76,14 +76,14 @@ Feature: Guilds
       And the guild should be archived
       And individual contributions should remain in each member's history
 
-    @wip
+    @done
     Scenario: User can only lead a limited number of guilds
       Given I am the leader of 3 guilds
       When I attempt to create a new guild
       Then I should see a message that I have reached the maximum number of guilds I can lead
       And I should be offered the option to disband or transfer leadership of an existing guild
 
-    @wip
+    @done
     Scenario: Edit guild details
       Given I am the leader of "Side Project Squad"
       When I update the guild details:

@@ -66,6 +66,14 @@ public sealed record PlayerProfileId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed guild identifier (ADR-0023).
+/// </summary>
+public sealed record GuildId(Guid Value)
+{
+    public static GuildId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>

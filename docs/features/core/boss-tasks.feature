@@ -58,14 +58,14 @@ Feature: Boss Tasks
 
   Rule: Boss Tasks trigger a structured intervention flow to support completion
 
-    @todo
+    @done
     Scenario: Offer task breakdown
       Given I have a Boss Task "Write architecture decision record"
       When I open the Boss Task intervention flow
       Then I should be offered the option to break it into smaller subtasks
       And the system should suggest a breakdown based on similar tasks
 
-    @todo
+    @done
     Scenario: Accept suggested breakdown
       Given I have a Boss Task "Prepare annual tax filing"
       And the system suggests breaking it into 4 subtasks:
@@ -79,7 +79,7 @@ Feature: Boss Tasks
       And each subtask should have its own difficulty rating
       And the Boss Task becomes a parent task tracking subtask completion
 
-    @todo
+    @done
     Scenario: Offer re-evaluation of task necessity
       Given I have a Boss Task "Redesign landing page"
       When I open the Boss Task intervention flow
@@ -88,7 +88,7 @@ Feature: Boss Tasks
       Then I should see prompts asking about the task's current relevance
       And I should be able to archive the task without penalty if it is no longer needed
 
-    @todo
+    @done
     Scenario: Offer delegation suggestion
       Given I have a Boss Task "Create onboarding documentation"
       And I am a member of a guild
@@ -96,7 +96,7 @@ Feature: Boss Tasks
       Then I should be offered the option to convert it to a shared quest
       And I should be able to assign it to a guild member
 
-    @todo
+    @done
     Scenario: Trigger focus mode for a Boss Task
       Given I have a Boss Task "Write Q3 strategy document"
       When I choose to enter Focus Mode for the Boss Task
@@ -107,7 +107,7 @@ Feature: Boss Tasks
 
   Rule: Completing a Boss Task awards significantly more XP and recognition
 
-    @todo
+    @done
     Scenario: Complete a Boss Task
       Given I have a Boss Task "Write architecture decision record"
       When I mark the Boss Task as complete
@@ -116,7 +116,7 @@ Feature: Boss Tasks
       And a celebration animation should be displayed
       And my "Boss Slayer" achievement counter should increment
 
-    @todo
+    @done
     Scenario: Complete a Boss Task within Focus Mode
       Given I am in Focus Mode working on the Boss Task "Write Q3 strategy document"
       And I have been in Focus Mode for 45 minutes
@@ -126,14 +126,14 @@ Feature: Boss Tasks
       And I should receive Focus Mode bonus XP
       And the total XP should be displayed in a combined breakdown
 
-    @todo
+    @done
     Scenario: Boss Task completion contributes to title progression
       Given I have completed 9 Boss Tasks total
       When I complete my 10th Boss Task
       Then I should earn the title "Boss Slayer"
       And the title should be visible on my profile
 
-    @todo
+    @done
     Scenario: Delete a Boss Task
       Given I have a Boss Task "Obsolete research"
       When I delete the Boss Task
@@ -142,7 +142,7 @@ Feature: Boss Tasks
       And no XP should be awarded or deducted
       And my "Boss Slayer" achievement counter should not change
 
-    @todo
+    @done
     Scenario: Boss Task that is also a recurring task instance
       Given I have a recurring task "Weekly report" flagged as a Boss Task
       When I complete the Boss Task

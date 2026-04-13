@@ -20,6 +20,11 @@ public sealed class TodoTask
     public DateOnly? ScheduledDate { get; private set; }
     public int RescheduleCount { get; private set; }
     public int ViewCount { get; private set; }
+    public string? WaitingReason { get; private set; }
+    public CommitmentNote? CommitmentNote { get; private set; }
+
+    private readonly List<ProcrastinationSignal> _procrastinationSignals = [];
+    public IReadOnlyList<ProcrastinationSignal> ProcrastinationSignals => _procrastinationSignals.AsReadOnly();
 
     public bool IsOverdue => ScheduledDate.HasValue
         && ScheduledDate.Value < DateOnly.FromDateTime(DateTime.UtcNow)
@@ -173,5 +178,39 @@ public sealed class TodoTask
         }
 
         Status = TaskStatus.Skipped;
+    }
+
+    public void SetWaitingReason(string reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+        {
+            throw new DomainException("Waiting reason cannot be empty.");
+        }
+
+        WaitingReason = reason;
+    }
+
+    public void ClearWaitingReason()
+    {
+        WaitingReason = null;
+    }
+
+    public void AddProcrastinationSignal(ProcrastinationSignal signal)
+    {
+        ArgumentNullException.ThrowIfNull(signal);
+        _procrastinationSignals.Add(signal);
+    }
+
+    public void ClearProcrastinationSignals()
+    {
+        _procrastinationSignals.Clear();
+    }
+
+    public void RescheduleWithCommitment(CommitmentNote note)
+    {
+        ArgumentNullException.ThrowIfNull(note);
+
+        Reschedule();
+        CommitmentNote = note;
     }
 }

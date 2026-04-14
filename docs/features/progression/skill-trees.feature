@@ -34,7 +34,7 @@ Feature: Skill Trees
         | organising       | 15        | Steward         |
         | side-project     | 10        | Builder         |
 
-    @wip
+    @done
     Scenario: View available and locked skill trees
       When I navigate to the skill tree view
       Then I should see my unlocked skill trees with progress
@@ -72,7 +72,7 @@ Feature: Skill Trees
       And I should see personalised study tips based on my patterns
       And I should see a history of qualifying task completions
 
-    @wip
+    @done
     Scenario: Multiple skill trees can be active simultaneously
       Given I have unlocked the "Creator" and "Builder" skill trees
       When I complete a task tagged "creative" and "side-project"
@@ -81,19 +81,19 @@ Feature: Skill Trees
 
   Rule: Skill tree tiers unlock personalised tips, workflows, and cosmetics
 
-    @wip
+    @done
     Scenario: Tier 1 perk unlocks personalised tips
       Given I have just unlocked the "Guardian" skill tree at tier 1
       Then I should receive a set of health and fitness productivity tips
       And the tips should be accessible from my skill tree view
 
-    @wip
+    @done
     Scenario: Tier 2 perk unlocks suggested workflows
       Given I have reached tier 2 of the "Architect" skill tree
       Then I should receive suggested quest templates for work projects
       And the templates should be usable when creating new quests
 
-    @wip
+    @done
     Scenario: Tier 3 perk unlocks cosmetic rewards
       Given I have reached tier 3 of the "Creator" skill tree
       Then I should unlock a unique profile badge for the "Creator" tree

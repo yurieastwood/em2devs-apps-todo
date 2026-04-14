@@ -31,14 +31,14 @@ Feature: Task Management
       Then the task "Write Q2 report" should appear in my inbox
       And the task should have all specified details saved
 
-    @wip
+    @done
     Scenario: Create a task with natural language date parsing
       When I create a task with the title "Call dentist"
       And I set the due date to "next Tuesday"
       Then the due date should resolve to the next occurring Tuesday
       And the task should appear in my upcoming view on that date
 
-    @wip
+    @done
     Scenario: Create a task via quick-add from any screen
       Given I am on any screen in the application
       When I activate the quick-add shortcut
@@ -72,7 +72,7 @@ Feature: Task Management
       Then the task status should change to "Completed"
       And I should be prompted to record actual time spent
 
-    @wip
+    @done
     Scenario: Record actual time spent after completing a task
       Given I have just completed the task "Write Q2 report" with an estimated time of 2 hours
       When I record the actual time spent as "2 hours 45 minutes"
@@ -182,7 +182,7 @@ Feature: Task Management
 
   Rule: Tasks can be filtered, sorted, and searched
 
-    @wip
+    @done
     Scenario: Filter tasks by tag
       Given I have the following tasks:
         | Title             | Tags          |
@@ -207,7 +207,7 @@ Feature: Task Management
       When I sort tasks by "Priority" descending
       Then tasks should be ordered: Critical, High, Medium, Low
 
-    @wip
+    @done
     Scenario: Search tasks by keyword
       Given I have 20 tasks with various titles and descriptions
       When I search for "report"
@@ -215,27 +215,27 @@ Feature: Task Management
 
   Rule: Multiple views provide different perspectives on tasks
 
-    @wip
+    @done
     Scenario: View tasks in Inbox
       When I navigate to the Inbox view
       Then I should see all tasks not assigned to a quest
       And tasks should be sorted by creation date descending
 
-    @wip
+    @done
     Scenario: View tasks in Today view
       When I navigate to the Today view
       Then I should see all tasks due today
       And I should see all overdue tasks
       And I should see tasks from my Smart Daily Brief if generated
 
-    @wip
+    @done
     Scenario: View tasks in Upcoming view
       When I navigate to the Upcoming view
       Then I should see tasks grouped by due date
       And I should see the next 14 days by default
       And days with no tasks should still be visible
 
-    @wip
+    @done
     Scenario: View completed tasks history
       When I navigate to the Completed view
       Then I should see all completed tasks

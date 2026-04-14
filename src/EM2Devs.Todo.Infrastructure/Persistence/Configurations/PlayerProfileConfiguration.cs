@@ -48,6 +48,11 @@ public sealed class PlayerProfileConfiguration : IEntityTypeConfiguration<Player
             streak.Property(s => s.GraceDaysAvailable)
                 .HasColumnName("streak_grace_days_available")
                 .IsRequired();
+
+            // ActiveFreeze (Phase 1 streak freeze feature) is transient — not persisted
+            // across restarts. Domain reconstructs it via Freeze()/Unfreeze() within a session.
+            streak.Ignore(s => s.ActiveFreeze);
+            streak.Ignore(s => s.IsFrozen);
         });
 
         builder.Property(p => p.LongestStreak)

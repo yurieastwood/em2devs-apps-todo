@@ -16,6 +16,16 @@ public sealed record Streak
 
     public bool IsFrozen => ActiveFreeze is not null;
 
+    // Stryker disable all : EF Core materialization constructor — not reachable from domain tests.
+    // EF picks the constructor where all parameters match mapped properties. ActiveFreeze is
+    // Ignored on the owned Streak config because StreakFreeze isn't persisted yet, so this
+    // three-argument constructor is the only bindable one for EF.
+    private Streak(int currentDays, DateOnly? lastActiveDate, int graceDaysAvailable)
+        : this(currentDays, lastActiveDate, graceDaysAvailable, activeFreeze: null)
+    {
+    }
+    // Stryker restore all
+
     public Streak(int currentDays, DateOnly? lastActiveDate, int graceDaysAvailable,
         StreakFreeze? activeFreeze = null)
     {

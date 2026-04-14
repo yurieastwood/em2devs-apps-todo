@@ -57,6 +57,26 @@ public sealed class TodoTask
         ScheduledDate = scheduledDate;
     }
 
+    // Stryker disable all : EF Core materialization constructor — not reachable from domain tests.
+    // EF binds these parameters to mapped properties by name+type. Parameter types must exactly
+    // match the mapped property types (notably non-nullable CreatedAt/Difficulty/Priority).
+    private TodoTask(TaskId id, TaskTitle title, TaskDifficulty difficulty, TaskPriority priority,
+        DateTimeOffset createdAt, DateTimeOffset? dueDate,
+        RecurringTaskId? sourceRecurringTaskId, DateOnly? scheduledDate)
+    {
+        Id = id;
+        Title = title;
+        Difficulty = difficulty;
+        Priority = priority;
+        CreatedAt = createdAt;
+        DueDate = dueDate;
+        SourceRecurringTaskId = sourceRecurringTaskId;
+        ScheduledDate = scheduledDate;
+        // Status, IsBossTask, RescheduleCount, ViewCount and the rest are EF-set
+        // through their private setters after this constructor returns.
+    }
+    // Stryker restore all
+
     public static TodoTask Create(TaskTitle title, TaskDifficulty difficulty = TaskDifficulty.Normal,
         DateTimeOffset? dueDate = null, TaskPriority priority = TaskPriority.Medium,
         DateTimeOffset? createdAt = null)

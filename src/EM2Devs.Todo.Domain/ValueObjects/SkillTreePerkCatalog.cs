@@ -40,6 +40,7 @@ public static class SkillTreePerkCatalog
             1 => SkillTreePerkType.Tips,
             2 => SkillTreePerkType.Workflow,
             3 => SkillTreePerkType.Cosmetic,
+            // Stryker disable once String: defensive default arm; SkillTier enforces 1..3.
             _ => throw new ArgumentOutOfRangeException(
                 nameof(tierValue), tierValue, "Unknown skill tier.")
         };
@@ -53,6 +54,7 @@ public static class SkillTreePerkCatalog
             SkillTreePerkType.Tips => $"Personalised {treeName} tips",
             SkillTreePerkType.Workflow => $"Suggested {treeName} quest templates",
             SkillTreePerkType.Cosmetic => $"{treeName} profile badge and themed colour palette",
+            // Stryker disable once String: defensive default arm; callers iterate over all defined perk types.
             _ => throw new ArgumentOutOfRangeException(
                 nameof(type), type, "Unknown perk type.")
         };

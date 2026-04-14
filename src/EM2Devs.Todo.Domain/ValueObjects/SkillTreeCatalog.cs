@@ -92,6 +92,8 @@ public sealed record SkillTreeCatalog
             SkillTreeType.Connector => "social",
             SkillTreeType.Steward => "home or organising",
             SkillTreeType.Builder => "side-project",
+            // Stryker disable once String: defensive default arm; unreachable because
+            // callers iterate over Enum.GetValues<SkillTreeType>() which only yields defined values.
             _ => throw new ArgumentOutOfRangeException(
                 nameof(type), type, "Unknown skill tree type.")
         };

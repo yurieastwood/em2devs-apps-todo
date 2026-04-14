@@ -40,7 +40,9 @@
       "Bash(ls:*)",
       "Bash(cat:*)",
       "Bash(grep:*)",
-      "Bash(for pr:*)"
+      "Bash(for pr:*)",
+      "Bash(mkdir -p /home/agent/.claude/plans)",
+      "Read(//home/agent/.claude/**)"
     ]
   }
 }

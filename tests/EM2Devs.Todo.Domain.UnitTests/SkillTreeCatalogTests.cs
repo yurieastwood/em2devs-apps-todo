@@ -89,4 +89,5 @@ public sealed class SkillTreeCatalogTests
         var ex = Should.Throw<ArgumentNullException>(() => SkillTreeCatalog.Build(null!));
         ex.ParamName.ShouldBe("unlockedTrees");
     }
+
 }

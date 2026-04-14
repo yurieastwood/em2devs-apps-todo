@@ -148,7 +148,9 @@ public sealed class TodoTaskConfiguration : IEntityTypeConfiguration<TodoTask>
 
             record.Property(r => r.Category)
                 .HasColumnName("category")
-                .HasConversion<string?>()
+                .HasConversion(
+                    category => category != null ? category.Value : null,
+                    value => value != null ? TaskCategory.From(value) : null)
                 .HasMaxLength(40);
         });
     }

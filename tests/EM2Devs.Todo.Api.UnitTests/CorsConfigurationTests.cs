@@ -14,7 +14,7 @@ public sealed class CorsConfigurationTests : IDisposable
     public CorsConfigurationTests()
     {
         _factory = new WebApplicationFactory<Program>();
-        _client = _factory.CreateClient();
+        _client = _factory.CreateClient().Authenticated();
     }
 
     public void Dispose() => _factory.Dispose();

@@ -28,6 +28,8 @@ public static class ResultExtensions
                 "Resource not found", StatusCodes.Status404NotFound, n.Message),
             ConflictError c => CreateProblem(
                 "Conflict", StatusCodes.Status409Conflict, c.Message),
+            UnauthorizedError u => CreateProblem(
+                "Unauthorized", StatusCodes.Status401Unauthorized, u.Message),
             _ => CreateProblem(
                 "An error occurred", StatusCodes.Status500InternalServerError, error.Message)
         };

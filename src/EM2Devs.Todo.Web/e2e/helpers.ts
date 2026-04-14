@@ -1,7 +1,12 @@
 import { expect, type Page } from '@playwright/test';
 
+export const DEMO_EMAIL = 'demo@waypoint.dev';
+export const DEMO_PASSWORD = 'demo1234';
+
 export async function loginAsDemoUser(page: Page) {
 	await page.goto('/login');
+	await page.getByTestId('email-input').fill(DEMO_EMAIL);
+	await page.getByTestId('password-input').fill(DEMO_PASSWORD);
 	await page.getByTestId('login-button').click();
 	await page.waitForURL('/');
 	await expect(page.getByRole('heading', { name: 'Tasks' })).toBeVisible();

@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EM2Devs.Todo.Api.Extensions;
 using EM2Devs.Todo.Application.Commands;
@@ -11,6 +12,7 @@ namespace EM2Devs.Todo.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
+[Authorize]
 [Route("api/tasks")]
 [Route("api/v{version:apiVersion}/tasks")]
 public sealed class TasksController : ControllerBase

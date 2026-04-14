@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json.Serialization;
 using EM2Devs.Todo.Api.ModelBinding;
 using Scalar.AspNetCore;
@@ -12,10 +13,12 @@ using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Infrastructure.Auth;
 using EM2Devs.Todo.Infrastructure.Persistence;
 using EM2Devs.Todo.ServiceDefaults;
-using EM2Devs.Todo.Api.Middleware;
 using EM2Devs.Todo.Api.Extensions;
+using EM2Devs.Todo.Api.Middleware;
 using Asp.Versioning;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 const string CorsPolicyName = "Frontend";
 
@@ -28,6 +31,12 @@ builder.Services.AddProblemDetails();
 
 string? connectionString = builder.Configuration.GetConnectionString("tododb");
 builder.Services.AddSingleton<ILastXpBreakdownCache, LastXpBreakdownCache>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddHttpContextAccessor();
+
+// Always register BCryptPasswordHasher as a singleton (pure, stateless).
+builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
 if (!string.IsNullOrEmpty(connectionString))
 {
@@ -36,20 +45,23 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.Services.AddScoped<IRecurringTaskRepository, PostgresRecurringTaskRepository>();
     builder.Services.AddScoped<IPlayerProfileRepository, PostgresPlayerProfileRepository>();
     builder.Services.AddScoped<IStreakSnapshotRepository, PostgresStreakSnapshotRepository>();
+    builder.Services.AddScoped<IUserRepository, PostgresUserRepository>();
 }
 else
 {
     builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
     builder.Services.AddSingleton<IRecurringTaskRepository, InMemoryRecurringTaskRepository>();
     builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
+    builder.Services.AddSingleton<IUserRepository>(sp =>
+        new InMemoryUserRepository(sp.GetRequiredService<IPasswordHasher>()));
 }
 
 // TODO: Add conditional Postgres/InMemory registration for Quest/Epic repositories when their persistence implementations are added
 builder.Services.AddSingleton<IQuestRepository, InMemoryQuestRepository>();
 builder.Services.AddSingleton<IEpicRepository, InMemoryEpicRepository>();
 
-builder.Services.AddScoped<DemoCurrentUser>();
-builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<DemoCurrentUser>());
+// JWT-backed ICurrentUser reads HttpContext.User claims on each request.
+builder.Services.AddScoped<ICurrentUser, JwtCurrentUser>();
 
 builder.Services.AddScoped<IMediator, Mediator>();
 
@@ -91,6 +103,10 @@ builder.Services.AddTransient<IRequestHandler<GetRecurringTaskQuery, Result<Recu
 builder.Services.AddTransient<IRequestHandler<ListRecurringTasksQuery, Result<IReadOnlyList<RecurringTask>>>, ListRecurringTasksQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<ListRecurringTaskInstancesQuery, Result<IReadOnlyList<TodoTask>>>, ListRecurringTaskInstancesQueryHandler>();
 
+// Auth CQRS handlers (Phase 0 multi-user JWT).
+builder.Services.AddTransient<IRequestHandler<RegisterUserCommand, Result<LoginResult>>, RegisterUserCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<LoginCommand, Result<LoginResult>>, LoginCommandHandler>();
+
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.XpAwardHandler>();
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskStatusChangedEvent>,
@@ -121,6 +137,32 @@ if (allowedOrigins.Length > 0)
         });
     });
 }
+
+// JWT Bearer authentication (Phase 0 multi-user auth).
+IConfigurationSection jwtConfig = builder.Configuration.GetSection("Jwt");
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtConfig["Issuer"],
+            ValidAudience = jwtConfig["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtConfig["Key"]
+                    ?? throw new InvalidOperationException("Jwt:Key not configured"))),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+// Intentionally no FallbackPolicy: endpoints must opt in via [Authorize] on their controller.
+// This keeps method-not-allowed (405) behaviour intact for unsupported verbs like TRACE/OPTIONS,
+// which would otherwise be short-circuited to 401 by the fallback before routing completes.
+builder.Services.AddAuthorization();
 
 builder.Services.AddApiVersioning(options =>
 {
@@ -153,15 +195,13 @@ if (!string.IsNullOrEmpty(connectionString) && isNonProduction && autoMigrateReq
 }
 
 app.UseExceptionHandler();
-if (app.Environment.IsDevelopment())
-{
-    app.UseMiddleware<DemoAuthMiddleware>();
-}
 app.MapDefaultEndpoints();
 if (allowedOrigins.Length > 0)
 {
     app.UseCors(CorsPolicyName);
 }
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapOpenApi();
 app.MapScalarApiReference();
 app.MapControllers();

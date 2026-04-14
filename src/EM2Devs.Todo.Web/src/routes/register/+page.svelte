@@ -7,13 +7,13 @@
 </script>
 
 <svelte:head>
-	<title>Sign In | EM2Devs Todo</title>
+	<title>Create Account | EM2Devs Todo</title>
 </svelte:head>
 
 <main>
-	<div class="login-card">
-		<h1>Welcome to Waypoint</h1>
-		<p>Sign in to your account to continue.</p>
+	<div class="register-card">
+		<h1>Create your account</h1>
+		<p>Sign up for a Waypoint account.</p>
 		<form
 			method="POST"
 			use:enhance={() => {
@@ -22,6 +22,19 @@
 				};
 			}}
 		>
+			<label for="displayName">Display name</label>
+			<input
+				id="displayName"
+				name="displayName"
+				type="text"
+				autocomplete="name"
+				required
+				minlength="1"
+				maxlength="100"
+				value={form?.displayName ?? ''}
+				data-testid="displayname-input"
+			/>
+
 			<label for="email">Email</label>
 			<input
 				id="email"
@@ -38,20 +51,22 @@
 				id="password"
 				name="password"
 				type="password"
-				autocomplete="current-password"
+				autocomplete="new-password"
 				required
+				minlength="8"
 				data-testid="password-input"
 			/>
 
 			{#if form?.error}
-				<p class="error" data-testid="login-error">{form.error}</p>
+				<p class="error" data-testid="register-error">{form.error}</p>
 			{/if}
 
-			<button type="submit" class="btn-primary" data-testid="login-button">Sign In</button>
+			<button type="submit" class="btn-primary" data-testid="register-button"
+				>Create account</button
+			>
 		</form>
 		<p class="hint">
-			New here? <a href={resolve('/register')} data-testid="register-link"
-				>Create an account</a
+			Already have an account? <a href={resolve('/login')} data-testid="login-link">Sign in</a
 			>.
 		</p>
 	</div>
@@ -66,7 +81,7 @@
 		font-family: system-ui, sans-serif;
 	}
 
-	.login-card {
+	.register-card {
 		text-align: left;
 		padding: 2rem;
 		border: 1px solid #e5e7eb;
@@ -108,7 +123,6 @@
 		color: #b91c1c;
 		margin: 0.75rem 0 0;
 		font-size: 0.875rem;
-		text-align: left;
 	}
 
 	.btn-primary {

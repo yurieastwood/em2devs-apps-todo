@@ -3,12 +3,67 @@ info:
   title: Waypoint API
   description: Waypoint — gamified todo app API for demonstrating agentic development guardrails.
   version: "1.0.0"
+security:
+  - bearerAuth: []
 paths:
   # ── Auth ──────────────────────────────────────────
+  /api/auth/register:
+    post:
+      operationId: register
+      summary: Register a new user account
+      description: Create a user with email, password, and display name. Returns a bearer token on success.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+            example:
+              email: "new-user@waypoint.dev"
+              password: "hunter2hunter2"
+              displayName: "New User"
+      responses:
+        "200":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              example:
+                token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEifQ.signature"
+                userId: "00000000-0000-0000-0000-000000000001"
+                displayName: "New User"
+                expiresAt: "2026-04-12T20:00:00Z"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
+        "409":
+          description: Email already registered
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
   /api/auth/login:
     post:
       operationId: login
-      summary: Authenticate and set auth cookie
+      summary: Authenticate with email and password
+      description: "Returns a short-lived bearer token. Clients attach the token to subsequent requests via the `Authorization: Bearer <token>` header."
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: "demo@waypoint.dev"
+              password: "demo1234"
       responses:
         "200":
           description: Login successful
@@ -16,26 +71,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AuthResponse"
+              example:
+                token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEifQ.signature"
+                userId: "00000000-0000-0000-0000-000000000001"
+                displayName: "Demo User"
+                expiresAt: "2026-04-12T20:00:00Z"
+        "400":
+          description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
+        "401":
+          description: Invalid email or password
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
   /api/auth/logout:
     post:
       operationId: logout
-      summary: Clear auth cookie and log out
+      summary: Client-side logout
+      description: No-op for stateless JWT auth; the client should discard its token after calling this endpoint.
+      tags: [Auth]
+      security: []
       responses:
         "204":
-          description: Logout successful
+          description: Logout acknowledged
   /api/auth/me:
     get:
       operationId: getMe
       summary: Get current authenticated user
+      description: Returns the user identity derived from the bearer token claims.
+      tags: [Auth]
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Current user info
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
-        "401":
-          description: Not authenticated
+                $ref: "#/components/schemas/MeResponse"
+              example:
+                userId: "00000000-0000-0000-0000-000000000001"
+                displayName: "Demo User"
+                email: "demo@waypoint.dev"
   # ── Tasks ─────────────────────────────────────────
   /api/tasks:
     get:
@@ -53,6 +136,8 @@ paths:
               - Done
               - Skipped
       responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: A list of tasks
           content:
@@ -77,6 +162,8 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateTaskRequest"
       responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "201":
           description: Task created
           content:
@@ -113,6 +200,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/taskId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: The task
           content:
@@ -133,6 +224,8 @@ paths:
             schema:
               $ref: "#/components/schemas/UpdateTaskRequest"
       responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Task updated
           content:
@@ -153,6 +246,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/taskId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "204":
           description: Task deleted
         "404":
@@ -170,6 +267,8 @@ paths:
             schema:
               $ref: "#/components/schemas/UpdateTaskStatusRequest"
       responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Task status updated
           content:
@@ -197,6 +296,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/taskId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Task re-opened
           content:
@@ -217,6 +320,10 @@ paths:
       operationId: listQuests
       summary: List all quests
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: A list of quests
           content:
@@ -235,6 +342,8 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateQuestRequest"
       responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "201":
           description: Quest created
           content:
@@ -267,6 +376,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/questId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: The quest
           content:
@@ -281,6 +394,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/questId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "204":
           description: Quest deleted
         "404":
@@ -298,6 +415,8 @@ paths:
             schema:
               $ref: "#/components/schemas/AddTaskToQuestRequest"
       responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Task added to quest
           content:
@@ -326,6 +445,10 @@ paths:
         - $ref: "#/components/parameters/questId"
         - $ref: "#/components/parameters/taskId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Task removed from quest
           content:
@@ -341,6 +464,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/questId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Quest completed
           content:
@@ -361,6 +488,10 @@ paths:
       operationId: listEpics
       summary: List all epics
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: A list of epics
           content:
@@ -379,6 +510,8 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateEpicRequest"
       responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "201":
           description: Epic created
           content:
@@ -411,6 +544,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/epicId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: The epic
           content:
@@ -425,6 +562,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/epicId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "204":
           description: Epic deleted
         "404":
@@ -442,6 +583,8 @@ paths:
             schema:
               $ref: "#/components/schemas/AssignQuestRequest"
       responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Quest assigned to epic
           content:
@@ -470,6 +613,10 @@ paths:
         - $ref: "#/components/parameters/epicId"
         - $ref: "#/components/parameters/questId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Quest removed from epic
           content:
@@ -485,6 +632,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/epicId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Epic completed
           content:
@@ -505,6 +656,10 @@ paths:
       operationId: listRecurringTasks
       summary: List all recurring tasks
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: A list of recurring tasks
           content:
@@ -523,6 +678,8 @@ paths:
             schema:
               $ref: "#/components/schemas/CreateRecurringTaskRequest"
       responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "201":
           description: Recurring task created
           content:
@@ -567,6 +724,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/recurringTaskId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: The recurring task
           content:
@@ -587,6 +748,8 @@ paths:
             schema:
               $ref: "#/components/schemas/UpdateRecurringTaskRequest"
       responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Recurring task updated
           content:
@@ -613,6 +776,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/recurringTaskId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "204":
           description: Recurring task deleted
         "404":
@@ -624,6 +791,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/recurringTaskId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Recurring task paused
           content:
@@ -645,6 +816,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/recurringTaskId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Recurring task resumed
           content:
@@ -672,6 +847,8 @@ paths:
             type: string
             format: date
       responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Instance generated
           content:
@@ -699,6 +876,10 @@ paths:
       parameters:
         - $ref: "#/components/parameters/recurringTaskId"
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: List of task instances
           content:
@@ -722,6 +903,10 @@ paths:
             type: string
             format: uuid
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Instance skipped
           content:
@@ -742,6 +927,10 @@ paths:
       operationId: getProfile
       summary: Get player progression profile
       responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
         "200":
           description: Player progression profile
           content:
@@ -749,6 +938,17 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProfileResponse"
 components:
+  responses:
+    Unauthorized:
+      description: Authentication required or bearer token is invalid/expired. Body is empty.
+    BadRequest:
+      description: Malformed request (invalid headers, body, or query parameters). Body may be empty or a `ValidationProblemDetails` document.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT issued by `POST /api/auth/login` or `POST /api/auth/register`.
   parameters:
     taskId:
       name: taskId
@@ -823,17 +1023,79 @@ components:
                 Title:
                   - "Title is required."
                   - "Title must not exceed 200 characters."
+    RegisterRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - password
+        - displayName
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          example: "new-user@waypoint.dev"
+        password:
+          type: string
+          minLength: 8
+          example: "hunter2hunter2"
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "New User"
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "demo@waypoint.dev"
+        password:
+          type: string
+          minLength: 1
+          example: "demo1234"
     AuthResponse:
+      type: object
+      required:
+        - token
+        - userId
+        - displayName
+        - expiresAt
+      properties:
+        token:
+          type: string
+          description: Signed JWT bearer token.
+          example: "eyJhbGciOiJIUzI1NiJ9.payload.signature"
+        userId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+          description: UTC instant when the token expires.
+    MeResponse:
       type: object
       required:
         - userId
         - displayName
+        - email
       properties:
         userId:
           type: string
           format: uuid
         displayName:
           type: string
+        email:
+          type: string
+          format: email
     CreateTaskRequest:
       type: object
       additionalProperties: false

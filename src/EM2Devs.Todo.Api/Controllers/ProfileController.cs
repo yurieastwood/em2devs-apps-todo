@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.ReadModels;
@@ -7,6 +8,7 @@ namespace EM2Devs.Todo.Api.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
+[Authorize]
 [Route("api/profile")]
 [Route("api/v{version:apiVersion}/profile")]
 public sealed class ProfileController : ControllerBase

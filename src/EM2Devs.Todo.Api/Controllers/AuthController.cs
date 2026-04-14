@@ -1,7 +1,12 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Asp.Versioning;
+using EM2Devs.Todo.Api.Extensions;
+using EM2Devs.Todo.Application.Commands;
+using EM2Devs.Todo.Application.Mediator;
+using EM2Devs.Todo.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using EM2Devs.Todo.Application.Ports;
-using EM2Devs.Todo.Api.Middleware;
 
 namespace EM2Devs.Todo.Api.Controllers;
 
@@ -11,44 +16,84 @@ namespace EM2Devs.Todo.Api.Controllers;
 [Route("api/v{version:apiVersion}/auth")]
 public sealed class AuthController : ControllerBase
 {
-    private readonly ICurrentUser _currentUser;
+    private readonly IMediator _mediator;
 
-    public AuthController(ICurrentUser currentUser) => _currentUser = currentUser;
+    public AuthController(IMediator mediator) => _mediator = mediator;
 
+    /// <summary>
+    /// Register a new user account and issue a JWT.
+    /// </summary>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        Result<LoginResult> result = await _mediator.Send(
+            new RegisterUserCommand(request.Email, request.Password, request.DisplayName), ct)
+            .ConfigureAwait(false);
+
+        return result.ToHttpResult(ok => Ok(new AuthResponse(
+            ok.Token, ok.UserId, ok.DisplayName, ok.ExpiresAt)));
+    }
+
+    /// <summary>
+    /// Authenticate with email and password and issue a JWT.
+    /// </summary>
     [HttpPost("login")]
-    public IActionResult Login()
+    [AllowAnonymous]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
-        Response.Cookies.Append(DemoAuthMiddleware.CookieName, "true", new CookieOptions
-        {
-            HttpOnly = true,
-            SameSite = SameSiteMode.Lax,
-            Path = "/"
-        });
+        ArgumentNullException.ThrowIfNull(request);
 
-        return Ok(new AuthResponse(_currentUser.UserId, _currentUser.DisplayName));
+        Result<LoginResult> result = await _mediator.Send(
+            new LoginCommand(request.Email, request.Password), ct)
+            .ConfigureAwait(false);
+
+        return result.ToHttpResult(ok => Ok(new AuthResponse(
+            ok.Token, ok.UserId, ok.DisplayName, ok.ExpiresAt)));
     }
 
-    [HttpPost("logout")]
-    public IActionResult Logout()
-    {
-        Response.Cookies.Delete(DemoAuthMiddleware.CookieName, new CookieOptions
-        {
-            Path = "/"
-        });
-
-        return NoContent();
-    }
-
+    /// <summary>
+    /// Return the authenticated user's identity as parsed from the bearer token claims.
+    /// </summary>
     [HttpGet("me")]
     public IActionResult Me()
     {
-        if (!_currentUser.IsAuthenticated)
+        ClaimsPrincipal user = HttpContext.User;
+        if (user.Identity is not { IsAuthenticated: true })
         {
             return Unauthorized();
         }
 
-        return Ok(new AuthResponse(_currentUser.UserId, _currentUser.DisplayName));
+        string? sub = user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!Guid.TryParse(sub, out Guid userId))
+        {
+            return Unauthorized();
+        }
+
+        string displayName = user.FindFirst(JwtRegisteredClaimNames.Name)?.Value
+            ?? user.FindFirst(ClaimTypes.Name)?.Value
+            ?? string.Empty;
+
+        string email = user.FindFirst(JwtRegisteredClaimNames.Email)?.Value
+            ?? user.FindFirst(ClaimTypes.Email)?.Value
+            ?? string.Empty;
+
+        return Ok(new MeResponse(userId, displayName, email));
     }
+
+    /// <summary>
+    /// Logout is a no-op on the server for stateless JWT auth; the client discards its token.
+    /// </summary>
+    [HttpPost("logout")]
+    [AllowAnonymous]
+    public IActionResult Logout() => NoContent();
 }
 
-public sealed record AuthResponse(Guid UserId, string DisplayName);
+public sealed record RegisterRequest(string Email, string Password, string DisplayName);
+public sealed record LoginRequest(string Email, string Password);
+public sealed record AuthResponse(string Token, Guid UserId, string DisplayName, DateTimeOffset ExpiresAt);
+public sealed record MeResponse(Guid UserId, string DisplayName, string Email);

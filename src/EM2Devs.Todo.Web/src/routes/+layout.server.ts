@@ -1,26 +1,19 @@
-import { getMe } from '$lib/api/auth';
+import { me } from '$lib/api/auth';
 import { getBaseUrl } from '$lib/server/config';
+import { TOKEN_COOKIE } from '../hooks.server';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ fetch, cookies }) => {
-	const hasCookie = cookies.get('demo-user');
-	if (!hasCookie) {
+	const token = cookies.get(TOKEN_COOKIE);
+	if (!token) {
 		return { user: null };
 	}
 
-	const baseUrl = getBaseUrl();
-
-	const apiFetch: typeof fetch = (input, init) => {
-		const headers = new Headers(init?.headers);
-		headers.set('X-Demo-User', 'true');
-		return fetch(input, { ...init, headers });
-	};
-
 	try {
-		const user = await getMe(apiFetch, baseUrl);
+		const user = await me(fetch, getBaseUrl());
 		return { user };
 	} catch (error) {
-		console.error('[layout] getMe failed for URL:', baseUrl, error);
+		console.error('[layout] me() failed:', error);
 		return { user: null };
 	}
 };

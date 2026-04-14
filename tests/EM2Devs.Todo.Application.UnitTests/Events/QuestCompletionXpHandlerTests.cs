@@ -36,6 +36,8 @@ public sealed class QuestCompletionXpHandlerTests
         await _profileRepo.Received(1).AwardXpAsync(
             QuestCompletionXpHandler.QuestCompletionBonusXp,
             null,
+            Arg.Any<DateOnly?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 

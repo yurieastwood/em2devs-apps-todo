@@ -26,6 +26,11 @@ public sealed class QuestCompletionXpHandler : INotificationHandler<QuestComplet
     {
         ArgumentNullException.ThrowIfNull(notification);
 
-        await _profileRepository.AwardXpAsync(QuestCompletionBonusXp, breakdown: null, ct).ConfigureAwait(false);
+        await _profileRepository.AwardXpAsync(
+            QuestCompletionBonusXp,
+            breakdown: null,
+            historyDate: DateOnly.FromDateTime(DateTime.UtcNow),
+            historySource: "Quest completion bonus",
+            ct: ct).ConfigureAwait(false);
     }
 }

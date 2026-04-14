@@ -28,7 +28,7 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
         }
     }
 
-    public Task AwardXpAsync(ExperiencePoints xp, XpBreakdownReadModel? breakdown = null, CancellationToken ct = default)
+    public Task AwardXpAsync(ExperiencePoints xp, XpBreakdownReadModel? breakdown = null, DateOnly? historyDate = null, string? historySource = null, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(xp);
 
@@ -36,6 +36,11 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
         {
             _profile.AwardXp(xp);
             _breakdownCache.SetCurrent(breakdown);
+
+            if (historyDate is not null && !string.IsNullOrWhiteSpace(historySource))
+            {
+                _profile.RecordXpEarning(historyDate.Value, xp, historySource);
+            }
         }
 
         return Task.CompletedTask;

@@ -28,13 +28,19 @@ public sealed class PostgresPlayerProfileRepository : IPlayerProfileRepository
         return PlayerProfileProjection.Project(profile, _breakdownCache.GetCurrent());
     }
 
-    public async Task AwardXpAsync(ExperiencePoints xp, XpBreakdownReadModel? breakdown = null, CancellationToken ct = default)
+    public async Task AwardXpAsync(ExperiencePoints xp, XpBreakdownReadModel? breakdown = null, DateOnly? historyDate = null, string? historySource = null, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(xp);
 
         PlayerProfile profile = await GetOrCreateAsync(ct).ConfigureAwait(false);
         profile.AwardXp(xp);
         _breakdownCache.SetCurrent(breakdown);
+
+        if (historyDate is not null && !string.IsNullOrWhiteSpace(historySource))
+        {
+            profile.RecordXpEarning(historyDate.Value, xp, historySource);
+        }
+
         await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 

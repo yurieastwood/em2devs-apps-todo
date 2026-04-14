@@ -45,6 +45,8 @@ public sealed class XpAwardHandlerTests
         await _profileRepo.Received(1).AwardXpAsync(
             Arg.Is<ExperiencePoints>(xp => xp.Value > 0),
             Arg.Any<XpBreakdownReadModel?>(),
+            Arg.Any<DateOnly?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 
@@ -67,6 +69,8 @@ public sealed class XpAwardHandlerTests
         await _profileRepo.Received(1).AwardXpAsync(
             Arg.Is<ExperiencePoints>(xp => xp.Value == 30),
             Arg.Any<XpBreakdownReadModel?>(),
+            Arg.Any<DateOnly?>(),
+            Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
 

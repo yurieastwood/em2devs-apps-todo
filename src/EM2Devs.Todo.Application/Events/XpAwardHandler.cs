@@ -52,7 +52,12 @@ public sealed class XpAwardHandler : INotificationHandler<TaskCompletedEvent>
         XpBreakdownReadModel breakdownModel = new(
             breakdown.BaseXp, breakdown.DeadlineModifier, breakdown.StreakMultiplier, breakdown.FinalXp);
 
-        await _profileRepository.AwardXpAsync(breakdown.ToExperiencePoints(), breakdownModel, ct).ConfigureAwait(false);
+        await _profileRepository.AwardXpAsync(
+            breakdown.ToExperiencePoints(),
+            breakdownModel,
+            historyDate: completionDate,
+            historySource: $"Task completed ({notification.Difficulty})",
+            ct: ct).ConfigureAwait(false);
 
         // Attribute XP to parent quest(s)
         ExperiencePoints earnedXp = breakdown.ToExperiencePoints();

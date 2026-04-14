@@ -53,5 +53,13 @@ public sealed class PlayerProfileConfiguration : IEntityTypeConfiguration<Player
         builder.Property(p => p.LongestStreak)
             .HasColumnName("longest_streak")
             .IsRequired();
+
+        // Phase 3 collections — currently in-memory only; the dashboard projects them
+        // from PlayerProfile when AwardXp / RecordSkillTreeProgress / AwardTitle are
+        // called, but they are not persisted between API restarts. Persisting these
+        // would require owned-collection mappings (separate slice of work).
+        builder.Ignore(p => p.SkillTrees);
+        builder.Ignore(p => p.TitleInventory);
+        builder.Ignore(p => p.XpHistory);
     }
 }

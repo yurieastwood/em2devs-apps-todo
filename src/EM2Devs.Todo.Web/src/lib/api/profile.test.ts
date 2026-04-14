@@ -12,7 +12,10 @@ describe('getProfile', () => {
 			xpToNextLevel: 50,
 			currentStreak: 5,
 			longestStreak: 12,
-			lastXpBreakdown: null
+			lastXpBreakdown: null,
+			xpHistory: [],
+			titles: { earned: [], active: null, progress: [] },
+			skillTrees: []
 		};
 
 		const mockFetch = vi.fn().mockResolvedValue({
@@ -58,7 +61,26 @@ describe('getProfile', () => {
 				deadlineModifier: 1.2,
 				streakMultiplier: 1.14,
 				finalXp: 41
-			}
+			},
+			xpHistory: [
+				{ date: '2026-04-10', xpEarned: 40, source: 'task-completed', cumulativeTotal: 140 },
+				{ date: '2026-04-12', xpEarned: 40, source: 'task-completed', cumulativeTotal: 180 }
+			],
+			titles: {
+				earned: [{ type: 'EarlyBird', displayName: 'Early Bird', earnedOn: '2026-04-05' }],
+				active: 'EarlyBird',
+				progress: []
+			},
+			skillTrees: [
+				{
+					type: 'Scholar',
+					tier: 1,
+					tasksCompletedInTier: 5,
+					tasksToNextTier: 25,
+					unlockHint: null,
+					perks: [{ tier: 1, perkType: 'Tips', description: 'Personalised Scholar tips' }]
+				}
+			]
 		};
 
 		const mockFetch = vi.fn().mockResolvedValue({

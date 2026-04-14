@@ -25,14 +25,7 @@ public sealed class PostgresPlayerProfileRepository : IPlayerProfileRepository
     public async Task<PlayerProfileReadModel> GetProfileAsync(CancellationToken ct = default)
     {
         PlayerProfile profile = await GetOrCreateAsync(ct).ConfigureAwait(false);
-
-        return new PlayerProfileReadModel(
-            TotalXp: profile.Level.CurrentXp.Value,
-            Level: profile.Level.Value,
-            XpToNextLevel: profile.Level.XpToNextLevel(),
-            CurrentStreak: profile.Streak.CurrentDays,
-            LongestStreak: profile.LongestStreak,
-            LastXpBreakdown: _breakdownCache.GetCurrent());
+        return PlayerProfileProjection.Project(profile, _breakdownCache.GetCurrent());
     }
 
     public async Task AwardXpAsync(ExperiencePoints xp, XpBreakdownReadModel? breakdown = null, CancellationToken ct = default)

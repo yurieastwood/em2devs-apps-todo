@@ -1618,6 +1618,9 @@ components:
         - xpToNextLevel
         - currentStreak
         - longestStreak
+        - xpHistory
+        - titles
+        - skillTrees
       properties:
         totalXp:
           type: integer
@@ -1635,9 +1638,218 @@ components:
           type: integer
           minimum: 0
         lastXpBreakdown:
+          type: object
           nullable: true
           allOf:
             - $ref: "#/components/schemas/XpBreakdownResponse"
+        xpHistory:
+          type: array
+          description: Most recent XP earning events, up to the last 20, oldest first.
+          items:
+            $ref: "#/components/schemas/XpHistoryEntry"
+        titles:
+          $ref: "#/components/schemas/ProfileTitles"
+        skillTrees:
+          type: array
+          description: All seven skill trees; locked entries include an unlockHint, unlocked entries include tier progress and perks.
+          items:
+            $ref: "#/components/schemas/SkillTreeDto"
+      example:
+        totalXp: 120
+        level: 2
+        xpToNextLevel: 30
+        currentStreak: 3
+        longestStreak: 5
+        xpHistory:
+          - date: "2026-04-10"
+            xpEarned: 40
+            source: "task-completed"
+            cumulativeTotal: 80
+          - date: "2026-04-12"
+            xpEarned: 40
+            source: "task-completed"
+            cumulativeTotal: 120
+        titles:
+          earned:
+            - type: "EarlyBird"
+              displayName: "Early Bird"
+              earnedOn: "2026-04-05"
+          active: "EarlyBird"
+          progress: []
+        skillTrees:
+          - type: "Scholar"
+            tier: 1
+            tasksCompletedInTier: 5
+            tasksToNextTier: 25
+            unlockHint: null
+            perks:
+              - tier: 1
+                perkType: "Tips"
+                description: "Personalised Scholar tips"
+          - type: "Creator"
+            tier: null
+            tasksCompletedInTier: null
+            tasksToNextTier: null
+            unlockHint: "Complete 10 creative tasks to unlock"
+            perks: []
+    XpHistoryEntry:
+      type: object
+      description: One XP earning event recorded against the player's history.
+      required:
+        - date
+        - xpEarned
+        - source
+        - cumulativeTotal
+      properties:
+        date:
+          type: string
+          format: date
+          description: The calendar date the XP was earned on.
+        xpEarned:
+          type: integer
+          minimum: 0
+          description: XP awarded by this event.
+        source:
+          type: string
+          minLength: 1
+          description: Short machine-friendly source tag (e.g. `task-completed`, `quest-completed`).
+        cumulativeTotal:
+          type: integer
+          minimum: 0
+          description: Running cumulative XP total as of this entry.
+      example:
+        date: "2026-04-12"
+        xpEarned: 40
+        source: "task-completed"
+        cumulativeTotal: 120
+    TitleDto:
+      type: object
+      description: A title earned by the player.
+      required:
+        - type
+        - displayName
+        - earnedOn
+      properties:
+        type:
+          type: string
+          description: Stable enum name for the title.
+        displayName:
+          type: string
+          description: Human-readable title label.
+        earnedOn:
+          type: string
+          format: date
+      example:
+        type: "EarlyBird"
+        displayName: "Early Bird"
+        earnedOn: "2026-04-05"
+    TitleProgressDto:
+      type: object
+      description: Progress toward a not-yet-earned title.
+      required:
+        - type
+        - progressPercentage
+        - remainingDescription
+      properties:
+        type:
+          type: string
+        progressPercentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        remainingDescription:
+          type: string
+      example:
+        type: "StreakMaster"
+        progressPercentage: 40
+        remainingDescription: "6 more days of consistent completions needed"
+    ProfileTitles:
+      type: object
+      description: Titles section of the profile, including earned titles, the active title, and progress.
+      required:
+        - earned
+        - progress
+      properties:
+        earned:
+          type: array
+          items:
+            $ref: "#/components/schemas/TitleDto"
+        active:
+          type: string
+          nullable: true
+          description: Stable type of the currently-active title, or null if none selected.
+        progress:
+          type: array
+          items:
+            $ref: "#/components/schemas/TitleProgressDto"
+      example:
+        earned:
+          - type: "EarlyBird"
+            displayName: "Early Bird"
+            earnedOn: "2026-04-05"
+        active: "EarlyBird"
+        progress: []
+    SkillTreePerkDto:
+      type: object
+      description: A perk unlocked at a specific tier of a skill tree.
+      required:
+        - tier
+        - perkType
+        - description
+      properties:
+        tier:
+          type: integer
+          minimum: 1
+          maximum: 3
+        perkType:
+          type: string
+          description: "One of: Tips, Workflow, Cosmetic."
+        description:
+          type: string
+      example:
+        tier: 1
+        perkType: "Tips"
+        description: "Personalised Scholar tips"
+    SkillTreeDto:
+      type: object
+      description: A skill tree entry. Locked trees carry an unlockHint and empty tier/perks; unlocked trees carry tier progress and perks.
+      required:
+        - type
+        - perks
+      properties:
+        type:
+          type: string
+          description: "One of the seven skill-tree types: Creator, Guardian, Scholar, Architect, Connector, Steward, Builder."
+        tier:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 3
+        tasksCompletedInTier:
+          type: integer
+          nullable: true
+          minimum: 0
+        tasksToNextTier:
+          type: integer
+          nullable: true
+          minimum: 0
+        unlockHint:
+          type: string
+          nullable: true
+        perks:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillTreePerkDto"
+      example:
+        type: "Scholar"
+        tier: 1
+        tasksCompletedInTier: 5
+        tasksToNextTier: 25
+        unlockHint: null
+        perks:
+          - tier: 1
+            perkType: "Tips"
+            description: "Personalised Scholar tips"
     XpBreakdownResponse:
       type: object
       required:

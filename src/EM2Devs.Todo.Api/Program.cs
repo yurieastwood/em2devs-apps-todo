@@ -7,6 +7,7 @@ using EM2Devs.Todo.Application.Commands;
 using EM2Devs.Todo.Application.Mediator;
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.Queries;
+using EM2Devs.Todo.Application.ReadModels;
 using EM2Devs.Todo.Application.Validators;
 using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
@@ -107,6 +108,9 @@ builder.Services.AddTransient<IRequestHandler<ListRecurringTaskInstancesQuery, R
 // Auth CQRS handlers (Phase 0 multi-user JWT).
 builder.Services.AddTransient<IRequestHandler<RegisterUserCommand, Result<LoginResult>>, RegisterUserCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<LoginCommand, Result<LoginResult>>, LoginCommandHandler>();
+
+// Profile query handler (Phase 3 profile expansion).
+builder.Services.AddTransient<IRequestHandler<GetPlayerProfileQuery, Result<PlayerProfileReadModel>>, GetPlayerProfileQueryHandler>();
 
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.XpAwardHandler>();

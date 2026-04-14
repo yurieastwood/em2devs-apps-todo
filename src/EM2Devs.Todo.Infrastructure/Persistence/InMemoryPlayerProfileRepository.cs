@@ -24,13 +24,7 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
     {
         lock (_lock)
         {
-            return Task.FromResult(new PlayerProfileReadModel(
-                TotalXp: _profile.Level.CurrentXp.Value,
-                Level: _profile.Level.Value,
-                XpToNextLevel: _profile.Level.XpToNextLevel(),
-                CurrentStreak: _profile.Streak.CurrentDays,
-                LongestStreak: _profile.LongestStreak,
-                LastXpBreakdown: _breakdownCache.GetCurrent()));
+            return Task.FromResult(PlayerProfileProjection.Project(_profile, _breakdownCache.GetCurrent()));
         }
     }
 

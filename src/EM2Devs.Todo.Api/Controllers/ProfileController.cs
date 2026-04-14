@@ -1,8 +1,10 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using EM2Devs.Todo.Application.Ports;
+using EM2Devs.Todo.Application.Mediator;
+using EM2Devs.Todo.Application.Queries;
 using EM2Devs.Todo.Application.ReadModels;
+using EM2Devs.Todo.Domain;
 
 namespace EM2Devs.Todo.Api.Controllers;
 
@@ -13,16 +15,24 @@ namespace EM2Devs.Todo.Api.Controllers;
 [Route("api/v{version:apiVersion}/profile")]
 public sealed class ProfileController : ControllerBase
 {
-    private readonly IPlayerProfileRepository _profileRepository;
+    private readonly IMediator _mediator;
 
-    public ProfileController(IPlayerProfileRepository profileRepository) =>
-        _profileRepository = profileRepository;
+    public ProfileController(IMediator mediator) =>
+        _mediator = mediator;
 
     [HttpGet]
     public async Task<IActionResult> GetProfile(CancellationToken ct)
     {
-        PlayerProfileReadModel profile = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);
+        Result<PlayerProfileReadModel> result =
+            await _mediator.Send(new GetPlayerProfileQuery(), ct).ConfigureAwait(false);
 
+        return result.Match<IActionResult>(
+            profile => Ok(Map(profile)),
+            error => Problem(error.Message, statusCode: 500));
+    }
+
+    private static ProfileResponse Map(PlayerProfileReadModel profile)
+    {
         XpBreakdownResponse? breakdown = profile.LastXpBreakdown is not null
             ? new XpBreakdownResponse(
                 profile.LastXpBreakdown.BaseXp,
@@ -31,13 +41,37 @@ public sealed class ProfileController : ControllerBase
                 profile.LastXpBreakdown.FinalXp)
             : null;
 
-        return Ok(new ProfileResponse(
+        IReadOnlyList<XpHistoryEntryResponse> xpHistory = (profile.XpHistory ?? [])
+            .Select(e => new XpHistoryEntryResponse(e.Date, e.XpEarned, e.Source, e.CumulativeTotal))
+            .ToList();
+
+        TitlesResponse titles = profile.Titles is { } t
+            ? new TitlesResponse(
+                t.Earned.Select(tt => new TitleResponse(tt.Type, tt.DisplayName, tt.EarnedOn)).ToList(),
+                t.Active,
+                t.Progress.Select(p => new TitleProgressResponse(p.Type, p.ProgressPercentage, p.RemainingDescription)).ToList())
+            : new TitlesResponse([], null, []);
+
+        IReadOnlyList<SkillTreeResponse> skillTrees = (profile.SkillTrees ?? [])
+            .Select(s => new SkillTreeResponse(
+                s.Type,
+                s.Tier,
+                s.TasksCompletedInTier,
+                s.TasksToNextTier,
+                s.UnlockHint,
+                s.Perks.Select(p => new SkillTreePerkResponse(p.Tier, p.PerkType, p.Description)).ToList()))
+            .ToList();
+
+        return new ProfileResponse(
             profile.TotalXp,
             profile.Level,
             profile.XpToNextLevel,
             profile.CurrentStreak,
             profile.LongestStreak,
-            breakdown));
+            breakdown,
+            xpHistory,
+            titles,
+            skillTrees);
     }
 }
 
@@ -47,10 +81,47 @@ public sealed record XpBreakdownResponse(
     double StreakMultiplier,
     int FinalXp);
 
+public sealed record XpHistoryEntryResponse(
+    DateOnly Date,
+    int XpEarned,
+    string Source,
+    int CumulativeTotal);
+
+public sealed record TitleResponse(
+    string Type,
+    string DisplayName,
+    DateOnly EarnedOn);
+
+public sealed record TitleProgressResponse(
+    string Type,
+    int ProgressPercentage,
+    string RemainingDescription);
+
+public sealed record TitlesResponse(
+    IReadOnlyList<TitleResponse> Earned,
+    string? Active,
+    IReadOnlyList<TitleProgressResponse> Progress);
+
+public sealed record SkillTreePerkResponse(
+    int Tier,
+    string PerkType,
+    string Description);
+
+public sealed record SkillTreeResponse(
+    string Type,
+    int? Tier,
+    int? TasksCompletedInTier,
+    int? TasksToNextTier,
+    string? UnlockHint,
+    IReadOnlyList<SkillTreePerkResponse> Perks);
+
 public sealed record ProfileResponse(
     int TotalXp,
     int Level,
     int XpToNextLevel,
     int CurrentStreak,
     int LongestStreak,
-    XpBreakdownResponse? LastXpBreakdown);
+    XpBreakdownResponse? LastXpBreakdown,
+    IReadOnlyList<XpHistoryEntryResponse> XpHistory,
+    TitlesResponse Titles,
+    IReadOnlyList<SkillTreeResponse> SkillTrees);

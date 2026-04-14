@@ -61,5 +61,39 @@ public sealed class TodoTaskConfiguration : IEntityTypeConfiguration<TodoTask>
         builder.HasIndex(t => new { t.SourceRecurringTaskId, t.ScheduledDate })
             .IsUnique()
             .HasFilter("source_recurring_task_id IS NOT NULL");
+
+        // Actual time record captured after task completion (Phase 2 - Actual Time Recording).
+        builder.OwnsOne(t => t.ActualTimeRecord, record =>
+        {
+            record.ToTable("task_actual_time_records");
+            record.WithOwner().HasForeignKey("task_id");
+            record.HasKey("task_id");
+
+            record.Property(r => r.Id)
+                .HasColumnName("id")
+                .HasConversion(
+                    id => id.Value,
+                    value => new EstimationRecordId(value));
+
+            record.Property(r => r.Estimated)
+                .HasColumnName("estimated_minutes")
+                .HasConversion(
+                    e => e.Minutes,
+                    v => TimeEstimate.FromMinutes(v));
+
+            record.Property(r => r.Actual)
+                .HasColumnName("actual_minutes")
+                .HasConversion(
+                    a => a.Minutes,
+                    v => TimeEstimate.FromMinutes(v));
+
+            record.Property(r => r.VariancePercent)
+                .HasColumnName("variance_percent");
+
+            record.Property(r => r.Category)
+                .HasColumnName("category")
+                .HasConversion<string?>()
+                .HasMaxLength(40);
+        });
     }
 }

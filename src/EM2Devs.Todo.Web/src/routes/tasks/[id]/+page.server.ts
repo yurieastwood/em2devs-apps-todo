@@ -3,6 +3,7 @@ import {
 	getTask,
 	updateTask,
 	deleteTask,
+	recordActualTime,
 	ApiError,
 	type TaskDifficulty,
 	type TaskPriority
@@ -105,5 +106,31 @@ export const actions: Actions = {
 			return failFromError(e, 'Failed to delete task', 'delete');
 		}
 		throw redirect(303, '/');
+	},
+
+	recordActualTime: async ({ request, fetch, params }) => {
+		const formData = await request.formData();
+		const raw = formData.get('actualMinutes')?.toString() ?? '';
+		const actualMinutes = Number(raw);
+
+		if (raw === '' || Number.isNaN(actualMinutes)) {
+			return fail(400, {
+				action: 'recordActualTime',
+				error: 'Actual minutes must be a number.'
+			});
+		}
+		if (!Number.isInteger(actualMinutes) || actualMinutes < 1 || actualMinutes > 1440) {
+			return fail(400, {
+				action: 'recordActualTime',
+				error: 'Actual minutes must be between 1 and 1440.'
+			});
+		}
+
+		try {
+			const updated = await recordActualTime(fetch, getBaseUrl(), params.id, actualMinutes);
+			return { action: 'recordActualTime', task: updated };
+		} catch (e) {
+			return failFromError(e, 'Failed to record actual time', 'recordActualTime');
+		}
 	}
 };

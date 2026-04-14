@@ -4,7 +4,7 @@
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData | null } = $props();
-	let task = $derived(data.task);
+	let task = $derived(form && 'task' in form && form.task ? form.task : data.task);
 
 	function toLocalDateTimeString(iso: string | null): string {
 		if (!iso) return '';
@@ -27,8 +27,16 @@
 
 	let saving = $state(false);
 	let deleting = $state(false);
+	let recording = $state(false);
+	let actualMinutesInput = $state('');
 
 	let actionError = $derived(form?.error ? String(form.error) : null);
+	let showRecordActualTimeForm = $derived(
+		task.status === 'Done' &&
+			task.estimatedMinutes != null &&
+			(task.actualMinutes == null || task.actualMinutes === undefined)
+	);
+	let hasActualTime = $derived(task.actualMinutes != null && task.actualMinutes !== undefined);
 </script>
 
 <svelte:head>
@@ -132,6 +140,56 @@
 			<a href={resolve('/')} class="btn-cancel">Cancel</a>
 		</div>
 	</form>
+
+	{#if hasActualTime}
+		<section class="variance-block" data-testid="task-variance">
+			<h2>Time spent</h2>
+			<p>
+				Estimated {task.estimatedMinutes} min, actual {task.actualMinutes} min ({#if (task.variancePercent ?? 0) >= 0}+{/if}{task.variancePercent}%
+				variance)
+			</p>
+		</section>
+	{:else if showRecordActualTimeForm}
+		<section class="record-actual-time" data-testid="record-actual-time-form">
+			<h2>Record actual time</h2>
+			<p class="hint">This task is done. How long did it actually take?</p>
+			<form
+				method="POST"
+				action="?/recordActualTime"
+				use:enhance={() => {
+					recording = true;
+					return async ({ update }) => {
+						try {
+							await update({ reset: false });
+						} finally {
+							recording = false;
+						}
+					};
+				}}
+			>
+				<label>
+					Actual minutes
+					<input
+						type="number"
+						name="actualMinutes"
+						bind:value={actualMinutesInput}
+						min={1}
+						max={1440}
+						required
+						data-testid="actual-minutes-input"
+					/>
+				</label>
+				<button
+					type="submit"
+					class="btn-save"
+					disabled={recording}
+					data-testid="record-actual-time-submit"
+				>
+					{recording ? 'Saving...' : 'Record actual time'}
+				</button>
+			</form>
+		</section>
+	{/if}
 
 	<form
 		method="POST"
@@ -267,5 +325,26 @@
 
 	.btn-delete:hover {
 		background: #fef2f2;
+	}
+
+	.record-actual-time,
+	.variance-block {
+		margin-top: 2rem;
+		padding: 1rem;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.25rem;
+		background: #f9fafb;
+	}
+
+	.record-actual-time h2,
+	.variance-block h2 {
+		margin: 0 0 0.5rem;
+		font-size: 1rem;
+	}
+
+	.hint {
+		color: #6b7280;
+		font-size: 0.875rem;
+		margin: 0 0 0.75rem;
 	}
 </style>

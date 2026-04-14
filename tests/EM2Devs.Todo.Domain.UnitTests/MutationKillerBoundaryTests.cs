@@ -31,7 +31,7 @@ public sealed class MutationKillerBoundaryTests
     public void NaturalDateParser_UnrecognisedNextWeekday_MessageQuotesExpression()
     {
         var ex = Should.Throw<DomainException>(() => NaturalDateParser.Parse("next banana", _today));
-        ex.Message.ShouldBe("Unrecognised date expression: 'next banana'.");
+        ex.Message.ShouldBe("Unrecognised weekday after 'next': 'banana'.");
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public sealed class MutationKillerBoundaryTests
     public void NaturalDateParser_UnrecognisedInNDays_MessageQuotesExpression()
     {
         var ex = Should.Throw<DomainException>(() => NaturalDateParser.Parse("in three days", _today));
-        ex.Message.ShouldBe("Unrecognised date expression: 'in three days'.");
+        ex.Message.ShouldBe("Unrecognised 'in N days' expression: 'in three days'.");
     }
 
     [Fact]

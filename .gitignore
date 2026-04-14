@@ -102,3 +102,4 @@ tools/
 # log4brains
 .log4brains/
 .claude/worktrees/
+__pycache__/

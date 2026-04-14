@@ -1,0 +1,124 @@
+using EM2Devs.Todo.Domain.Exceptions;
+using EM2Devs.Todo.Domain.ValueObjects;
+
+namespace EM2Devs.Todo.Domain.Entities;
+
+/// <summary>
+/// Authenticated user aggregate (Phase 0 multi-user JWT auth migration).
+/// Holds identity credentials and display profile. Separate from <see cref="PlayerProfile"/>,
+/// which is the gamification projection keyed by <see cref="UserId"/>.
+/// </summary>
+public sealed class User
+{
+    /// <summary>Maximum length of an RFC 5321 email address.</summary>
+    public const int MaxEmailLength = 254;
+
+    /// <summary>Minimum length of a display name.</summary>
+    public const int MinDisplayNameLength = 1;
+
+    /// <summary>Maximum length of a display name.</summary>
+    public const int MaxDisplayNameLength = 100;
+
+    public UserId Id { get; }
+    public string Email { get; private set; }
+    public string PasswordHash { get; private set; }
+    public string DisplayName { get; private set; }
+    public DateTimeOffset CreatedAt { get; }
+
+    private User(UserId id, string email, string passwordHash, string displayName, DateTimeOffset createdAt)
+    {
+        Id = id;
+        Email = email;
+        PasswordHash = passwordHash;
+        DisplayName = displayName;
+        CreatedAt = createdAt;
+    }
+
+    // Stryker disable all : EF Core materialization constructor — not a behavioural surface.
+#pragma warning disable CS8618 // Non-nullable members set by EF via reflection.
+    private User(UserId id, DateTimeOffset createdAt)
+    {
+        Id = id;
+        CreatedAt = createdAt;
+    }
+#pragma warning restore CS8618
+    // Stryker restore all
+
+    /// <summary>
+    /// Factory: validates inputs and constructs a new <see cref="User"/>.
+    /// </summary>
+    public static User Create(
+        string email,
+        string passwordHash,
+        string displayName,
+        DateTimeOffset createdAt,
+        UserId? id = null)
+    {
+        string validatedEmail = ValidateEmail(email);
+        string validatedHash = ValidatePasswordHash(passwordHash);
+        string validatedName = ValidateDisplayName(displayName);
+
+        return new User(id ?? UserId.New(), validatedEmail, validatedHash, validatedName, createdAt);
+    }
+
+    /// <summary>
+    /// Replaces the stored password hash. Caller is responsible for hashing plaintext.
+    /// </summary>
+    public void ChangePassword(string newPasswordHash)
+    {
+        PasswordHash = ValidatePasswordHash(newPasswordHash);
+    }
+
+    /// <summary>
+    /// Updates the user's display name. Validates length and non-empty.
+    /// </summary>
+    public void UpdateDisplayName(string newDisplayName)
+    {
+        DisplayName = ValidateDisplayName(newDisplayName);
+    }
+
+    private static string ValidateEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new DomainException("Email cannot be empty.");
+        }
+
+        if (email.Length > MaxEmailLength)
+        {
+            throw new DomainException($"Email cannot exceed {MaxEmailLength} characters.");
+        }
+
+        if (!email.Contains('@', StringComparison.Ordinal))
+        {
+            throw new DomainException("Email must contain '@'.");
+        }
+
+        return email;
+    }
+
+    private static string ValidatePasswordHash(string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+        {
+            throw new DomainException("Password hash cannot be empty.");
+        }
+
+        return passwordHash;
+    }
+
+    private static string ValidateDisplayName(string displayName)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            throw new DomainException("Display name cannot be empty.");
+        }
+
+        if (displayName.Length > MaxDisplayNameLength)
+        {
+            throw new DomainException($"Display name cannot exceed {MaxDisplayNameLength} characters.");
+        }
+
+        return displayName;
+    }
+}

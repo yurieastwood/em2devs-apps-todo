@@ -22,9 +22,15 @@ public sealed class TodoTask
     public int ViewCount { get; private set; }
     public string? WaitingReason { get; private set; }
     public CommitmentNote? CommitmentNote { get; private set; }
+    public QuestId? AssignedQuestId { get; private set; }
+    public EstimationRecord? ActualTimeRecord { get; private set; }
 
     private readonly List<ProcrastinationSignal> _procrastinationSignals = [];
     public IReadOnlyList<ProcrastinationSignal> ProcrastinationSignals => _procrastinationSignals.AsReadOnly();
+
+    private readonly List<Tag> _tags = [];
+    /// <summary>Tags attached to this task. Duplicates (after normalisation) are ignored.</summary>
+    public IReadOnlyList<Tag> Tags => _tags.AsReadOnly();
 
     public bool IsOverdue => ScheduledDate.HasValue
         && ScheduledDate.Value < DateOnly.FromDateTime(DateTime.UtcNow)
@@ -228,5 +234,78 @@ public sealed class TodoTask
 
         Reschedule();
         CommitmentNote = note;
+    }
+
+    /// <summary>Adds a tag. If an equivalent tag is already present it is a no-op.</summary>
+    public void AddTag(Tag tag)
+    {
+        ArgumentNullException.ThrowIfNull(tag);
+        if (!_tags.Contains(tag))
+        {
+            _tags.Add(tag);
+        }
+    }
+
+    /// <summary>Removes a tag. If it is not present it is a no-op.</summary>
+    public void RemoveTag(Tag tag)
+    {
+        ArgumentNullException.ThrowIfNull(tag);
+        _tags.Remove(tag);
+    }
+
+    /// <summary>Returns true when the task has a tag equal to the supplied tag.</summary>
+    public bool HasTag(Tag tag)
+    {
+        ArgumentNullException.ThrowIfNull(tag);
+        return _tags.Contains(tag);
+    }
+
+    /// <summary>
+    /// Returns true when either the title or the description contains the given keyword
+    /// (case-insensitive). Null/empty keywords match nothing.
+    /// </summary>
+    public bool MatchesKeyword(string keyword)
+    {
+        if (string.IsNullOrWhiteSpace(keyword))
+        {
+            return false;
+        }
+
+        string needle = keyword.Trim();
+        if (Title.Value.Contains(needle, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+        return Description is not null
+            && Description.Contains(needle, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>Assigns this task to a quest. Passing null unassigns.</summary>
+    public void AssignToQuest(QuestId? questId)
+    {
+        AssignedQuestId = questId;
+    }
+
+    /// <summary>
+    /// Records the actual time spent on this completed task and returns the
+    /// resulting <see cref="EstimationRecord"/>, which is also stored on the task.
+    /// Requires both an estimated time and a Done status.
+    /// </summary>
+    public EstimationRecord RecordActualTime(TimeEstimate actual)
+    {
+        ArgumentNullException.ThrowIfNull(actual);
+
+        if (Status != TaskStatus.Done)
+        {
+            throw new DomainException("Actual time can only be recorded for completed tasks.");
+        }
+
+        if (EstimatedTime is null)
+        {
+            throw new DomainException("Actual time can only be recorded when an estimate exists.");
+        }
+
+        ActualTimeRecord = EstimationRecord.Create(EstimatedTime, actual);
+        return ActualTimeRecord;
     }
 }

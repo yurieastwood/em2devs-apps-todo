@@ -15,6 +15,8 @@ export interface Task {
 	dueDate: string | null;
 	completedAt: string | null;
 	scheduledDate: string | null;
+	actualMinutes?: number | null;
+	variancePercent?: number | null;
 }
 
 export interface UpdateTaskFields {
@@ -147,6 +149,21 @@ export async function reopenTask(
 ): Promise<Task> {
 	const url = new URL(`/api/tasks/${taskId}/reopen`, baseUrl);
 	const response = await fetch(url, { method: 'PATCH' });
+	return handleResponse<Task>(response);
+}
+
+export async function recordActualTime(
+	fetch: typeof globalThis.fetch,
+	baseUrl: string,
+	taskId: string,
+	actualMinutes: number
+): Promise<Task> {
+	const url = new URL(`/api/tasks/${taskId}/actual-time`, baseUrl);
+	const response = await fetch(url, {
+		method: 'PATCH',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ actualMinutes })
+	});
 	return handleResponse<Task>(response);
 }
 

@@ -350,6 +350,58 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+  /api/tasks/{taskId}/actual-time:
+    patch:
+      operationId: recordActualTime
+      summary: Record actual time spent on a completed task
+      description: Records how long the task actually took, compared against the estimate. Returns the updated task with variance data.
+      tags: [Tasks]
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordActualTimeRequest"
+            example:
+              actualMinutes: 45
+      responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "200":
+          description: Actual time recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+              example:
+                id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                title: "Write tests"
+                status: "Done"
+                difficulty: "Normal"
+                priority: "Medium"
+                estimatedMinutes: 30
+                actualMinutes: 45
+                variancePercent: 50
+        "400":
+          description: Validation error (actualMinutes out of range)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
+        "404":
+          description: Task not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Task is not completed or has no estimate
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
   /api/tasks/{taskId}/reopen:
     patch:
       operationId: reopenTask
@@ -1285,6 +1337,27 @@ components:
           format: date
           nullable: true
           description: Calendar day the task is scheduled for (used by Today/Upcoming views).
+        actualMinutes:
+          type: integer
+          nullable: true
+          minimum: 1
+          maximum: 1440
+          description: Actual time spent on the task, in minutes (recorded after completion).
+        variancePercent:
+          type: integer
+          nullable: true
+          description: Rounded percentage variance of actual vs estimated time (e.g. 50 means 50% over estimate).
+    RecordActualTimeRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - actualMinutes
+      properties:
+        actualMinutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+          description: Actual time spent on the task, in minutes (max 24 hours).
     CreateQuestRequest:
       type: object
       additionalProperties: false

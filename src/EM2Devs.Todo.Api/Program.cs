@@ -70,6 +70,7 @@ builder.Services.AddTransient<IRequestHandler<CreateTaskCommand, Result<TodoTask
 builder.Services.AddTransient<IRequestHandler<UpdateTaskStatusCommand, Result<TodoTask>>, UpdateTaskStatusCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<UpdateTaskCommand, Result<TodoTask>>, UpdateTaskCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<ReopenTaskCommand, Result<TodoTask>>, ReopenTaskCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<RecordActualTimeCommand, Result<TodoTask>>, RecordActualTimeCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<DeleteTaskCommand, Result<bool>>, DeleteTaskCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<GetTaskQuery, Result<TodoTask>>, GetTaskQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<ListTasksQuery, Result<IReadOnlyList<TodoTask>>>, ListTasksQueryHandler>();

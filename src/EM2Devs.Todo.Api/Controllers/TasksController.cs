@@ -99,10 +99,25 @@ public sealed class TasksController : ControllerBase
         return result.ToHttpResult(_ => NoContent());
     }
 
+    [HttpPatch("{taskId:guid}/actual-time")]
+    public async Task<IActionResult> RecordActualTime(
+        Guid taskId,
+        [FromBody] RecordActualTimeRequest request,
+        CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        Result<TodoTask> result = await _mediator.Send(
+            new RecordActualTimeCommand(taskId, request.ActualMinutes), ct).ConfigureAwait(false);
+        return result.ToHttpResult(task => Ok(MapToResponse(task)));
+    }
+
     private static TaskResponse MapToResponse(TodoTask task) =>
         new(task.Id.Value, task.Title.Value, task.Description, task.Status.ToString(),
             task.Difficulty.ToString(), task.Priority.ToString(), task.EstimatedTime?.Minutes,
-            task.DueDate, task.CompletedAt, task.ScheduledDate);
+            task.DueDate, task.CompletedAt, task.ScheduledDate,
+            task.ActualTimeRecord?.Actual.Minutes,
+            task.ActualTimeRecord is null ? null : (int)Math.Round(task.ActualTimeRecord.VariancePercent));
 }
 
 public sealed record CreateTaskRequest(string Title);
@@ -116,8 +131,10 @@ public sealed record UpdateTaskRequest(
     DateTimeOffset? DueDate = null,
     bool ClearDueDate = false);
 public sealed record UpdateTaskStatusRequest(string Status);
+public sealed record RecordActualTimeRequest(int ActualMinutes);
 public sealed record TaskResponse(
     Guid Id, string Title, string? Description, string Status,
     string Difficulty, string Priority, int? EstimatedMinutes,
     DateTimeOffset? DueDate, DateTimeOffset? CompletedAt,
-    DateOnly? ScheduledDate);
+    DateOnly? ScheduledDate,
+    int? ActualMinutes, int? VariancePercent);

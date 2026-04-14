@@ -1,12 +1,3 @@
 # Hooks disable stateful link inference via the Python API
 # (the TOML parser in v4.14.3 doesn't expose stateful.inference.algorithms)
 hooks = "./schemathesis_hooks.py"
-
-# Known tech debt: the `use_after_free` check intermittently flags recurring-task
-# PUT/POST scenarios due to in-memory repository state accumulating across test
-# cases (Schemathesis' resource tracker expects scoped-per-scenario stores).
-# The auth pipeline itself is correct — verified by all other checks. Re-enable
-# once the in-memory repositories are scoped per test scenario or the default
-# switches to Postgres + transaction rollback for test runs.
-[runner]
-exclude-checks = ["use_after_free"]

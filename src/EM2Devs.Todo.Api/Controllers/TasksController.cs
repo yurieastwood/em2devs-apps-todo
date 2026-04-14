@@ -21,13 +21,22 @@ public sealed class TasksController : ControllerBase
 
     public TasksController(IMediator mediator) => _mediator = mediator;
 
+    /// <summary>
+    /// Lists tasks optionally filtered by status or by a named view. The <c>status</c> and
+    /// <c>view</c> query parameters are mutually exclusive; supplying both returns a 400.
+    /// Valid views: <c>inbox</c>, <c>today</c>, <c>upcoming</c>, <c>completed</c>.
+    /// </summary>
     [HttpGet]
-    public async Task<IActionResult> ListTasks([FromQuery] string? status, CancellationToken ct)
+    public async Task<IActionResult> ListTasks(
+        [FromQuery] string? status,
+        [FromQuery] string? view,
+        CancellationToken ct)
     {
         // ASP.NET binds ?status= as null for string?; use Request.Query to detect presence with empty value
         string? statusFilter = Request.Query.ContainsKey("status") ? (status ?? string.Empty) : null;
+        string? viewFilter = Request.Query.ContainsKey("view") ? (view ?? string.Empty) : null;
 
-        Result<IReadOnlyList<TodoTask>> result = await _mediator.Send(new ListTasksQuery(statusFilter), ct).ConfigureAwait(false);
+        Result<IReadOnlyList<TodoTask>> result = await _mediator.Send(new ListTasksQuery(statusFilter, viewFilter), ct).ConfigureAwait(false);
         return result.ToHttpResult(tasks => Ok(tasks.Select(MapToResponse)));
     }
 
@@ -93,7 +102,7 @@ public sealed class TasksController : ControllerBase
     private static TaskResponse MapToResponse(TodoTask task) =>
         new(task.Id.Value, task.Title.Value, task.Description, task.Status.ToString(),
             task.Difficulty.ToString(), task.Priority.ToString(), task.EstimatedTime?.Minutes,
-            task.DueDate, task.CompletedAt);
+            task.DueDate, task.CompletedAt, task.ScheduledDate);
 }
 
 public sealed record CreateTaskRequest(string Title);
@@ -110,4 +119,5 @@ public sealed record UpdateTaskStatusRequest(string Status);
 public sealed record TaskResponse(
     Guid Id, string Title, string? Description, string Status,
     string Difficulty, string Priority, int? EstimatedMinutes,
-    DateTimeOffset? DueDate, DateTimeOffset? CompletedAt);
+    DateTimeOffset? DueDate, DateTimeOffset? CompletedAt,
+    DateOnly? ScheduledDate);

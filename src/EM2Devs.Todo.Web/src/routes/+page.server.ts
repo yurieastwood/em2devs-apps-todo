@@ -5,13 +5,22 @@ import {
 	updateTaskStatus,
 	reopenTask,
 	deleteTask,
-	ApiError
+	ApiError,
+	type TaskView
 } from '$lib/api/tasks';
 import { getProfile } from '$lib/api/profile';
 import { getBaseUrl } from '$lib/server/config';
 import type { Actions, PageServerLoad } from './$types';
 
 const VALID_STATUSES = ['Todo', 'InProgress', 'Done'];
+const VALID_VIEWS: readonly TaskView[] = ['inbox', 'today', 'upcoming', 'completed'];
+const DEFAULT_VIEW: TaskView = 'today';
+
+function parseView(raw: string | null): TaskView {
+	if (raw === null) return DEFAULT_VIEW;
+	const lower = raw.toLowerCase();
+	return (VALID_VIEWS as readonly string[]).includes(lower) ? (lower as TaskView) : DEFAULT_VIEW;
+}
 
 function failFromError(e: unknown, fallbackMessage: string, action: string) {
 	const status = e instanceof ApiError ? (e.problem.status ?? 500) : 500;
@@ -19,16 +28,17 @@ function failFromError(e: unknown, fallbackMessage: string, action: string) {
 	return fail(status, { action, error: message });
 }
 
-export const load: PageServerLoad = async ({ fetch }) => {
+export const load: PageServerLoad = async ({ fetch, url }) => {
+	const view = parseView(url.searchParams.get('view'));
 	try {
 		const [tasks, profile] = await Promise.all([
-			listTasks(fetch, getBaseUrl()),
+			listTasks(fetch, getBaseUrl(), { view }),
 			getProfile(fetch, getBaseUrl()).catch(() => null)
 		]);
-		return { tasks, profile, error: null };
+		return { tasks, profile, view, error: null };
 	} catch (e) {
 		const message = e instanceof Error ? e.message : 'An unexpected error occurred';
-		return { tasks: [], profile: null, error: message };
+		return { tasks: [], profile: null, view, error: message };
 	}
 };
 

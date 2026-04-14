@@ -117,7 +117,7 @@ Feature: Recurring Tasks and Quest Chains
 
   Rule: Quest chains auto-generate recurring quest structures from patterns
 
-    @wip
+    @done
     Scenario: User receives a suggestion for a recurring quest pattern
       Given I have completed the following quests in the last 3 weeks:
         | Quest Title       | Completed On |
@@ -128,7 +128,7 @@ Feature: Recurring Tasks and Quest Chains
       Then I should see a suggestion to create a quest chain for "Weekly meal prep"
       And the suggestion should include the detected cadence of "Weekly"
 
-    @wip
+    @done
     Scenario: Create a quest chain from a template
       When I create a quest chain with the following details:
         | Field     | Value                          |
@@ -139,7 +139,7 @@ Feature: Recurring Tasks and Quest Chains
       And each quest should contain the 4 specified tasks
       And each quest should have a 24-hour default deadline
 
-    @wip
+    @done
     Scenario: Quest chain adapts task list over time
       Given I have a quest chain "Weekly Meal Prep" running for 4 weeks
       And I have consistently added an extra task "Clean kitchen" to each instance
@@ -148,7 +148,7 @@ Feature: Recurring Tasks and Quest Chains
       When I accept the suggestion
       Then all future instances should include "Clean kitchen"
 
-    @wip
+    @done
     Scenario: View quest chain history and stats
       Given I have a quest chain "Weekly Meal Prep" running for 8 weeks
       When I view the quest chain details
@@ -157,7 +157,7 @@ Feature: Recurring Tasks and Quest Chains
       And I should see the streak of consecutive completions
       And I should see the total XP earned from the chain
 
-    @wip
+    @done
     Scenario: Quest chain generates bonus XP for consistency
       Given I have a quest chain "Weekly Meal Prep" with a 4-week streak
       When the 5th consecutive instance is completed

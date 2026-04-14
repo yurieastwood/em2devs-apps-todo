@@ -12,6 +12,7 @@ public sealed class Epic
     public string Description { get; private set; }
     public DateOnly? TargetDate { get; private set; }
     public bool IsCompleted { get; private set; }
+    public SagaId? SagaId { get; private set; }
     public IReadOnlyList<Quest> Quests => _quests.AsReadOnly();
 
     public decimal Progress
@@ -64,6 +65,28 @@ public sealed class Epic
         }
 
         _quests.Remove(quest);
+    }
+
+    public void AssignToSaga(SagaId sagaId)
+    {
+        ArgumentNullException.ThrowIfNull(sagaId);
+
+        if (SagaId is not null)
+        {
+            throw new DomainException("Epic already belongs to a saga. Remove it from the current saga first, or move it.");
+        }
+
+        SagaId = sagaId;
+    }
+
+    public void UnassignFromSaga()
+    {
+        if (SagaId is null)
+        {
+            throw new DomainException("Epic is not assigned to any saga.");
+        }
+
+        SagaId = null;
     }
 
     public void Complete()

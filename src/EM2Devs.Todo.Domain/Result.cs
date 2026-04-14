@@ -12,6 +12,8 @@ public sealed record ValidationError(
 
 public sealed record ConflictError(string Message) : ResultError(Message);
 
+public sealed record UnauthorizedError(string Message) : ResultError(Message);
+
 [SuppressMessage("Design", "CA1000:Do not declare static members on generic types",
     Justification = "Factory methods are the idiomatic API for Result<T>")]
 public sealed class Result<T>

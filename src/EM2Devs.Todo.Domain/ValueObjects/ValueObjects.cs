@@ -122,6 +122,14 @@ public sealed record AnnualWrappedId(Guid Value)
 }
 
 /// <summary>
+/// Strongly-typed user identifier for the authenticated user aggregate (Phase 0 multi-user auth).
+/// </summary>
+public sealed record UserId(Guid Value)
+{
+    public static UserId New() => new(Guid.NewGuid());
+}
+
+/// <summary>
 /// Validated task title (ADR-0002).
 /// Enforces non-empty, max 200 characters on construction.
 /// </summary>

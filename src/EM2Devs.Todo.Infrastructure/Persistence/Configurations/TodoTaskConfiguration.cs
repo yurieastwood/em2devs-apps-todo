@@ -38,7 +38,6 @@ public sealed class TodoTaskConfiguration : IEntityTypeConfiguration<TodoTask>
             .HasColumnName("priority")
             .HasConversion<string>()
             .HasMaxLength(20)
-            .HasDefaultValue(TaskPriority.Medium)
             .IsRequired();
 
         builder.Property(t => t.EstimatedTime)
@@ -61,7 +60,6 @@ public sealed class TodoTaskConfiguration : IEntityTypeConfiguration<TodoTask>
             .HasColumnName("difficulty")
             .HasConversion<string>()
             .HasMaxLength(20)
-            .HasDefaultValue(TaskDifficulty.Normal)
             .IsRequired();
 
         builder.Property(t => t.DueDate)

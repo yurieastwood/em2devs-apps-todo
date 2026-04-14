@@ -40,6 +40,16 @@ public sealed class ProfileControllerTests : IDisposable
         profile.XpToNextLevel.ShouldBe(50);
         profile.CurrentStreak.ShouldBe(0);
         profile.LongestStreak.ShouldBe(0);
+        profile.XpHistory.ShouldNotBeNull();
+        profile.XpHistory.ShouldBeEmpty();
+        profile.Titles.ShouldNotBeNull();
+        profile.Titles!.Earned.ShouldBeEmpty();
+        profile.Titles.Active.ShouldBeNull();
+        profile.Titles.Progress.ShouldBeEmpty();
+        profile.SkillTrees.ShouldNotBeNull();
+        // All seven skill tree types appear as locked entries by default.
+        profile.SkillTrees.Count.ShouldBe(7);
+        profile.SkillTrees.ShouldAllBe(t => t.Tier == null && !string.IsNullOrEmpty(t.UnlockHint));
     }
 
     [Fact]
@@ -57,5 +67,33 @@ public sealed class ProfileControllerTests : IDisposable
         int Level,
         int XpToNextLevel,
         int CurrentStreak,
-        int LongestStreak);
+        int LongestStreak,
+        IReadOnlyList<XpHistoryEntryResponse> XpHistory,
+        TitlesResponse Titles,
+        IReadOnlyList<SkillTreeResponse> SkillTrees);
+
+    private sealed record XpHistoryEntryResponse(
+        DateOnly Date,
+        int XpEarned,
+        string Source,
+        int CumulativeTotal);
+
+    private sealed record TitleResponse(string Type, string DisplayName, DateOnly EarnedOn);
+
+    private sealed record TitleProgressResponse(string Type, int ProgressPercentage, string RemainingDescription);
+
+    private sealed record TitlesResponse(
+        IReadOnlyList<TitleResponse> Earned,
+        string? Active,
+        IReadOnlyList<TitleProgressResponse> Progress);
+
+    private sealed record SkillTreePerkResponse(int Tier, string PerkType, string Description);
+
+    private sealed record SkillTreeResponse(
+        string Type,
+        int? Tier,
+        int? TasksCompletedInTier,
+        int? TasksToNextTier,
+        string? UnlockHint,
+        IReadOnlyList<SkillTreePerkResponse> Perks);
 }

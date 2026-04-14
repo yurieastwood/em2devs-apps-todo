@@ -123,11 +123,21 @@ paths:
   /api/tasks:
     get:
       operationId: listTasks
-      summary: List all tasks
+      summary: List tasks, optionally filtered by status or a named view
+      description: |
+        Returns all tasks belonging to the authenticated user. The `status` and `view` query
+        parameters are mutually exclusive — supplying both returns a 400 Validation error.
+
+        The `view` parameter selects a named bucket with domain-defined semantics:
+          - `inbox`: open tasks with no assigned quest
+          - `today`: open tasks scheduled for today or earlier (overdue)
+          - `upcoming`: open tasks scheduled within the next 14 days
+          - `completed`: tasks with status `Done`, most recently completed first
       parameters:
         - name: status
           in: query
           required: false
+          description: Filter tasks by status. Mutually exclusive with `view`.
           schema:
             type: string
             enum:
@@ -135,6 +145,30 @@ paths:
               - InProgress
               - Done
               - Skipped
+        - name: view
+          in: query
+          required: false
+          description: Named view bucket. Mutually exclusive with `status`.
+          schema:
+            type: string
+            enum:
+              - inbox
+              - today
+              - upcoming
+              - completed
+          examples:
+            inbox:
+              value: inbox
+              summary: Open tasks with no quest assignment
+            today:
+              value: today
+              summary: Tasks due today or overdue
+            upcoming:
+              value: upcoming
+              summary: Tasks scheduled in the next 14 days
+            completed:
+              value: completed
+              summary: Tasks that have been marked done
       responses:
         "401":
           $ref: "#/components/responses/Unauthorized"
@@ -146,8 +180,35 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TaskResponse"
+              examples:
+                inbox:
+                  summary: Inbox view — a single unassigned task
+                  value:
+                    - id: "11111111-1111-1111-1111-111111111111"
+                      title: "Call dentist"
+                      description: null
+                      status: Todo
+                      difficulty: Normal
+                      priority: Medium
+                      estimatedMinutes: null
+                      dueDate: null
+                      completedAt: null
+                      scheduledDate: null
+                today:
+                  summary: Today view — due today
+                  value:
+                    - id: "22222222-2222-2222-2222-222222222222"
+                      title: "Finish report"
+                      description: null
+                      status: Todo
+                      difficulty: Normal
+                      priority: High
+                      estimatedMinutes: 60
+                      dueDate: null
+                      completedAt: null
+                      scheduledDate: "2026-04-12"
         "400":
-          description: Invalid status filter value
+          description: Invalid status or view value, or both supplied simultaneously
           content:
             application/problem+json:
               schema:
@@ -1219,6 +1280,11 @@ components:
           type: string
           format: date-time
           nullable: true
+        scheduledDate:
+          type: string
+          format: date
+          nullable: true
+          description: Calendar day the task is scheduled for (used by Today/Upcoming views).
     CreateQuestRequest:
       type: object
       additionalProperties: false

@@ -2,6 +2,8 @@ export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 export type TaskDifficulty = 'Trivial' | 'Easy' | 'Normal' | 'Hard' | 'Epic';
 export type TaskStatus = 'Todo' | 'InProgress' | 'Done' | 'Skipped';
 
+export type TaskView = 'inbox' | 'today' | 'upcoming' | 'completed';
+
 export interface Task {
 	id: string;
 	title: string;
@@ -12,6 +14,7 @@ export interface Task {
 	estimatedMinutes: number | null;
 	dueDate: string | null;
 	completedAt: string | null;
+	scheduledDate: string | null;
 }
 
 export interface UpdateTaskFields {
@@ -66,8 +69,19 @@ export async function handleResponse<T>(response: Response): Promise<T> {
 	return throwIfError(response) as never;
 }
 
-export async function listTasks(fetch: typeof globalThis.fetch, baseUrl: string): Promise<Task[]> {
+export interface ListTasksOptions {
+	view?: TaskView;
+}
+
+export async function listTasks(
+	fetch: typeof globalThis.fetch,
+	baseUrl: string,
+	options: ListTasksOptions = {}
+): Promise<Task[]> {
 	const url = new URL('/api/tasks', baseUrl);
+	if (options.view) {
+		url.searchParams.set('view', options.view);
+	}
 	const response = await fetch(url);
 	return handleResponse<Task[]>(response);
 }

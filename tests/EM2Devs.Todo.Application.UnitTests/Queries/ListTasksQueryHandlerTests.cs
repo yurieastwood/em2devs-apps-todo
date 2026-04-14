@@ -16,7 +16,7 @@ public sealed class ListTasksQueryHandlerTests
 
     public ListTasksQueryHandlerTests()
     {
-        _handler = new ListTasksQueryHandler(_repository);
+        _handler = new ListTasksQueryHandler(_repository, TimeProvider.System);
     }
 
     [Fact]

@@ -43,7 +43,8 @@ describe('listTasks', () => {
 				priority: 'Medium',
 				estimatedMinutes: null,
 				dueDate: null,
-				completedAt: null
+				completedAt: null,
+				scheduledDate: null
 			},
 			{
 				id: '2',
@@ -54,7 +55,8 @@ describe('listTasks', () => {
 				priority: 'Medium',
 				estimatedMinutes: null,
 				dueDate: null,
-				completedAt: null
+				completedAt: null,
+				scheduledDate: null
 			}
 		];
 
@@ -85,7 +87,8 @@ describe('createTask', () => {
 			priority: 'Medium',
 			estimatedMinutes: null,
 			dueDate: null,
-			completedAt: null
+			completedAt: null,
+			scheduledDate: null
 		};
 		const fetchMock = mockOk(created);
 
@@ -129,7 +132,8 @@ describe('updateTaskStatus', () => {
 			priority: 'Medium',
 			estimatedMinutes: null,
 			dueDate: null,
-			completedAt: null
+			completedAt: null,
+			scheduledDate: null
 		};
 		const fetchMock = mockOk(updated);
 
@@ -193,7 +197,8 @@ describe('updateTask', () => {
 			priority: 'Medium',
 			estimatedMinutes: null,
 			dueDate: null,
-			completedAt: null
+			completedAt: null,
+			scheduledDate: null
 		};
 		const fetchMock = mockOk(updated);
 
@@ -235,7 +240,8 @@ describe('reopenTask', () => {
 			priority: 'Medium',
 			estimatedMinutes: null,
 			dueDate: null,
-			completedAt: null
+			completedAt: null,
+			scheduledDate: null
 		};
 		const fetchMock = mockOk(reopened);
 
@@ -270,7 +276,8 @@ describe('getTask', () => {
 			priority: 'Medium',
 			estimatedMinutes: null,
 			dueDate: null,
-			completedAt: null
+			completedAt: null,
+			scheduledDate: null
 		};
 		const fetchMock = mockOk(expected);
 

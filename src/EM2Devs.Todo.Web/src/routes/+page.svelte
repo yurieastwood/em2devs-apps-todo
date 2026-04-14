@@ -1,14 +1,107 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import type { ActionData, PageData } from './$types';
 	import XpEarnedToast from '$lib/components/XpEarnedToast.svelte';
+	import type { Task, TaskView } from '$lib/api/tasks';
 
 	let { data, form }: { data: PageData; form: ActionData | null } = $props();
 
 	let tasks = $derived(data.tasks);
 	let loadError = $derived(data.error);
 	let profile = $derived(data.profile);
+	let currentView = $derived<TaskView>(data.view);
+
+	const VIEW_TABS: { view: TaskView; label: string }[] = [
+		{ view: 'inbox', label: 'Inbox' },
+		{ view: 'today', label: 'Today' },
+		{ view: 'upcoming', label: 'Upcoming' },
+		{ view: 'completed', label: 'Completed' }
+	];
+
+	function selectView(view: TaskView) {
+		// resolve('/') returns the base path; append our query string for the view switch.
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		goto(`${resolve('/')}?view=${view}`, { keepFocus: true, noScroll: true });
+	}
+
+	function startOfTodayMs(): number {
+		const now = new Date();
+		return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+	}
+
+	const WEEKDAY_FORMATTER = new Intl.DateTimeFormat(undefined, { weekday: 'long' });
+	const DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
+		month: 'short',
+		day: 'numeric'
+	});
+
+	function parseDateOnly(iso: string): Date {
+		// "YYYY-MM-DD" → local midnight Date for stable weekday formatting.
+		const [y, m, d] = iso.split('-').map((s) => Number.parseInt(s, 10));
+		return new Date(y, m - 1, d);
+	}
+
+	function formatUpcomingHeader(iso: string, todayMs: number): string {
+		const target = parseDateOnly(iso);
+		const diffDays = Math.round((target.getTime() - todayMs) / (24 * 60 * 60 * 1000));
+		if (diffDays === 1) return 'Tomorrow';
+		if (diffDays >= 2 && diffDays <= 7) return WEEKDAY_FORMATTER.format(target);
+		return `${WEEKDAY_FORMATTER.format(target)}, ${DATE_FORMATTER.format(target)}`;
+	}
+
+	function formatCompletedHeader(iso: string, todayMs: number): string {
+		const target = parseDateOnly(iso);
+		const diffDays = Math.round((todayMs - target.getTime()) / (24 * 60 * 60 * 1000));
+		if (diffDays === 0) return 'Today';
+		if (diffDays === 1) return 'Yesterday';
+		if (diffDays <= 7) return WEEKDAY_FORMATTER.format(target);
+		return `${WEEKDAY_FORMATTER.format(target)}, ${DATE_FORMATTER.format(target)}`;
+	}
+
+	type TaskGroup = { key: string; label: string; tasks: Task[] };
+
+	function bucketBy<T>(items: T[], keyOf: (item: T) => string | null): Record<string, T[]> {
+		const buckets: Record<string, T[]> = {};
+		for (const item of items) {
+			const key = keyOf(item);
+			if (key === null) continue;
+			(buckets[key] ??= []).push(item);
+		}
+		return buckets;
+	}
+
+	let groupedTasks = $derived.by<TaskGroup[]>(() => {
+		const todayMs = startOfTodayMs();
+		if (currentView === 'upcoming') {
+			const buckets = bucketBy(tasks, (t) => t.scheduledDate);
+			return Object.entries(buckets)
+				.sort(([a], [b]) => a.localeCompare(b))
+				.map(([key, list]) => ({
+					key,
+					label: formatUpcomingHeader(key, todayMs),
+					tasks: list
+				}));
+		}
+		if (currentView === 'completed') {
+			const cutoffMs = todayMs - 30 * 24 * 60 * 60 * 1000;
+			const buckets = bucketBy(tasks, (t) => {
+				if (!t.completedAt) return null;
+				const ms = Date.parse(t.completedAt);
+				if (Number.isNaN(ms) || ms < cutoffMs) return null;
+				return t.completedAt.slice(0, 10);
+			});
+			return Object.entries(buckets)
+				.sort(([a], [b]) => b.localeCompare(a))
+				.map(([key, list]) => ({
+					key,
+					label: formatCompletedHeader(key, todayMs),
+					tasks: list
+				}));
+		}
+		return [];
+	});
 	let previousXp = $state<number | null>(null);
 	let xpDelta = $state(0);
 
@@ -108,6 +201,21 @@
 	<XpEarnedToast delta={xpDelta} />
 	<h1>Tasks</h1>
 
+	<nav class="view-tabs" aria-label="Task views" data-testid="view-tabs">
+		{#each VIEW_TABS as tab (tab.view)}
+			<button
+				type="button"
+				class="view-tab"
+				class:active={currentView === tab.view}
+				aria-current={currentView === tab.view ? 'page' : undefined}
+				onclick={() => selectView(tab.view)}
+				data-testid={`view-tab-${tab.view}`}
+			>
+				{tab.label}
+			</button>
+		{/each}
+	</nav>
+
 	{#if notification}
 		<div class="notification" role="alert">
 			{notification}
@@ -171,6 +279,122 @@
 		</div>
 	{/if}
 
+	{#snippet taskItem(task: Task)}
+		<li class="task-item" data-status={task.status} data-testid="task-item">
+			<div class="task-info">
+				<a
+					class="task-title-link"
+					class:done={task.status === 'Done'}
+					href={resolve(`/tasks/${task.id}`)}
+					data-testid="task-title"
+				>
+					{task.title}
+				</a>
+				<span class="task-status" data-status={task.status} data-testid="task-status"
+					>{task.status}</span
+				>
+			</div>
+			<div class="task-actions">
+				{#if nextStatus(task.status)}
+					<form
+						method="POST"
+						action="?/updateStatus"
+						use:enhance={() => {
+							actionInFlight = task.id;
+							return async ({ update }) => {
+								try {
+									await update();
+								} finally {
+									actionInFlight = null;
+								}
+							};
+						}}
+					>
+						<input type="hidden" name="taskId" value={task.id} />
+						<input type="hidden" name="status" value={nextStatus(task.status)} />
+						<button
+							type="submit"
+							class="btn-action"
+							disabled={actionInFlight === task.id}
+							data-testid="task-advance-button"
+						>
+							{actionInFlight === task.id ? '...' : nextStatusLabel(task.status)}
+						</button>
+					</form>
+				{/if}
+				{#if task.status === 'Done'}
+					<form
+						method="POST"
+						action="?/reopen"
+						use:enhance={() => {
+							actionInFlight = task.id;
+							return async ({ update }) => {
+								try {
+									await update();
+								} finally {
+									actionInFlight = null;
+								}
+							};
+						}}
+					>
+						<input type="hidden" name="taskId" value={task.id} />
+						<button
+							type="submit"
+							class="btn-action"
+							disabled={actionInFlight === task.id}
+							data-testid="task-reopen-button"
+						>
+							{actionInFlight === task.id ? '...' : 'Reopen'}
+						</button>
+					</form>
+				{/if}
+				{#if confirmDeleteId === task.id}
+					<div class="confirm-delete">
+						<span>Delete?</span>
+						<form
+							method="POST"
+							action="?/delete"
+							use:enhance={() => {
+								actionInFlight = task.id;
+								return async ({ update }) => {
+									try {
+										await update();
+									} finally {
+										actionInFlight = null;
+										confirmDeleteId = null;
+									}
+								};
+							}}
+						>
+							<input type="hidden" name="taskId" value={task.id} />
+							<button
+								type="submit"
+								class="btn-confirm-yes"
+								disabled={actionInFlight === task.id}
+								data-testid="task-confirm-delete"
+							>
+								{actionInFlight === task.id ? '...' : 'Yes'}
+							</button>
+						</form>
+						<button
+							type="button"
+							class="btn-confirm-no"
+							onclick={() => (confirmDeleteId = null)}
+							data-testid="task-cancel-delete">No</button
+						>
+					</div>
+				{:else}
+					<button
+						type="button"
+						class="btn-delete"
+						onclick={() => (confirmDeleteId = task.id)}
+						data-testid="task-delete-button">Delete</button
+					>
+				{/if}
+			</div>
+		</li>
+	{/snippet}
+
 	{#if loadError}
 		<p class="error" role="alert">{loadError}</p>
 	{:else if tasks.length === 0 && !onboardingDismissed}
@@ -210,133 +434,50 @@
 			</button>
 		</div>
 	{:else if tasks.length === 0}
-		<p class="empty">No tasks yet. Create your first task to get started!</p>
+		<p class="empty" data-testid="view-empty">
+			{#if currentView === 'inbox'}
+				No unassigned tasks. Everything's in a quest!
+			{:else if currentView === 'today'}
+				Nothing scheduled for today. Enjoy the calm.
+			{:else if currentView === 'upcoming'}
+				Nothing scheduled in the next 14 days.
+			{:else if currentView === 'completed'}
+				No completed tasks yet — finish something to see it here.
+			{:else}
+				No tasks yet. Create your first task to get started!
+			{/if}
+		</p>
+	{:else if currentView === 'upcoming' || currentView === 'completed'}
+		{#if groupedTasks.length === 0}
+			<p class="empty" data-testid="view-empty">
+				{#if currentView === 'upcoming'}
+					Nothing scheduled in the next 14 days.
+				{:else}
+					No completed tasks in the last 30 days.
+				{/if}
+			</p>
+		{:else}
+			<div class="task-groups" data-testid="task-groups">
+				{#each groupedTasks as group (group.key)}
+					<section class="task-group" data-testid="task-group" data-group-key={group.key}>
+						<h2 class="task-group-header" data-testid="task-group-header">
+							{group.label}
+						</h2>
+						<ul class="task-list" data-testid="task-list">
+							{#each group.tasks as task (task.id)}
+								{@render taskItem(task)}
+							{/each}
+						</ul>
+					</section>
+				{/each}
+			</div>
+		{/if}
 	{:else if visibleTasks.length === 0}
 		<p class="empty" data-testid="filter-empty">No tasks match the current filter.</p>
 	{:else}
 		<ul class="task-list" data-testid="task-list">
 			{#each visibleTasks as task (task.id)}
-				<li class="task-item" data-status={task.status} data-testid="task-item">
-					<div class="task-info">
-						<a
-							class="task-title-link"
-							class:done={task.status === 'Done'}
-							href={resolve(`/tasks/${task.id}`)}
-							data-testid="task-title"
-						>
-							{task.title}
-						</a>
-						<span
-							class="task-status"
-							data-status={task.status}
-							data-testid="task-status">{task.status}</span
-						>
-					</div>
-					<div class="task-actions">
-						{#if nextStatus(task.status)}
-							<form
-								method="POST"
-								action="?/updateStatus"
-								use:enhance={() => {
-									actionInFlight = task.id;
-									return async ({ update }) => {
-										try {
-											await update();
-										} finally {
-											actionInFlight = null;
-										}
-									};
-								}}
-							>
-								<input type="hidden" name="taskId" value={task.id} />
-								<input
-									type="hidden"
-									name="status"
-									value={nextStatus(task.status)}
-								/>
-								<button
-									type="submit"
-									class="btn-action"
-									disabled={actionInFlight === task.id}
-									data-testid="task-advance-button"
-								>
-									{actionInFlight === task.id
-										? '...'
-										: nextStatusLabel(task.status)}
-								</button>
-							</form>
-						{/if}
-						{#if task.status === 'Done'}
-							<form
-								method="POST"
-								action="?/reopen"
-								use:enhance={() => {
-									actionInFlight = task.id;
-									return async ({ update }) => {
-										try {
-											await update();
-										} finally {
-											actionInFlight = null;
-										}
-									};
-								}}
-							>
-								<input type="hidden" name="taskId" value={task.id} />
-								<button
-									type="submit"
-									class="btn-action"
-									disabled={actionInFlight === task.id}
-									data-testid="task-reopen-button"
-								>
-									{actionInFlight === task.id ? '...' : 'Reopen'}
-								</button>
-							</form>
-						{/if}
-						{#if confirmDeleteId === task.id}
-							<div class="confirm-delete">
-								<span>Delete?</span>
-								<form
-									method="POST"
-									action="?/delete"
-									use:enhance={() => {
-										actionInFlight = task.id;
-										return async ({ update }) => {
-											try {
-												await update();
-											} finally {
-												actionInFlight = null;
-												confirmDeleteId = null;
-											}
-										};
-									}}
-								>
-									<input type="hidden" name="taskId" value={task.id} />
-									<button
-										type="submit"
-										class="btn-confirm-yes"
-										disabled={actionInFlight === task.id}
-										data-testid="task-confirm-delete"
-									>
-										{actionInFlight === task.id ? '...' : 'Yes'}
-									</button>
-								</form>
-								<button
-									type="button"
-									class="btn-confirm-no"
-									onclick={() => (confirmDeleteId = null)}
-									data-testid="task-cancel-delete">No</button
-								>
-							</div>
-						{:else}
-							<button
-								type="button"
-								class="btn-delete"
-								onclick={() => (confirmDeleteId = task.id)}
-								data-testid="task-delete-button">Delete</button
-							>
-						{/if}
-					</div>
-				</li>
+				{@render taskItem(task)}
 			{/each}
 		</ul>
 	{/if}
@@ -352,6 +493,47 @@
 
 	h1 {
 		margin-bottom: 1.5rem;
+	}
+
+	.view-tabs {
+		display: flex;
+		gap: 0.25rem;
+		margin-bottom: 1.25rem;
+		border-bottom: 1px solid #e5e7eb;
+	}
+
+	.view-tab {
+		padding: 0.5rem 0.9rem;
+		background: none;
+		border: none;
+		border-bottom: 2px solid transparent;
+		cursor: pointer;
+		font-size: 0.9rem;
+		color: #6b7280;
+		font-weight: 500;
+	}
+
+	.view-tab:hover {
+		color: #111827;
+	}
+
+	.view-tab.active {
+		color: #2563eb;
+		border-bottom-color: #2563eb;
+	}
+
+	.task-groups {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+	}
+
+	.task-group-header {
+		font-size: 0.85rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: #6b7280;
+		margin: 0 0 0.5rem 0;
 	}
 
 	.notification {

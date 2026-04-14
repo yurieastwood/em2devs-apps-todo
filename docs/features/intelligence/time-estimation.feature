@@ -24,7 +24,7 @@ Feature: Time Estimation Learning
       Then I should not be prompted for actual time spent
       And no estimation data should be recorded
 
-    @wip
+    @done
     Scenario: Optional time tracking during task execution
       Given I have a task "Code review" with estimated time of 30 minutes
       When I start a timer for the task
@@ -82,7 +82,7 @@ Feature: Time Estimation Learning
       When I accept the corrected estimate
       Then the task estimated time should be updated to 2 hours 48 minutes
 
-    @wip
+    @done
     Scenario: User accepts corrected estimate but completes in original time
       Given the system has detected I underestimate writing tasks by 40%
       And I accepted a corrected estimate of 2 hours 48 minutes for a writing task
@@ -91,7 +91,7 @@ Feature: Time Estimation Learning
       And the estimation model should reduce the bias correction factor for this category
       And the model should not over-correct based on a single instance
 
-    @wip
+    @done
     Scenario: User dismisses corrected estimate
       Given the system suggests a corrected estimate of 2 hours 48 minutes
       When I dismiss the suggestion
@@ -100,7 +100,7 @@ Feature: Time Estimation Learning
 
   Rule: Users can view their estimation accuracy trends
 
-    @wip
+    @done
     Scenario: View estimation accuracy dashboard
       When I navigate to my estimation insights
       Then I should see my overall estimation accuracy percentage

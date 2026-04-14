@@ -27,17 +27,20 @@ public sealed record NotificationSettings
     public TimeOnly? QuietHoursStart { get; }
     public TimeOnly? QuietHoursEnd { get; }
     public string TimeZoneId { get; }
+    public bool DisableAll { get; }
 
     private NotificationSettings(
         IReadOnlyDictionary<NotificationCategory, bool> categoryToggles,
         TimeOnly? quietHoursStart,
         TimeOnly? quietHoursEnd,
-        string timeZoneId)
+        string timeZoneId,
+        bool disableAll)
     {
         _categoryToggles = categoryToggles;
         QuietHoursStart = quietHoursStart;
         QuietHoursEnd = quietHoursEnd;
         TimeZoneId = timeZoneId;
+        DisableAll = disableAll;
     }
 
     /// <summary>
@@ -50,7 +53,8 @@ public sealed record NotificationSettings
             new Dictionary<NotificationCategory, bool>(_defaultToggles),
             null,
             null,
-            "UTC");
+            "UTC",
+            false);
     }
 
     /// <summary>
@@ -76,7 +80,7 @@ public sealed record NotificationSettings
             merged[kvp.Key] = kvp.Value;
         }
 
-        return new NotificationSettings(merged, quietHoursStart, quietHoursEnd, effectiveTimeZoneId);
+        return new NotificationSettings(merged, quietHoursStart, quietHoursEnd, effectiveTimeZoneId, false);
     }
 
     /// <summary>
@@ -84,6 +88,11 @@ public sealed record NotificationSettings
     /// </summary>
     public bool IsCategoryEnabled(NotificationCategory category)
     {
+        if (DisableAll)
+        {
+            return false;
+        }
+
         return _categoryToggles.TryGetValue(category, out bool enabled) && enabled;
     }
 
@@ -97,7 +106,7 @@ public sealed record NotificationSettings
             [category] = enabled
         };
 
-        return new NotificationSettings(updated, QuietHoursStart, QuietHoursEnd, TimeZoneId);
+        return new NotificationSettings(updated, QuietHoursStart, QuietHoursEnd, TimeZoneId, DisableAll);
     }
 
     /// <summary>
@@ -109,7 +118,8 @@ public sealed record NotificationSettings
             new Dictionary<NotificationCategory, bool>(_categoryToggles),
             start,
             end,
-            TimeZoneId);
+            TimeZoneId,
+            DisableAll);
     }
 
     /// <summary>
@@ -122,7 +132,22 @@ public sealed record NotificationSettings
             new Dictionary<NotificationCategory, bool>(_categoryToggles),
             QuietHoursStart,
             QuietHoursEnd,
-            timeZoneId);
+            timeZoneId,
+            DisableAll);
+    }
+
+    /// <summary>
+    /// Returns a new NotificationSettings with all notifications disabled or re-enabled.
+    /// When disabled, IsCategoryEnabled returns false for every category regardless of individual toggles.
+    /// </summary>
+    public NotificationSettings WithDisableAll(bool disableAll)
+    {
+        return new NotificationSettings(
+            new Dictionary<NotificationCategory, bool>(_categoryToggles),
+            QuietHoursStart,
+            QuietHoursEnd,
+            TimeZoneId,
+            disableAll);
     }
 
     /// <summary>

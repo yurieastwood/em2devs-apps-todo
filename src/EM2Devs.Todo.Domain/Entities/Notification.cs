@@ -12,19 +12,26 @@ public sealed class Notification
     public bool IsDismissed { get; private set; }
     public DateTimeOffset CreatedAt { get; }
     public int? AutoDismissAfterSeconds { get; }
+    public DeliveryChannel Channel { get; }
+    public DeepLink? DeepLink { get; }
 
     private Notification(NotificationId id, NotificationType type, string message,
-        DateTimeOffset createdAt, int? autoDismissAfterSeconds)
+        DateTimeOffset createdAt, int? autoDismissAfterSeconds,
+        DeliveryChannel channel, DeepLink? deepLink)
     {
         Id = id;
         Type = type;
         Message = message;
         CreatedAt = createdAt;
         AutoDismissAfterSeconds = autoDismissAfterSeconds;
+        Channel = channel;
+        DeepLink = deepLink;
     }
 
     public static Notification Create(NotificationType type, string message,
-        int? autoDismissAfterSeconds = null)
+        int? autoDismissAfterSeconds = null,
+        DeliveryChannel channel = DeliveryChannel.InApp,
+        DeepLink? deepLink = null)
     {
         if (string.IsNullOrWhiteSpace(message))
         {
@@ -37,7 +44,7 @@ public sealed class Notification
         }
 
         return new Notification(NotificationId.New(), type, message,
-            DateTimeOffset.UtcNow, autoDismissAfterSeconds);
+            DateTimeOffset.UtcNow, autoDismissAfterSeconds, channel, deepLink);
     }
 
     public void MarkAsRead()

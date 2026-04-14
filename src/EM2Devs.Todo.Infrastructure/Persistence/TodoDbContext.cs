@@ -9,6 +9,7 @@ public sealed class TodoDbContext : DbContext
     public DbSet<RecurringTask> RecurringTasks => Set<RecurringTask>();
     public DbSet<PlayerProfile> PlayerProfiles => Set<PlayerProfile>();
     public DbSet<StreakSnapshot> StreakSnapshots => Set<StreakSnapshot>();
+    public DbSet<User> Users => Set<User>();
 
     public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)
     {

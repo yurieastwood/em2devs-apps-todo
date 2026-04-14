@@ -56,6 +56,62 @@ public sealed class TodoTaskConfiguration : IEntityTypeConfiguration<TodoTask>
         builder.Property(t => t.ScheduledDate)
             .HasColumnName("scheduled_date");
 
+        // Constructor-bound properties added in Phase 0-3 work
+        builder.Property(t => t.Difficulty)
+            .HasColumnName("difficulty")
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasDefaultValue(TaskDifficulty.Normal)
+            .IsRequired();
+
+        builder.Property(t => t.DueDate)
+            .HasColumnName("due_date");
+
+        builder.Property(t => t.CreatedAt)
+            .HasColumnName("created_at")
+            .IsRequired();
+
+        // Other persisted properties added during Phases 0-3
+        builder.Property(t => t.Description)
+            .HasColumnName("description")
+            .HasMaxLength(2000);
+
+        builder.Property(t => t.CompletedAt)
+            .HasColumnName("completed_at");
+
+        builder.Property(t => t.IsBossTask)
+            .HasColumnName("is_boss_task")
+            .HasDefaultValue(false)
+            .IsRequired();
+
+        builder.Property(t => t.RescheduleCount)
+            .HasColumnName("reschedule_count")
+            .HasDefaultValue(0)
+            .IsRequired();
+
+        builder.Property(t => t.ViewCount)
+            .HasColumnName("view_count")
+            .HasDefaultValue(0)
+            .IsRequired();
+
+        builder.Property(t => t.WaitingReason)
+            .HasColumnName("waiting_reason")
+            .HasMaxLength(500);
+
+        builder.Property(t => t.AssignedQuestId)
+            .HasColumnName("assigned_quest_id")
+            .HasConversion(
+                id => id != null ? id.Value : (Guid?)null,
+                value => value.HasValue ? new QuestId(value.Value) : null);
+
+        // Domain-only collections and value objects not yet persisted
+        // (kept in-memory; demo functionality unaffected)
+        builder.Ignore(t => t.Tags);
+        builder.Ignore(t => t.ProcrastinationSignals);
+        builder.Ignore(t => t.CommitmentNote);
+        builder.Ignore(t => t.IsOverdue);
+        builder.Ignore(t => t.WasCompletedLate);
+
         // Prevent duplicate generated instances for the same recurring task + calendar date.
         // Filtered: only applies to rows that originated from a recurring task.
         builder.HasIndex(t => new { t.SourceRecurringTaskId, t.ScheduledDate })

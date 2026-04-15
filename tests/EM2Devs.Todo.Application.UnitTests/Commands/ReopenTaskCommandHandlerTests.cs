@@ -24,7 +24,7 @@ public sealed class ReopenTaskCommandHandlerTests
     public async Task Should_ReopenTask_When_TaskIsDone()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Completed task"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Completed task"));
         task.MoveToInProgress();
         task.MarkAsDone();
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>()).Returns(task);
@@ -44,7 +44,7 @@ public sealed class ReopenTaskCommandHandlerTests
     public async Task Should_ReturnConflictError_When_TaskIsNotDone()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Not done"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Not done"));
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>()).Returns(task);
 
         ReopenTaskCommand command = new(task.Id.Value);

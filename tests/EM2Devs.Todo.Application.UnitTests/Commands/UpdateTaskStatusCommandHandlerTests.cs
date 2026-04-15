@@ -26,7 +26,7 @@ public sealed class UpdateTaskStatusCommandHandlerTests
     public async Task Should_ReturnSuccess_When_ValidTransitionToInProgress()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test task"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Test task"));
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>())
             .Returns(task);
 
@@ -78,7 +78,7 @@ public sealed class UpdateTaskStatusCommandHandlerTests
     public async Task Should_ReturnConflictError_When_TaskAlreadyInTargetStatus()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test task"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Test task"));
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>())
             .Returns(task);
 
@@ -98,7 +98,7 @@ public sealed class UpdateTaskStatusCommandHandlerTests
     {
         // Given — task with Hard difficulty and a deadline
         DateTimeOffset deadline = DateTimeOffset.UtcNow.AddDays(3);
-        TodoTask task = TodoTask.Create(new TaskTitle("Hard task"), TaskDifficulty.Hard, deadline);
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Hard task"), TaskDifficulty.Hard, deadline);
         task.MoveToInProgress();
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>())
             .Returns(task);

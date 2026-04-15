@@ -15,8 +15,8 @@ public sealed class TaskViewFilterTests
     {
         var dueDate = scheduled?.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
         var task = dueDate.HasValue
-            ? TodoTask.CreateFromRecurring(new TaskTitle(title), RecurringTaskId.New(), scheduled!.Value)
-            : TodoTask.Create(new TaskTitle(title), createdAt: createdAt);
+            ? TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle(title), RecurringTaskId.New(), scheduled!.Value)
+            : TodoTask.Create(TestData.TestUserId, new TaskTitle(title), createdAt: createdAt);
         if (scheduled.HasValue)
         {
             // override created-at via reflection-free public method path: use CreateFromRecurring's CreatedAt = now.
@@ -33,10 +33,10 @@ public sealed class TaskViewFilterTests
     [Trait("Category", "Domain")]
     public void Should_IncludeOnlyUnassignedOpenTasks_When_Inbox()
     {
-        var a = TodoTask.Create(new TaskTitle("A"), createdAt: new DateTimeOffset(2026, 4, 1, 0, 0, 0, TimeSpan.Zero));
-        var b = TodoTask.Create(new TaskTitle("B"), createdAt: new DateTimeOffset(2026, 4, 2, 0, 0, 0, TimeSpan.Zero));
+        var a = TodoTask.Create(TestData.TestUserId, new TaskTitle("A"), createdAt: new DateTimeOffset(2026, 4, 1, 0, 0, 0, TimeSpan.Zero));
+        var b = TodoTask.Create(TestData.TestUserId, new TaskTitle("B"), createdAt: new DateTimeOffset(2026, 4, 2, 0, 0, 0, TimeSpan.Zero));
         b.AssignToQuest(QuestId.New());
-        var c = TodoTask.Create(new TaskTitle("C"), createdAt: new DateTimeOffset(2026, 4, 3, 0, 0, 0, TimeSpan.Zero));
+        var c = TodoTask.Create(TestData.TestUserId, new TaskTitle("C"), createdAt: new DateTimeOffset(2026, 4, 3, 0, 0, 0, TimeSpan.Zero));
         c.Delete();
 
         var inbox = TaskViewFilter.ForInbox(new[] { a, b, c });
@@ -49,9 +49,9 @@ public sealed class TaskViewFilterTests
     [Trait("Category", "Domain")]
     public void Should_SortByCreationDescending_When_Inbox()
     {
-        var older = TodoTask.Create(new TaskTitle("Older"),
+        var older = TodoTask.Create(TestData.TestUserId, new TaskTitle("Older"),
             createdAt: new DateTimeOffset(2026, 4, 1, 0, 0, 0, TimeSpan.Zero));
-        var newer = TodoTask.Create(new TaskTitle("Newer"),
+        var newer = TodoTask.Create(TestData.TestUserId, new TaskTitle("Newer"),
             createdAt: new DateTimeOffset(2026, 4, 10, 0, 0, 0, TimeSpan.Zero));
 
         var inbox = TaskViewFilter.ForInbox(new[] { older, newer });
@@ -64,10 +64,10 @@ public sealed class TaskViewFilterTests
     [Trait("Category", "Domain")]
     public void Should_IncludeDueTodayAndOverdue_When_Today()
     {
-        var dueToday = TodoTask.CreateFromRecurring(new TaskTitle("today"), RecurringTaskId.New(), _today);
-        var overdue = TodoTask.CreateFromRecurring(new TaskTitle("overdue"), RecurringTaskId.New(), _today.AddDays(-3));
-        var future = TodoTask.CreateFromRecurring(new TaskTitle("future"), RecurringTaskId.New(), _today.AddDays(2));
-        var unscheduled = TodoTask.Create(new TaskTitle("none"));
+        var dueToday = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("today"), RecurringTaskId.New(), _today);
+        var overdue = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("overdue"), RecurringTaskId.New(), _today.AddDays(-3));
+        var future = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("future"), RecurringTaskId.New(), _today.AddDays(2));
+        var unscheduled = TodoTask.Create(TestData.TestUserId, new TaskTitle("none"));
 
         var result = TaskViewFilter.ForToday(new[] { dueToday, overdue, future, unscheduled }, _today);
 
@@ -78,7 +78,7 @@ public sealed class TaskViewFilterTests
     [Trait("Category", "Domain")]
     public void Should_ExcludeCompleted_When_Today()
     {
-        var completed = TodoTask.CreateFromRecurring(new TaskTitle("done"), RecurringTaskId.New(), _today);
+        var completed = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("done"), RecurringTaskId.New(), _today);
         completed.MoveToInProgress();
         completed.MarkAsDone();
 
@@ -91,9 +91,9 @@ public sealed class TaskViewFilterTests
     [Trait("Category", "Domain")]
     public void Should_Return14DayGroups_When_Upcoming()
     {
-        var day3 = TodoTask.CreateFromRecurring(new TaskTitle("d3"), RecurringTaskId.New(), _today.AddDays(3));
-        var day7 = TodoTask.CreateFromRecurring(new TaskTitle("d7"), RecurringTaskId.New(), _today.AddDays(7));
-        var outside = TodoTask.CreateFromRecurring(new TaskTitle("d20"), RecurringTaskId.New(), _today.AddDays(20));
+        var day3 = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("d3"), RecurringTaskId.New(), _today.AddDays(3));
+        var day7 = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("d7"), RecurringTaskId.New(), _today.AddDays(7));
+        var outside = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("d20"), RecurringTaskId.New(), _today.AddDays(20));
 
         var groups = TaskViewFilter.ForUpcoming(new[] { day3, day7, outside }, _today);
 
@@ -118,15 +118,15 @@ public sealed class TaskViewFilterTests
     [Trait("Category", "Domain")]
     public void Should_GroupCompletedTasksByCompletionDate_When_Completed()
     {
-        var t1 = TodoTask.CreateFromRecurring(new TaskTitle("t1"), RecurringTaskId.New(), _today);
+        var t1 = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("t1"), RecurringTaskId.New(), _today);
         t1.MoveToInProgress();
         t1.MarkAsDone();
 
-        var t2 = TodoTask.CreateFromRecurring(new TaskTitle("t2"), RecurringTaskId.New(), _today);
+        var t2 = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("t2"), RecurringTaskId.New(), _today);
         t2.MoveToInProgress();
         t2.MarkAsDone();
 
-        var open = TodoTask.Create(new TaskTitle("open"));
+        var open = TodoTask.Create(TestData.TestUserId, new TaskTitle("open"));
 
         var result = TaskViewFilter.ForCompleted(new[] { t1, t2, open });
 
@@ -140,13 +140,13 @@ public sealed class TaskViewFilterTests
     public void Should_OrderGroupsDescendingByDate_When_Completed()
     {
         // Fabricate two tasks and directly verify ordering by CompletedAt dates.
-        var t1 = TodoTask.CreateFromRecurring(new TaskTitle("t1"), RecurringTaskId.New(), _today);
+        var t1 = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("t1"), RecurringTaskId.New(), _today);
         t1.MoveToInProgress();
         t1.MarkAsDone();
 
         // Second task completed later -> should appear first.
         System.Threading.Thread.Sleep(5);
-        var t2 = TodoTask.CreateFromRecurring(new TaskTitle("t2"), RecurringTaskId.New(), _today);
+        var t2 = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("t2"), RecurringTaskId.New(), _today);
         t2.MoveToInProgress();
         t2.MarkAsDone();
 

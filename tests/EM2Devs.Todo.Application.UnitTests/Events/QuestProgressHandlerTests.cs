@@ -27,11 +27,11 @@ public sealed class QuestProgressHandlerTests
     public async Task Should_ReplaceTaskAndSaveQuest_When_TaskBelongsToQuest()
     {
         // Given — quest has a stale task snapshot (status = Todo)
-        TodoTask staleTask = TodoTask.Create(new TaskTitle("Test task"));
+        TodoTask staleTask = TodoTask.Create(TestUserId, new TaskTitle("Test task"));
         Quest quest = Quest.Create(new QuestTitle("Test quest"), "desc");
         quest.AddTask(staleTask);
         // Add another task so quest doesn't auto-complete
-        quest.AddTask(TodoTask.Create(new TaskTitle("Other task")));
+        quest.AddTask(TodoTask.Create(TestUserId, new TaskTitle("Other task")));
 
         quest.Tasks[0].Status.ShouldBe(TaskStatus.Todo);
 
@@ -59,7 +59,7 @@ public sealed class QuestProgressHandlerTests
     {
         // Given
         TaskId orphanTaskId = new(Guid.NewGuid());
-        TodoTask freshTask = TodoTask.Create(new TaskTitle("Orphan"));
+        TodoTask freshTask = TodoTask.Create(TestUserId, new TaskTitle("Orphan"));
 
         _taskRepo.GetByIdAsync(orphanTaskId, Arg.Any<CancellationToken>())
             .Returns(freshTask);
@@ -104,13 +104,13 @@ public sealed class QuestProgressHandlerTests
         Quest quest = Quest.Create(new QuestTitle("Prepare presentation"), "desc");
         for (int i = 0; i < 4; i++)
         {
-            TodoTask completedTask = TodoTask.Create(new TaskTitle($"Completed task {i + 1}"));
+            TodoTask completedTask = TodoTask.Create(TestUserId, new TaskTitle($"Completed task {i + 1}"));
             completedTask.MoveToInProgress();
             completedTask.MarkAsDone();
             quest.AddTask(completedTask);
         }
 
-        TodoTask finalTask = TodoTask.Create(new TaskTitle("Do final rehearsal"));
+        TodoTask finalTask = TodoTask.Create(TestUserId, new TaskTitle("Do final rehearsal"));
         quest.AddTask(finalTask);
         quest.Progress.ShouldBe(80);
 
@@ -148,7 +148,7 @@ public sealed class QuestProgressHandlerTests
     {
         // Given — quest already completed, task status changes for some reason
         Quest quest = Quest.Create(new QuestTitle("Already done"), "desc");
-        TodoTask task = TodoTask.Create(new TaskTitle("Task"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Task"));
         task.MoveToInProgress();
         task.MarkAsDone();
         quest.AddTask(task);
@@ -178,15 +178,15 @@ public sealed class QuestProgressHandlerTests
     {
         // Given — quest with 3 tasks, 1 completed + 1 being completed = 2/3
         Quest quest = Quest.Create(new QuestTitle("Partial"), "desc");
-        TodoTask doneTask = TodoTask.Create(new TaskTitle("Done"));
+        TodoTask doneTask = TodoTask.Create(TestUserId, new TaskTitle("Done"));
         doneTask.MoveToInProgress();
         doneTask.MarkAsDone();
         quest.AddTask(doneTask);
 
-        TodoTask currentTask = TodoTask.Create(new TaskTitle("Current"));
+        TodoTask currentTask = TodoTask.Create(TestUserId, new TaskTitle("Current"));
         quest.AddTask(currentTask);
 
-        TodoTask futureTask = TodoTask.Create(new TaskTitle("Future"));
+        TodoTask futureTask = TodoTask.Create(TestUserId, new TaskTitle("Future"));
         quest.AddTask(futureTask);
 
         // Simulate current task being completed

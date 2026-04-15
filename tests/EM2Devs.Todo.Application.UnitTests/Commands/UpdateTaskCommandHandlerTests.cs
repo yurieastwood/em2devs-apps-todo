@@ -24,7 +24,7 @@ public sealed class UpdateTaskCommandHandlerTests
     public async Task Should_UpdateTitle_When_ValidTitleProvided()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Old title"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Old title"));
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>()).Returns(task);
 
         UpdateTaskCommand command = new(task.Id.Value, Title: "New title");
@@ -42,7 +42,7 @@ public sealed class UpdateTaskCommandHandlerTests
     public async Task Should_UpdateDescription_When_DescriptionProvided()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Test"));
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>()).Returns(task);
 
         UpdateTaskCommand command = new(task.Id.Value, Description: "New description");
@@ -77,7 +77,7 @@ public sealed class UpdateTaskCommandHandlerTests
     public async Task Should_ReturnValidationError_When_TitleIsEmpty()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Test"));
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>()).Returns(task);
 
         UpdateTaskCommand command = new(task.Id.Value, Title: "");
@@ -95,7 +95,7 @@ public sealed class UpdateTaskCommandHandlerTests
     public async Task Should_ReturnValidationError_When_DifficultyIsInvalid()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Test"));
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>()).Returns(task);
 
         UpdateTaskCommand command = new(task.Id.Value, Difficulty: "Legendary");

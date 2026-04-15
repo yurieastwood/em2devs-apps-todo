@@ -6,6 +6,7 @@ namespace EM2Devs.Todo.Domain.Entities;
 public sealed class TodoTask
 {
     public TaskId Id { get; }
+    public Guid UserId { get; private set; }
     public TaskTitle Title { get; private set; }
     public string? Description { get; private set; }
     public TaskStatus Status { get; private set; }
@@ -41,12 +42,18 @@ public sealed class TodoTask
         && CompletedAt.HasValue
         && DateOnly.FromDateTime(CompletedAt.Value.UtcDateTime) > ScheduledDate.Value;
 
-    private TodoTask(TaskId id, TaskTitle title, TaskDifficulty difficulty, DateTimeOffset? dueDate,
+    private TodoTask(TaskId id, Guid userId, TaskTitle title, TaskDifficulty difficulty, DateTimeOffset? dueDate,
         TaskPriority priority = TaskPriority.Medium,
         RecurringTaskId? sourceRecurringTaskId = null, DateOnly? scheduledDate = null,
         DateTimeOffset? createdAt = null)
     {
+        if (userId == Guid.Empty)
+        {
+            throw new DomainException("UserId cannot be empty.");
+        }
+
         Id = id;
+        UserId = userId;
         Title = title;
         Status = TaskStatus.Todo;
         Difficulty = difficulty;
@@ -60,11 +67,12 @@ public sealed class TodoTask
     // Stryker disable all : EF Core materialization constructor — not reachable from domain tests.
     // EF binds these parameters to mapped properties by name+type. Parameter types must exactly
     // match the mapped property types (notably non-nullable CreatedAt/Difficulty/Priority).
-    private TodoTask(TaskId id, TaskTitle title, TaskDifficulty difficulty, TaskPriority priority,
+    private TodoTask(TaskId id, Guid userId, TaskTitle title, TaskDifficulty difficulty, TaskPriority priority,
         DateTimeOffset createdAt, DateTimeOffset? dueDate,
         RecurringTaskId? sourceRecurringTaskId, DateOnly? scheduledDate)
     {
         Id = id;
+        UserId = userId;
         Title = title;
         Difficulty = difficulty;
         Priority = priority;
@@ -77,19 +85,19 @@ public sealed class TodoTask
     }
     // Stryker restore all
 
-    public static TodoTask Create(TaskTitle title, TaskDifficulty difficulty = TaskDifficulty.Normal,
+    public static TodoTask Create(Guid userId, TaskTitle title, TaskDifficulty difficulty = TaskDifficulty.Normal,
         DateTimeOffset? dueDate = null, TaskPriority priority = TaskPriority.Medium,
         DateTimeOffset? createdAt = null)
     {
-        return new TodoTask(TaskId.New(), title, difficulty, dueDate, priority, createdAt: createdAt);
+        return new TodoTask(TaskId.New(), userId, title, difficulty, dueDate, priority, createdAt: createdAt);
     }
 
-    public static TodoTask CreateFromRecurring(TaskTitle title, RecurringTaskId sourceId, DateOnly scheduledDate,
+    public static TodoTask CreateFromRecurring(Guid userId, TaskTitle title, RecurringTaskId sourceId, DateOnly scheduledDate,
         TaskDifficulty difficulty = TaskDifficulty.Normal)
     {
         ArgumentNullException.ThrowIfNull(sourceId);
         var dueDate = scheduledDate.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
-        return new TodoTask(TaskId.New(), title, difficulty, new DateTimeOffset(dueDate),
+        return new TodoTask(TaskId.New(), userId, title, difficulty, new DateTimeOffset(dueDate),
             sourceRecurringTaskId: sourceId, scheduledDate: scheduledDate);
     }
 

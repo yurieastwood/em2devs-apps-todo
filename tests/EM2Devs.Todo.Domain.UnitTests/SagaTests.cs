@@ -170,7 +170,7 @@ public sealed class SagaTests
         Saga saga = CreateSaga();
         Epic e1 = Epic.Create(new EpicTitle("Done"), "d");
         Quest q1 = Quest.Create(new QuestTitle("q1"), "d");
-        TodoTask t1 = TodoTask.Create(new TaskTitle("t1"));
+        TodoTask t1 = TodoTask.Create(TestData.TestUserId, new TaskTitle("t1"));
         q1.AddTask(t1);
         t1.MoveToInProgress();
         t1.MarkAsDone();
@@ -178,7 +178,7 @@ public sealed class SagaTests
 
         Epic e2 = Epic.Create(new EpicTitle("NotDone"), "d");
         Quest q2 = Quest.Create(new QuestTitle("q2"), "d");
-        q2.AddTask(TodoTask.Create(new TaskTitle("t2")));
+        q2.AddTask(TodoTask.Create(TestData.TestUserId, new TaskTitle("t2")));
         e2.AddQuest(q2);
 
         saga.AddEpic(e1);
@@ -226,7 +226,7 @@ public sealed class SagaTests
         Epic done = CreateCompletedEpic("Done");
         Epic inProgress = Epic.Create(new EpicTitle("InProgress"), "d");
         Quest q = Quest.Create(new QuestTitle("q"), "d");
-        q.AddTask(TodoTask.Create(new TaskTitle("t")));
+        q.AddTask(TodoTask.Create(TestData.TestUserId, new TaskTitle("t")));
         inProgress.AddQuest(q);
 
         saga.AddEpic(done);
@@ -354,7 +354,7 @@ public sealed class SagaTests
     {
         Epic epic = Epic.Create(new EpicTitle(title), "d");
         Quest q = Quest.Create(new QuestTitle($"q-{title}"), "d");
-        TodoTask t = TodoTask.Create(new TaskTitle($"t-{title}"));
+        TodoTask t = TodoTask.Create(TestData.TestUserId, new TaskTitle($"t-{title}"));
         q.AddTask(t);
         t.MoveToInProgress();
         t.MarkAsDone();

@@ -11,11 +11,13 @@ namespace EM2Devs.Todo.Application.UnitTests.Commands;
 public sealed class CreateTaskCommandHandlerTests
 {
     private readonly ITaskRepository _repository = Substitute.For<ITaskRepository>();
+    private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
     private readonly CreateTaskCommandHandler _handler;
 
     public CreateTaskCommandHandlerTests()
     {
-        _handler = new CreateTaskCommandHandler(_repository);
+        _currentUser.UserId.Returns(TestUserId);
+        _handler = new CreateTaskCommandHandler(_repository, _currentUser);
     }
 
     [Fact]

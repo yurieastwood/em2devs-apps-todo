@@ -32,7 +32,7 @@ public sealed class RecurringTask
         return new RecurringTask(RecurringTaskId.New(), title, pattern, endDate);
     }
 
-    public TodoTask GenerateNextInstance(DateOnly scheduledDate)
+    public TodoTask GenerateNextInstance(Guid userId, DateOnly scheduledDate)
     {
         if (!IsActive)
         {
@@ -44,7 +44,7 @@ public sealed class RecurringTask
             throw new DomainException("Cannot generate instances after the end date.");
         }
 
-        return TodoTask.CreateFromRecurring(Title, Id, scheduledDate);
+        return TodoTask.CreateFromRecurring(userId, Title, Id, scheduledDate);
     }
 
     /// <summary>

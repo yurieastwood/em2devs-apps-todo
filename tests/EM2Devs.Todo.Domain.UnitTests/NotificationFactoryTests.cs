@@ -20,7 +20,7 @@ public sealed class NotificationFactoryTests
 
     private static TodoTask CreateTaskDueToday(string title = "Submit report")
     {
-        TodoTask task = TodoTask.Create(
+        TodoTask task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle(title),
             dueDate: new DateTimeOffset(DateOnly.FromDateTime(_now.Date).ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc), TimeSpan.Zero));
         return task;
@@ -28,7 +28,7 @@ public sealed class NotificationFactoryTests
 
     private static TodoTask CreateTaskDueIn(string title, TimeSpan dueIn)
     {
-        TodoTask task = TodoTask.Create(
+        TodoTask task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle(title),
             dueDate: _now + dueIn);
         return task;
@@ -36,7 +36,7 @@ public sealed class NotificationFactoryTests
 
     private static TodoTask CreateOverdueTask(string title = "Submit report", int daysOverdue = 2)
     {
-        TodoTask task = TodoTask.Create(
+        TodoTask task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle(title),
             dueDate: _now.AddDays(-daysOverdue));
         return task;
@@ -44,7 +44,7 @@ public sealed class NotificationFactoryTests
 
     private static TodoTask CreateCompletedTask(string title = "Buy milk")
     {
-        TodoTask task = TodoTask.Create(
+        TodoTask task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle(title),
             dueDate: new DateTimeOffset(DateOnly.FromDateTime(_now.Date).ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc), TimeSpan.Zero));
         task.MoveToInProgress();
@@ -54,7 +54,7 @@ public sealed class NotificationFactoryTests
 
     private static TodoTask CreateSkippedTask(string title = "Skipped task")
     {
-        TodoTask task = TodoTask.Create(
+        TodoTask task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle(title),
             dueDate: new DateTimeOffset(DateOnly.FromDateTime(_now.Date).ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc), TimeSpan.Zero));
         task.Skip();
@@ -145,7 +145,7 @@ public sealed class NotificationFactoryTests
     public void Should_NotCreateUpcomingReminder_When_TaskHasNoDueDate()
     {
         // Given — task without due date
-        TodoTask task = TodoTask.Create(new TaskTitle("No deadline"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("No deadline"));
         NotificationSettings settings = DefaultSettings();
         TimeSpan window = TimeSpan.FromHours(48);
 
@@ -342,7 +342,7 @@ public sealed class NotificationFactoryTests
     public void Should_NotCreateOverdueReminder_When_TaskHasNoDueDate()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("No deadline"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("No deadline"));
         NotificationSettings settings = DefaultSettings();
 
         // When
@@ -618,7 +618,7 @@ public sealed class NotificationFactoryTests
     public void Should_CreateUpcomingReminder_When_TaskDueExactlyAtCurrentTime()
     {
         // Given — task due exactly now (timeUntilDue == TimeSpan.Zero, boundary test for < vs <=)
-        TodoTask task = TodoTask.Create(
+        TodoTask task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Exact deadline"),
             dueDate: _now);
         NotificationSettings settings = DefaultSettings();
@@ -637,7 +637,7 @@ public sealed class NotificationFactoryTests
     {
         // Given — a task that was completed but its due date is in the past
         // This kills the block-removal mutant on IsCompletedOrSkipped for overdue path
-        TodoTask task = TodoTask.Create(
+        TodoTask task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Old task"),
             dueDate: _now.AddDays(-3));
         task.MoveToInProgress();
@@ -656,7 +656,7 @@ public sealed class NotificationFactoryTests
     public void Should_CreateOverdueReminder_When_TaskDueExactlyAtCurrentTime()
     {
         // Given — task due exactly at current time (boundary for > vs >=)
-        TodoTask task = TodoTask.Create(
+        TodoTask task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Exact due task"),
             dueDate: _now);
         NotificationSettings settings = DefaultSettings();

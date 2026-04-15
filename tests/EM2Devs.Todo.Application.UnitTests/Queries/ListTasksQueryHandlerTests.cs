@@ -24,7 +24,7 @@ public sealed class ListTasksQueryHandlerTests
     public async Task Should_ReturnSuccess_When_TasksExist()
     {
         // Given
-        List<TodoTask> tasks = [TodoTask.Create(new TaskTitle("Task 1")), TodoTask.Create(new TaskTitle("Task 2"))];
+        List<TodoTask> tasks = [TodoTask.Create(TestUserId, new TaskTitle("Task 1")), TodoTask.Create(TestUserId, new TaskTitle("Task 2"))];
         _repository.GetAllAsync(Arg.Any<CancellationToken>())
             .Returns(tasks.AsReadOnly());
 

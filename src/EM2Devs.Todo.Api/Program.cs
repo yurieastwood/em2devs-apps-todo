@@ -58,7 +58,9 @@ if (!string.IsNullOrEmpty(connectionString))
 }
 else
 {
-    builder.Services.AddSingleton<ITaskRepository, InMemoryTaskRepository>();
+    // Scoped so it can depend on the scoped ICurrentUser; state lives in the singleton store.
+    builder.Services.AddSingleton<InMemoryTaskStore>();
+    builder.Services.AddScoped<ITaskRepository, InMemoryTaskRepository>();
     builder.Services.AddSingleton<IRecurringTaskRepository, InMemoryRecurringTaskRepository>();
     builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
     builder.Services.AddSingleton<IUserRepository>(sp =>

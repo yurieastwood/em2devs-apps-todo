@@ -50,12 +50,14 @@ public sealed class GenerateInstancesCommandHandler
 {
     private readonly IRecurringTaskRepository _recurringRepository;
     private readonly ITaskRepository _taskRepository;
+    private readonly ICurrentUser _currentUser;
 
     public GenerateInstancesCommandHandler(
-        IRecurringTaskRepository recurringRepository, ITaskRepository taskRepository)
+        IRecurringTaskRepository recurringRepository, ITaskRepository taskRepository, ICurrentUser currentUser)
     {
         _recurringRepository = recurringRepository;
         _taskRepository = taskRepository;
+        _currentUser = currentUser;
     }
 
     public async Task<Result<TodoTask>> Handle(GenerateInstancesCommand request, CancellationToken ct)
@@ -74,7 +76,7 @@ public sealed class GenerateInstancesCommandHandler
         TodoTask instance;
         try
         {
-            instance = recurring.GenerateNextInstance(scheduledDate);
+            instance = recurring.GenerateNextInstance(_currentUser.UserId, scheduledDate);
         }
         catch (DomainException ex)
         {

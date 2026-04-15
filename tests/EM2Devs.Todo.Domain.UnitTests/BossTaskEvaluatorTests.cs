@@ -21,7 +21,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_PromoteToBossTask_When_TaskRescheduled3Times()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Write architecture decision record"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Write architecture decision record"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -39,7 +39,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_PromoteToBossTask_When_TaskRescheduledMoreThan3Times()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Overdue report"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Overdue report"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -58,7 +58,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_NotPromoteToBossTask_When_TaskRescheduledLessThan3Times()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Simple task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Simple task"));
         task.Reschedule();
         task.Reschedule();
 
@@ -75,7 +75,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_ReturnFalse_When_TaskAlreadyBossAndStillQualifies()
     {
         // Given — task already promoted, still meets criteria
-        var task = TodoTask.Create(new TaskTitle("Already boss"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Already boss"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -98,7 +98,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_PromoteToBossTask_When_HighPriorityTaskOpenFor14Days()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Refactor authentication module"),
             priority: TaskPriority.High,
             createdAt: DateTimeOffset.UtcNow.AddDays(-15));
@@ -116,7 +116,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_PromoteToBossTask_When_CriticalPriorityTaskOpenFor14Days()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Fix critical security bug"),
             priority: TaskPriority.Critical,
             createdAt: DateTimeOffset.UtcNow.AddDays(-14));
@@ -134,7 +134,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_NotPromoteToBossTask_When_HighPriorityTaskOpenForLessThan14Days()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Recent high priority"),
             priority: TaskPriority.High,
             createdAt: DateTimeOffset.UtcNow.AddDays(-13));
@@ -156,7 +156,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_NotPromoteToBossTask_When_LowPriorityTaskOpenFor30Days()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Reorganise bookshelf"),
             priority: TaskPriority.Low,
             createdAt: DateTimeOffset.UtcNow.AddDays(-30));
@@ -174,7 +174,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_NotPromoteToBossTask_When_MediumPriorityTaskOpenFor30Days()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Organise desk"),
             priority: TaskPriority.Medium,
             createdAt: DateTimeOffset.UtcNow.AddDays(-30));
@@ -196,7 +196,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_PromoteToBossTask_When_HardTaskViewed5TimesWithoutProgress()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Prepare annual tax filing"),
             difficulty: TaskDifficulty.Hard);
         for (int i = 0; i < 5; i++)
@@ -217,7 +217,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_PromoteToBossTask_When_EpicTaskViewed5TimesWithoutProgress()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Massive refactor"),
             difficulty: TaskDifficulty.Epic);
         for (int i = 0; i < 5; i++)
@@ -238,7 +238,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_NotPromoteToBossTask_When_HardTaskViewedLessThan5Times()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Tax filing"),
             difficulty: TaskDifficulty.Hard);
         for (int i = 0; i < 4; i++)
@@ -259,7 +259,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_NotPromoteToBossTask_When_NormalDifficultyTaskViewed5Times()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Normal difficulty task"),
             difficulty: TaskDifficulty.Normal);
         for (int i = 0; i < 5; i++)
@@ -280,7 +280,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_NotPromoteToBossTask_When_HardTaskViewed5TimesButInProgress()
     {
         // Given — task has been started so avoidance rule does not apply
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Tax filing in progress"),
             difficulty: TaskDifficulty.Hard);
         for (int i = 0; i < 5; i++)
@@ -307,7 +307,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_DemoteFromBossTask_When_PriorityChangedToLow()
     {
         // Given — task was promoted due to age + high priority
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Refactor authentication module"),
             priority: TaskPriority.High,
             createdAt: DateTimeOffset.UtcNow.AddDays(-15));
@@ -328,7 +328,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_DemoteFromBossTask_When_ConditionsNoLongerMet()
     {
         // Given — task was promoted due to avoidance (hard + 5 views, todo status)
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Hard task now in progress"),
             difficulty: TaskDifficulty.Hard);
         for (int i = 0; i < 5; i++)
@@ -357,7 +357,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_BecomeBossTask_When_ManuallyPromoted()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Have difficult conversation with manager"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Have difficult conversation with manager"));
 
         // When — manual promotion uses the existing PromoteToBossTask method
         task.PromoteToBossTask();
@@ -371,7 +371,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_NotDemoteManuallyPromotedTask_When_NoAutomaticCriteriaMet()
     {
         // Given — manually promoted task that does not meet any automatic criteria
-        var task = TodoTask.Create(new TaskTitle("Manual boss task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Manual boss task"));
         task.PromoteToBossTask();
         task.IsBossTask.ShouldBeTrue();
 
@@ -410,7 +410,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_ReturnFalse_When_TaskIsDoneEvenWithPromotionConditions()
     {
         // Given — task meets promotion criteria (3+ reschedules) but is Done
-        var task = TodoTask.Create(new TaskTitle("Completed task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Completed task"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -430,7 +430,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_ReturnFalse_When_TaskIsSkippedEvenWithPromotionConditions()
     {
         // Given — task meets promotion criteria (3+ reschedules) but is Skipped
-        var task = TodoTask.Create(new TaskTitle("Skipped task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Skipped task"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -449,7 +449,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_ReturnTrue_When_ShouldPromoteDetectsRescheduling()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Rescheduled task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Rescheduled task"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -466,7 +466,7 @@ public sealed class BossTaskEvaluatorTests
     public void Should_ReturnFalse_When_NoPromotionCriteriaMet()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Brand new task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Brand new task"));
 
         // When
         bool result = BossTaskEvaluator.ShouldPromote(task);

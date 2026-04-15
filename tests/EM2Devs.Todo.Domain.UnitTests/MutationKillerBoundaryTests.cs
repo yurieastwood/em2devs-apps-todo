@@ -227,10 +227,10 @@ public sealed class MutationKillerBoundaryTests
     public void TaskViewFilter_ForUpcoming_OrdersTasksAscendingByCreatedAt()
     {
         DateOnly target = _today.AddDays(3);
-        var older = TodoTask.CreateFromRecurring(new TaskTitle("older"), RecurringTaskId.New(), target);
+        var older = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("older"), RecurringTaskId.New(), target);
         // Introduce a clock gap so CreatedAt differs.
         System.Threading.Thread.Sleep(5);
-        var newer = TodoTask.CreateFromRecurring(new TaskTitle("newer"), RecurringTaskId.New(), target);
+        var newer = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("newer"), RecurringTaskId.New(), target);
 
         var groups = TaskViewFilter.ForUpcoming(new[] { newer, older }, _today);
         var dayTasks = groups.Single(g => g.Date == target).Tasks;
@@ -245,9 +245,9 @@ public sealed class MutationKillerBoundaryTests
     public void TaskViewFilter_ForUpcoming_ExcludesDeletedTasksOnMatchingDay()
     {
         DateOnly target = _today.AddDays(3);
-        var deleted = TodoTask.CreateFromRecurring(new TaskTitle("deleted"), RecurringTaskId.New(), target);
+        var deleted = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("deleted"), RecurringTaskId.New(), target);
         deleted.Delete();
-        var alive = TodoTask.CreateFromRecurring(new TaskTitle("alive"), RecurringTaskId.New(), target);
+        var alive = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("alive"), RecurringTaskId.New(), target);
 
         var groups = TaskViewFilter.ForUpcoming(new[] { deleted, alive }, _today);
         var dayTasks = groups.Single(g => g.Date == target).Tasks;
@@ -261,10 +261,10 @@ public sealed class MutationKillerBoundaryTests
     public void TaskViewFilter_ForUpcoming_ExcludesDoneTasksOnMatchingDay()
     {
         DateOnly target = _today.AddDays(3);
-        var done = TodoTask.CreateFromRecurring(new TaskTitle("done"), RecurringTaskId.New(), target);
+        var done = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("done"), RecurringTaskId.New(), target);
         done.MoveToInProgress();
         done.MarkAsDone();
-        var alive = TodoTask.CreateFromRecurring(new TaskTitle("alive"), RecurringTaskId.New(), target);
+        var alive = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("alive"), RecurringTaskId.New(), target);
 
         var groups = TaskViewFilter.ForUpcoming(new[] { done, alive }, _today);
         var dayTasks = groups.Single(g => g.Date == target).Tasks;
@@ -279,7 +279,7 @@ public sealed class MutationKillerBoundaryTests
     [Trait("Category", "Domain")]
     public void TaskViewFilter_ForToday_ExcludesDeletedTask()
     {
-        var scheduled = TodoTask.CreateFromRecurring(new TaskTitle("x"), RecurringTaskId.New(), _today);
+        var scheduled = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("x"), RecurringTaskId.New(), _today);
         scheduled.Delete();
 
         var result = TaskViewFilter.ForToday(new[] { scheduled }, _today);
@@ -292,10 +292,10 @@ public sealed class MutationKillerBoundaryTests
     [Trait("Category", "Domain")]
     public void TaskViewFilter_ForInbox_ExcludesDoneTask()
     {
-        var done = TodoTask.Create(new TaskTitle("done"));
+        var done = TodoTask.Create(TestData.TestUserId, new TaskTitle("done"));
         done.MoveToInProgress();
         done.MarkAsDone();
-        var open = TodoTask.Create(new TaskTitle("open"));
+        var open = TodoTask.Create(TestData.TestUserId, new TaskTitle("open"));
 
         var inbox = TaskViewFilter.ForInbox(new[] { done, open });
         inbox.Count.ShouldBe(1);
@@ -312,12 +312,12 @@ public sealed class MutationKillerBoundaryTests
         // by writing the backing property via reflection. Only the private
         // setter of CompletedAt is manipulated; this keeps production code
         // unchanged while guaranteeing two distinct group keys.
-        var earlier = TodoTask.CreateFromRecurring(new TaskTitle("earlier"), RecurringTaskId.New(), _today);
+        var earlier = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("earlier"), RecurringTaskId.New(), _today);
         earlier.MoveToInProgress();
         earlier.MarkAsDone();
         SetCompletedAt(earlier, new DateTimeOffset(2026, 4, 10, 12, 0, 0, TimeSpan.Zero));
 
-        var later = TodoTask.CreateFromRecurring(new TaskTitle("later"), RecurringTaskId.New(), _today);
+        var later = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("later"), RecurringTaskId.New(), _today);
         later.MoveToInProgress();
         later.MarkAsDone();
         SetCompletedAt(later, new DateTimeOffset(2026, 4, 14, 12, 0, 0, TimeSpan.Zero));
@@ -337,12 +337,12 @@ public sealed class MutationKillerBoundaryTests
         // Construct a task that has CompletedAt populated but Status reverted via Reopen:
         // Reopen sets CompletedAt = null, so we instead set CompletedAt via reflection while
         // leaving Status as Todo.
-        var weird = TodoTask.Create(new TaskTitle("weird"));
+        var weird = TodoTask.Create(TestData.TestUserId, new TaskTitle("weird"));
         SetCompletedAt(weird, new DateTimeOffset(2026, 4, 14, 12, 0, 0, TimeSpan.Zero));
 
         // Also include a genuinely completed task so the returned list is non-empty and
         // the filter's behaviour is unambiguous.
-        var done = TodoTask.CreateFromRecurring(new TaskTitle("done"), RecurringTaskId.New(), _today);
+        var done = TodoTask.CreateFromRecurring(TestData.TestUserId, new TaskTitle("done"), RecurringTaskId.New(), _today);
         done.MoveToInProgress();
         done.MarkAsDone();
 
@@ -365,7 +365,7 @@ public sealed class MutationKillerBoundaryTests
     [Trait("Category", "Domain")]
     public void TodoTask_RecordActualTime_NotDone_MessageIsExact()
     {
-        var task = TodoTask.Create(new TaskTitle("x"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("x"));
         task.UpdateEstimatedTime(TimeEstimate.FromMinutes(60));
 
         var ex = Should.Throw<DomainException>(() =>
@@ -377,7 +377,7 @@ public sealed class MutationKillerBoundaryTests
     [Trait("Category", "Domain")]
     public void TodoTask_RecordActualTime_NoEstimate_MessageIsExact()
     {
-        var task = TodoTask.Create(new TaskTitle("x"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("x"));
         task.MoveToInProgress();
         task.MarkAsDone();
 
@@ -390,7 +390,7 @@ public sealed class MutationKillerBoundaryTests
     [Trait("Category", "Domain")]
     public void TodoTask_RecordActualTime_NullActual_ParamNameIsActual()
     {
-        var task = TodoTask.Create(new TaskTitle("x"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("x"));
         task.UpdateEstimatedTime(TimeEstimate.FromMinutes(60));
         task.MoveToInProgress();
         task.MarkAsDone();

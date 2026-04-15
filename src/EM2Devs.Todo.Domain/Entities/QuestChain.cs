@@ -62,7 +62,7 @@ public sealed class QuestChain
     /// Generates the next chain instance as a concrete Quest whose due date is
     /// <see cref="DefaultInstanceDeadline"/> after <paramref name="scheduledOn"/>.
     /// </summary>
-    public Quest GenerateInstance(DateOnly scheduledOn)
+    public Quest GenerateInstance(Guid userId, DateOnly scheduledOn)
     {
         DateOnly deadline = scheduledOn.AddDays(1);
         DateTimeOffset taskDue = new DateTimeOffset(
@@ -71,7 +71,7 @@ public sealed class QuestChain
 
         foreach (TaskTitle taskTitle in _taskTemplate)
         {
-            TodoTask task = TodoTask.Create(taskTitle, dueDate: taskDue);
+            TodoTask task = TodoTask.Create(userId, taskTitle, dueDate: taskDue);
             quest.AddTask(task);
         }
 

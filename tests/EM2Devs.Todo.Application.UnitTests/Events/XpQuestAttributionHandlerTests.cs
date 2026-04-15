@@ -34,7 +34,7 @@ public sealed class XpQuestAttributionHandlerTests
         // Given — a task that belongs to a quest
         TaskId taskId = new(Guid.NewGuid());
         Quest quest = Quest.Create(new QuestTitle("Sprint work"), "Sprint tasks");
-        TodoTask task = TodoTask.Create(new TaskTitle("Fix login bug"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Fix login bug"));
         quest.AddTask(task);
 
         _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
@@ -89,9 +89,9 @@ public sealed class XpQuestAttributionHandlerTests
         TaskId taskId = new(Guid.NewGuid());
         Quest quest1 = Quest.Create(new QuestTitle("Quest 1"), "First");
         Quest quest2 = Quest.Create(new QuestTitle("Quest 2"), "Second");
-        TodoTask task = TodoTask.Create(new TaskTitle("Shared task"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Shared task"));
         quest1.AddTask(task);
-        quest2.AddTask(TodoTask.Create(new TaskTitle("Shared task"))); // Different instance but for testing
+        quest2.AddTask(TodoTask.Create(TestUserId, new TaskTitle("Shared task"))); // Different instance but for testing
 
         _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
             .Returns(new PlayerProfileReadModel(100, 2, 50, 0, 0));

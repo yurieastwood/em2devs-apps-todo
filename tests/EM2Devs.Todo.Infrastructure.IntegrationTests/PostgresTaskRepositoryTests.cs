@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Testcontainers.PostgreSql;
+using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
 using EM2Devs.Todo.Infrastructure.Persistence;
@@ -36,7 +37,15 @@ public sealed class PostgresTaskRepositoryTests : IAsyncLifetime, IDisposable
 
         _dbContext = new TodoDbContext(options);
         await _dbContext.Database.EnsureCreatedAsync();
-        _repository = new PostgresTaskRepository(_dbContext);
+        _repository = new PostgresTaskRepository(_dbContext, new FakeCurrentUser(TestUserId));
+    }
+
+    private sealed class FakeCurrentUser : ICurrentUser
+    {
+        public FakeCurrentUser(Guid userId) { UserId = userId; }
+        public Guid UserId { get; }
+        public string DisplayName => "Test";
+        public bool IsAuthenticated => true;
     }
 
     public async Task DisposeAsync()
@@ -49,7 +58,7 @@ public sealed class PostgresTaskRepositoryTests : IAsyncLifetime, IDisposable
     public async Task Should_PersistAndRetrieveTask_When_TaskIsCreated()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Buy groceries"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Buy groceries"));
 
         // When
         await _repository.SaveAsync(task);
@@ -66,8 +75,8 @@ public sealed class PostgresTaskRepositoryTests : IAsyncLifetime, IDisposable
     public async Task Should_ReturnAllTasks_When_MultiplTasksExist()
     {
         // Given
-        TodoTask task1 = TodoTask.Create(new TaskTitle("Task one"));
-        TodoTask task2 = TodoTask.Create(new TaskTitle("Task two"));
+        TodoTask task1 = TodoTask.Create(TestUserId, new TaskTitle("Task one"));
+        TodoTask task2 = TodoTask.Create(TestUserId, new TaskTitle("Task two"));
         await _repository.SaveAsync(task1);
         await _repository.SaveAsync(task2);
 
@@ -82,7 +91,7 @@ public sealed class PostgresTaskRepositoryTests : IAsyncLifetime, IDisposable
     public async Task Should_PersistStatusChange_When_TaskIsCompleted()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Write report"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Write report"));
         await _repository.SaveAsync(task);
 
         // When
@@ -104,7 +113,7 @@ public sealed class PostgresTaskRepositoryTests : IAsyncLifetime, IDisposable
     public async Task Should_DeleteTask_When_TaskExists()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Delete me"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Delete me"));
         await _repository.SaveAsync(task);
 
         // When

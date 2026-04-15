@@ -22,7 +22,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_FlagAsProcrastinationCandidate_When_TaskRescheduled3OrMoreTimes()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Update resume"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Update resume"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -40,7 +40,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_IncludeGentleInterventionPrompt_When_TaskFlaggedForRescheduling()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Update resume"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Update resume"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -60,7 +60,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotFlagAsProcrastinationCandidate_When_TaskRescheduledLessThan3Times()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Quick task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Quick task"));
         task.Reschedule();
         task.Reschedule();
 
@@ -80,7 +80,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_FlagAsProcrastinationCandidate_When_TaskViewed5TimesWithoutAction()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Call accountant"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Call accountant"));
         for (int i = 0; i < 5; i++)
         {
             task.RecordView();
@@ -99,7 +99,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotFlagForViewingWithoutAction_When_TaskViewedLessThan5Times()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Quick look"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Quick look"));
         for (int i = 0; i < 4; i++)
         {
             task.RecordView();
@@ -117,7 +117,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotFlagForViewingWithoutAction_When_TaskIsInProgress()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Started task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Started task"));
         for (int i = 0; i < 5; i++)
         {
             task.RecordView();
@@ -141,7 +141,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotFlagAsProcrastinationCandidate_When_TaskHasWaitingReason()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Follow up with contractor"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Follow up with contractor"));
         for (int i = 0; i < 5; i++)
         {
             task.RecordView();
@@ -161,7 +161,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_FlagAgain_When_WaitingReasonCleared()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Follow up with contractor"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Follow up with contractor"));
         for (int i = 0; i < 5; i++)
         {
             task.RecordView();
@@ -186,7 +186,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_FlagAsAvoided_When_HighPriorityTaskSkippedFor4Days()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Prepare investor pitch"),
             priority: TaskPriority.Critical);
 
@@ -205,7 +205,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotFlagAsAvoided_When_LowPriorityTaskSkipped()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Organise bookshelf"),
             priority: TaskPriority.Low);
 
@@ -223,7 +223,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotFlagAsAvoided_When_NotEnoughDaysInTodayView()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Critical task"),
             priority: TaskPriority.Critical);
 
@@ -241,7 +241,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotFlagAsAvoided_When_NotEnoughLowerPriorityTasksCompleted()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Critical task"),
             priority: TaskPriority.High);
 
@@ -259,7 +259,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotFlagAsAvoided_When_HighPriorityTaskIsInProgress()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Started critical task"),
             priority: TaskPriority.Critical);
         task.MoveToInProgress();
@@ -282,7 +282,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_HaveHigherUrgency_When_MultipleSignalsDetected()
     {
         // Given — task with multiple signals
-        var multiSignalTask = TodoTask.Create(
+        var multiSignalTask = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Complete tax return"),
             priority: TaskPriority.High);
         multiSignalTask.Reschedule();
@@ -294,7 +294,7 @@ public sealed class ProcrastinationEvaluatorTests
         }
 
         // Given — task with single signal
-        var singleSignalTask = TodoTask.Create(new TaskTitle("Simple rescheduled task"));
+        var singleSignalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Simple rescheduled task"));
         singleSignalTask.Reschedule();
         singleSignalTask.Reschedule();
         singleSignalTask.Reschedule();
@@ -317,7 +317,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_SumSignalWeights_When_CalculatingUrgencyScore()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Multi-signal task"),
             priority: TaskPriority.High);
         task.Reschedule();
@@ -345,7 +345,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_FlagAsProcrastinationCandidate_When_TaskOverdueBy7OrMoreDays()
     {
         // Given — task due 10 days ago
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("File insurance claim"),
             dueDate: DateTimeOffset.UtcNow.AddDays(-10));
 
@@ -362,7 +362,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_FlagAsProcrastinationCandidate_When_TaskOverdueByExactly7Days()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Exactly 7 days overdue"),
             dueDate: DateTimeOffset.UtcNow.AddDays(-7));
 
@@ -379,7 +379,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotFlagAsOverdue_When_TaskOverdueByLessThan7Days()
     {
         // Given
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Recently overdue"),
             dueDate: DateTimeOffset.UtcNow.AddDays(-6));
 
@@ -395,7 +395,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotFlagAsOverdue_When_TaskHasNoDueDate()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("No due date task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("No due date task"));
 
         // When
         var candidate = ProcrastinationEvaluator.Evaluate(task);
@@ -413,7 +413,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_OfferAllInterventionOptions_When_TaskFlaggedForProcrastination()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Update resume"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Update resume"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -455,7 +455,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_SuggestSubtasks_When_BreakingDownProcrastinatedTask()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Prepare investor pitch"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Prepare investor pitch"));
 
         // When
         var subtasks = ProcrastinationEvaluator.SuggestSubtasks(task);
@@ -500,7 +500,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_PromoteToBossTask_When_ChoosingBossTaskIntervention()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Write thesis chapter"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Write thesis chapter"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -524,7 +524,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_ClearProcrastinationSignals_When_BossTaskCompleted()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Write thesis chapter"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Write thesis chapter"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -546,7 +546,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotAppearInProcrastinationInsights_When_CompletedBossTask()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Write thesis chapter"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Write thesis chapter"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -572,7 +572,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_AttachCommitmentNote_When_ReschedulingWithIntent()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Schedule dentist appointment"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Schedule dentist appointment"));
         var note = new CommitmentNote("Will call during lunch break");
 
         // When
@@ -602,7 +602,7 @@ public sealed class ProcrastinationEvaluatorTests
     [Trait("Category", "Domain")]
     public void Should_ThrowArgumentNullException_When_ReschedulingWithNullNote()
     {
-        var task = TodoTask.Create(new TaskTitle("Test"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
         Should.Throw<ArgumentNullException>(() => task.RescheduleWithCommitment(null!));
     }
 
@@ -611,7 +611,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_ThrowDomainException_When_ReschedulingCompletedTaskWithCommitment()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Done task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Done task"));
         task.MoveToInProgress();
         task.MarkAsDone();
 
@@ -629,19 +629,19 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_ShowProcrastinationPatterns_When_AnalysingTaskHistory()
     {
         // Given — tasks with procrastination signals
-        var task1 = TodoTask.Create(new TaskTitle("Task one"));
+        var task1 = TodoTask.Create(TestData.TestUserId, new TaskTitle("Task one"));
         task1.Reschedule();
         task1.Reschedule();
         task1.Reschedule();
         ProcrastinationEvaluator.Evaluate(task1);
 
-        var task2 = TodoTask.Create(new TaskTitle("Task two"));
+        var task2 = TodoTask.Create(TestData.TestUserId, new TaskTitle("Task two"));
         task2.Reschedule();
         task2.Reschedule();
         task2.Reschedule();
         ProcrastinationEvaluator.Evaluate(task2);
 
-        var task3 = TodoTask.Create(new TaskTitle("Task three"));
+        var task3 = TodoTask.Create(TestData.TestUserId, new TaskTitle("Task three"));
         for (int i = 0; i < 5; i++)
         {
             task3.RecordView();
@@ -690,7 +690,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_IncludeAcknowledgementOfDifficulty_When_PresentingIntervention()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Overwhelming task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Overwhelming task"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -708,7 +708,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_IncludeConstructiveSuggestion_When_PresentingIntervention()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Hard task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Hard task"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -726,7 +726,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_NotContainShamingWords_When_PresentingIntervention()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Shameful task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Shameful task"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -836,7 +836,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_ReturnNull_When_TaskIsDone()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Done task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Done task"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -855,7 +855,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_ReturnNull_When_TaskIsSkipped()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Skipped task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Skipped task"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -873,7 +873,7 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_IncludeForwardPathInMessage_When_GeneratingIntervention()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Test message parts"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test message parts"));
         task.Reschedule();
         task.Reschedule();
         task.Reschedule();
@@ -891,13 +891,13 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_ExcludeTasksWithNoSignals_When_AnalysingPatterns()
     {
         // Given — mix of tasks: some with signals, some without
-        var taskWithSignals = TodoTask.Create(new TaskTitle("Has signals"));
+        var taskWithSignals = TodoTask.Create(TestData.TestUserId, new TaskTitle("Has signals"));
         taskWithSignals.Reschedule();
         taskWithSignals.Reschedule();
         taskWithSignals.Reschedule();
         ProcrastinationEvaluator.Evaluate(taskWithSignals);
 
-        var taskWithoutSignals = TodoTask.Create(new TaskTitle("No signals"));
+        var taskWithoutSignals = TodoTask.Create(TestData.TestUserId, new TaskTitle("No signals"));
 
         // When
         var patterns = ProcrastinationEvaluator.AnalysePatterns(
@@ -912,13 +912,13 @@ public sealed class ProcrastinationEvaluatorTests
     public void Should_CalculateCorrectSuccessRate_When_AnalysingPatterns()
     {
         // Given — 2 procrastinated tasks, 1 completed after intervention
-        var task1 = TodoTask.Create(new TaskTitle("Task one"));
+        var task1 = TodoTask.Create(TestData.TestUserId, new TaskTitle("Task one"));
         task1.Reschedule();
         task1.Reschedule();
         task1.Reschedule();
         ProcrastinationEvaluator.Evaluate(task1);
 
-        var task2 = TodoTask.Create(new TaskTitle("Task two"));
+        var task2 = TodoTask.Create(TestData.TestUserId, new TaskTitle("Task two"));
         task2.Reschedule();
         task2.Reschedule();
         task2.Reschedule();
@@ -938,7 +938,7 @@ public sealed class ProcrastinationEvaluatorTests
     {
         // Given — task due 10 days before evaluation date
         var evaluationDate = new DateTimeOffset(2026, 4, 12, 0, 0, 0, TimeSpan.Zero);
-        var task = TodoTask.Create(
+        var task = TodoTask.Create(TestData.TestUserId,
             new TaskTitle("Test with evaluation date"),
             dueDate: evaluationDate.AddDays(-10));
 

@@ -15,6 +15,7 @@ using EM2Devs.Todo.Infrastructure.Auth;
 using EM2Devs.Todo.Infrastructure.Persistence;
 using EM2Devs.Todo.ServiceDefaults;
 using EM2Devs.Todo.Api.Extensions;
+using EM2Devs.Todo.Api.Hubs;
 using EM2Devs.Todo.Api.Middleware;
 using Asp.Versioning;
 using FluentValidation;
@@ -197,6 +198,26 @@ builder.Services
                     ?? throw new InvalidOperationException("Jwt:Key not configured"))),
             ClockSkew = TimeSpan.Zero
         };
+
+        // SignalR's JS client sends the access token as a query-string parameter
+        // during the WebSocket/Server-Sent-Events handshake because browsers can't
+        // attach custom Authorization headers on those upgrade requests. Narrow this
+        // allowance to the notifications hub path only — other endpoints must keep
+        // using the standard Authorization header so we don't broaden the attack surface.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                string? accessToken = context.Request.Query["access_token"];
+                PathString path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken)
+                    && path.StartsWithSegments("/hubs/notifications", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 // Intentionally no FallbackPolicy: endpoints must opt in via [Authorize] on their controller.
@@ -222,6 +243,10 @@ builder.Services.AddControllers(options =>
     });
 builder.Services.AddOpenApi();
 
+// Real-time notification push over SignalR (feat/signalr-notifications).
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<INotificationPublisher, SignalRNotificationPublisher>();
+
 var app = builder.Build();
 
 bool isNonProduction = app.Environment.IsDevelopment()
@@ -245,6 +270,7 @@ app.UseAuthorization();
 app.MapOpenApi();
 app.MapScalarApiReference();
 app.MapControllers();
+app.MapHub<NotificationsHub>("/hubs/notifications");
 
 app.Run();
 

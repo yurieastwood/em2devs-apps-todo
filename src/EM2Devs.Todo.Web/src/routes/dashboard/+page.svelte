@@ -1,5 +1,13 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { onDestroy } from 'svelte';
+	import type { HubConnection } from '@microsoft/signalr';
+	import {
+		connectNotifications,
+		disconnectNotifications,
+		type RealtimeNotification
+	} from '$lib/notifications/realtime';
+	import type { Notification } from '$lib/api/notifications';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -13,7 +21,69 @@
 	);
 	let freezeDays = $state(7);
 
-	let notifications = $derived(data.notifications ?? []);
+	// Local notification list — seeded from the server-loaded data, then
+	// mutated in-place as real-time pushes arrive over SignalR.
+	// Buffer of real-time pushes. Merged with server-loaded data via a derived
+	// array so we don't fight the `svelte/prefer-writable-derived` lint rule.
+	let pushed = $state<Notification[]>([]);
+	let notifications = $derived.by(() => {
+		const base = data.notifications ?? [];
+		if (pushed.length === 0) return base;
+		const pushedIds = new Set(pushed.map((n) => n.id));
+		const filtered = base.filter((n) => !pushedIds.has(n.id));
+		return [...pushed, ...filtered];
+	});
+
+	let hubConnection: HubConnection | null = null;
+
+	$effect(() => {
+		let cancelled = false;
+
+		async function connect() {
+			try {
+				const response = await fetch('/realtime/token');
+				if (!response.ok) return;
+				const { token, baseUrl } = (await response.json()) as {
+					token: string;
+					baseUrl: string;
+				};
+				if (cancelled) return;
+				const connection = await connectNotifications(
+					token,
+					(incoming: RealtimeNotification) => {
+						// Merge — de-dupe by id in case a refresh already surfaced the row.
+						const existing = pushed.findIndex((n) => n.id === incoming.id);
+						if (existing >= 0) {
+							pushed[existing] = incoming;
+						} else {
+							pushed = [incoming, ...pushed];
+						}
+					},
+					{ baseUrl }
+				);
+				if (cancelled) {
+					await disconnectNotifications(connection);
+					return;
+				}
+				hubConnection = connection;
+			} catch (err) {
+				// Non-fatal: the inbox is still available via page refresh.
+				console.warn('[realtime] hub connect failed', err);
+			}
+		}
+
+		void connect();
+
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	onDestroy(() => {
+		void disconnectNotifications(hubConnection);
+		hubConnection = null;
+	});
+
 	let sortedNotifications = $derived(
 		[...notifications]
 			.sort((a, b) => {

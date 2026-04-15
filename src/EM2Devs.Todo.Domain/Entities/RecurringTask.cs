@@ -6,22 +6,44 @@ namespace EM2Devs.Todo.Domain.Entities;
 public sealed class RecurringTask
 {
     public RecurringTaskId Id { get; }
+    public Guid UserId { get; private set; }
     public TaskTitle Title { get; private set; }
     public RecurrencePattern Pattern { get; private set; }
     public bool IsActive { get; private set; }
     public DateOnly? EndDate { get; }
 
-    private RecurringTask(RecurringTaskId id, TaskTitle title, RecurrencePattern pattern,
+    private RecurringTask(RecurringTaskId id, Guid userId, TaskTitle title, RecurrencePattern pattern,
         DateOnly? endDate = null)
     {
+        if (userId == Guid.Empty)
+        {
+            throw new DomainException("UserId cannot be empty.");
+        }
+
         Id = id;
+        UserId = userId;
         Title = title;
         Pattern = pattern;
         IsActive = true;
         EndDate = endDate;
     }
 
-    public static RecurringTask Create(TaskTitle title, RecurrencePattern pattern,
+    // Stryker disable all : EF Core materialization constructor — not reachable from domain tests.
+    // EF binds these parameters to mapped properties by name+type. Parameter types must exactly
+    // match the mapped property types.
+    private RecurringTask(RecurringTaskId id, Guid userId, TaskTitle title, RecurrencePattern pattern,
+        bool isActive, DateOnly? endDate)
+    {
+        Id = id;
+        UserId = userId;
+        Title = title;
+        Pattern = pattern;
+        IsActive = isActive;
+        EndDate = endDate;
+    }
+    // Stryker restore all
+
+    public static RecurringTask Create(Guid userId, TaskTitle title, RecurrencePattern pattern,
         DateOnly? endDate = null)
     {
         if (endDate.HasValue && endDate.Value < DateOnly.FromDateTime(DateTime.UtcNow))
@@ -29,10 +51,10 @@ public sealed class RecurringTask
             throw new DomainException("Cannot create a recurring task with an end date in the past.");
         }
 
-        return new RecurringTask(RecurringTaskId.New(), title, pattern, endDate);
+        return new RecurringTask(RecurringTaskId.New(), userId, title, pattern, endDate);
     }
 
-    public TodoTask GenerateNextInstance(Guid userId, DateOnly scheduledDate)
+    public TodoTask GenerateNextInstance(DateOnly scheduledDate)
     {
         if (!IsActive)
         {
@@ -44,7 +66,7 @@ public sealed class RecurringTask
             throw new DomainException("Cannot generate instances after the end date.");
         }
 
-        return TodoTask.CreateFromRecurring(userId, Title, Id, scheduledDate);
+        return TodoTask.CreateFromRecurring(UserId, Title, Id, scheduledDate);
     }
 
     /// <summary>

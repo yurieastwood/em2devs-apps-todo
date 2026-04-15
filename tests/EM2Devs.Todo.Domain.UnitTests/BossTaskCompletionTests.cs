@@ -531,12 +531,11 @@ public sealed class BossTaskCompletionTests
     public void Should_GenerateNormalNextInstance_When_RecurringBossTaskCompleted()
     {
         // Given — recurring task generates next instance
-        var recurringTask = RecurringTask.Create(
-            new TaskTitle("Weekly report"), RecurrencePattern.Weekly);
+        var recurringTask = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Weekly report"), RecurrencePattern.Weekly);
         var nextDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7);
 
         // When — generate next instance
-        var nextInstance = recurringTask.GenerateNextInstance(TestData.TestUserId, nextDate);
+        var nextInstance = recurringTask.GenerateNextInstance(nextDate);
 
         // Then — next instance should be normal (not boss)
         nextInstance.IsBossTask.ShouldBeFalse();

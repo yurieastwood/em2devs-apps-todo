@@ -14,9 +14,13 @@ public sealed class CreateRecurringTaskCommandHandler
     : IRequestHandler<CreateRecurringTaskCommand, Result<RecurringTask>>
 {
     private readonly IRecurringTaskRepository _repository;
+    private readonly ICurrentUser _currentUser;
 
-    public CreateRecurringTaskCommandHandler(IRecurringTaskRepository repository) =>
+    public CreateRecurringTaskCommandHandler(IRecurringTaskRepository repository, ICurrentUser currentUser)
+    {
         _repository = repository;
+        _currentUser = currentUser;
+    }
 
     public async Task<Result<RecurringTask>> Handle(CreateRecurringTaskCommand request, CancellationToken ct)
     {
@@ -37,7 +41,7 @@ public sealed class CreateRecurringTaskCommandHandler
             return new ValidationError($"Invalid recurrence pattern: '{request.Pattern}'. Valid values: Daily, Weekly, Monthly.");
         }
 
-        RecurringTask recurringTask = RecurringTask.Create(title, pattern);
+        RecurringTask recurringTask = RecurringTask.Create(_currentUser.UserId, title, pattern);
         await _repository.SaveAsync(recurringTask, ct).ConfigureAwait(false);
         return recurringTask;
     }
@@ -50,14 +54,12 @@ public sealed class GenerateInstancesCommandHandler
 {
     private readonly IRecurringTaskRepository _recurringRepository;
     private readonly ITaskRepository _taskRepository;
-    private readonly ICurrentUser _currentUser;
 
     public GenerateInstancesCommandHandler(
-        IRecurringTaskRepository recurringRepository, ITaskRepository taskRepository, ICurrentUser currentUser)
+        IRecurringTaskRepository recurringRepository, ITaskRepository taskRepository)
     {
         _recurringRepository = recurringRepository;
         _taskRepository = taskRepository;
-        _currentUser = currentUser;
     }
 
     public async Task<Result<TodoTask>> Handle(GenerateInstancesCommand request, CancellationToken ct)
@@ -76,7 +78,7 @@ public sealed class GenerateInstancesCommandHandler
         TodoTask instance;
         try
         {
-            instance = recurring.GenerateNextInstance(_currentUser.UserId, scheduledDate);
+            instance = recurring.GenerateNextInstance(scheduledDate);
         }
         catch (DomainException ex)
         {

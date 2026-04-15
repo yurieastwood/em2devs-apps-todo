@@ -88,4 +88,25 @@ public sealed class PostgresTaskRepository : ITaskRepository
             .MaxAsync(t => t.ScheduledDate, ct)
             .ConfigureAwait(false);
     }
+
+    public async Task SaveForGenerationAsync(TodoTask task, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+
+        if (_dbContext.Entry(task).State == EntityState.Detached)
+        {
+            _dbContext.Tasks.Add(task);
+        }
+
+        await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
+
+    public async Task<DateOnly?> GetMaxScheduledDateForGenerationAsync(RecurringTaskId sourceId, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(sourceId);
+        return await _dbContext.Tasks
+            .Where(t => t.SourceRecurringTaskId == sourceId && t.ScheduledDate != null)
+            .MaxAsync(t => t.ScheduledDate, ct)
+            .ConfigureAwait(false);
+    }
 }

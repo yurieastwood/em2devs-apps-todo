@@ -30,10 +30,6 @@ namespace EM2Devs.Todo.Worker.Jobs;
 [DisallowConcurrentExecution]
 public sealed partial class RecurringTaskGenerationJob : IJob
 {
-    // Slice 1: background job fallback user. Matches the seed demo user in
-    // AddUsersAndSeed migration. Removed in Slice 2 when RecurringTask gains UserId.
-    private static readonly Guid _demoUserId = new("00000000-0000-0000-0000-000000000001");
-
     private readonly IRecurringTaskRepository _recurringRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly TodoDbContext _dbContext;
@@ -59,8 +55,11 @@ public sealed partial class RecurringTaskGenerationJob : IJob
         ArgumentNullException.ThrowIfNull(context);
 
         DateOnly today = DateOnly.FromDateTime(_timeProvider.GetUtcNow().UtcDateTime);
+        // Slice 2: bypass the per-user filter — the job runs outside any user scope and
+        // generates instances on behalf of every owning user. Each recurring task carries
+        // its UserId, which flows onto the generated TodoTask via GenerateNextInstance.
         IReadOnlyList<RecurringTask> all = await _recurringRepository
-            .GetAllAsync(context.CancellationToken)
+            .GetAllForGenerationAsync(context.CancellationToken)
             .ConfigureAwait(false);
 
         int generated = 0;
@@ -72,7 +71,7 @@ public sealed partial class RecurringTaskGenerationJob : IJob
             }
 
             DateOnly? lastScheduledDate = await _taskRepository
-                .GetMaxScheduledDateAsync(recurring.Id, context.CancellationToken)
+                .GetMaxScheduledDateForGenerationAsync(recurring.Id, context.CancellationToken)
                 .ConfigureAwait(false);
 
             if (!recurring.IsDueForGeneration(lastScheduledDate, today))
@@ -80,12 +79,10 @@ public sealed partial class RecurringTaskGenerationJob : IJob
                 continue;
             }
 
-            // Slice 1: RecurringTask is not yet scoped to a user. Until Slice 2 adds a
-            // UserId to RecurringTask, generated instances belong to the seed demo user.
-            TodoTask instance = recurring.GenerateNextInstance(_demoUserId, today);
+            TodoTask instance = recurring.GenerateNextInstance(today);
             try
             {
-                await _taskRepository.SaveAsync(instance, context.CancellationToken).ConfigureAwait(false);
+                await _taskRepository.SaveForGenerationAsync(instance, context.CancellationToken).ConfigureAwait(false);
             }
             catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: "23505" })
             {

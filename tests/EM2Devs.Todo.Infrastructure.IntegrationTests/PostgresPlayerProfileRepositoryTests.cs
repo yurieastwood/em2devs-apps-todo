@@ -30,7 +30,7 @@ public sealed class PostgresPlayerProfileRepositoryTests : IAsyncLifetime, IDisp
         _dbContext = new TodoDbContext(options);
         await _dbContext.Database.EnsureCreatedAsync();
         _breakdownCache = new LastXpBreakdownCache();
-        _repository = new PostgresPlayerProfileRepository(_dbContext, _breakdownCache);
+        _repository = new PostgresPlayerProfileRepository(_dbContext, _breakdownCache, new InMemoryXpHistoryCache());
     }
 
     public async Task DisposeAsync()
@@ -60,7 +60,7 @@ public sealed class PostgresPlayerProfileRepositoryTests : IAsyncLifetime, IDisp
             .UseNpgsql(_postgres.GetConnectionString())
             .Options;
         await using TodoDbContext fresh = new(options);
-        var freshRepo = new PostgresPlayerProfileRepository(fresh, _breakdownCache);
+        var freshRepo = new PostgresPlayerProfileRepository(fresh, _breakdownCache, new InMemoryXpHistoryCache());
 
         PlayerProfileReadModel profile = await freshRepo.GetProfileAsync();
 

@@ -19,7 +19,7 @@ public sealed class XpAwardHandlerStreakTests
     public async Task Should_RecordStreakCompletionBeforeAwardingXp_When_TaskCompleted()
     {
         // Given — fresh in-memory profile
-        var profileRepo = new InMemoryPlayerProfileRepository(new LastXpBreakdownCache());
+        var profileRepo = new InMemoryPlayerProfileRepository(new LastXpBreakdownCache(), new InMemoryXpHistoryCache());
         var mediator = new NoopMediator();
         var questRepo = Substitute.For<IQuestRepository>();
         questRepo.GetByTaskIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>())
@@ -50,7 +50,7 @@ public sealed class XpAwardHandlerStreakTests
     public async Task Should_FeedNewStreakIntoMultiplier_When_BuildingStreak()
     {
         // Given — pre-existing 5-day streak ending yesterday (relative to the completion timestamp)
-        var profileRepo = new InMemoryPlayerProfileRepository(new LastXpBreakdownCache());
+        var profileRepo = new InMemoryPlayerProfileRepository(new LastXpBreakdownCache(), new InMemoryXpHistoryCache());
         DateOnly yesterday = new(2026, 4, 6);
         for (int i = 0; i < 5; i++)
         {

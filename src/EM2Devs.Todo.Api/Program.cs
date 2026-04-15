@@ -32,6 +32,7 @@ builder.Services.AddProblemDetails();
 
 string? connectionString = builder.Configuration.GetConnectionString("tododb");
 builder.Services.AddSingleton<ILastXpBreakdownCache, LastXpBreakdownCache>();
+builder.Services.AddSingleton<IXpHistoryCache, InMemoryXpHistoryCache>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddHttpContextAccessor();
 

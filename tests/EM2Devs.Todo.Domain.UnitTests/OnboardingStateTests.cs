@@ -365,7 +365,7 @@ public sealed class OnboardingStateTests
         ExperiencePoints retroXp = OnboardingState.CalculateRetroactiveXp(45);
 
         // When — applied to a new profile
-        PlayerProfile profile = PlayerProfile.NewProfile();
+        PlayerProfile profile = PlayerProfile.NewProfile(TestData.TestUserId);
         profile.AwardXp(retroXp);
 
         // Then — the player has already reached a level (not starting from scratch)
@@ -395,7 +395,7 @@ public sealed class OnboardingStateTests
     public void Should_ApplyRetroactiveSkillTreeProgress_When_Activated()
     {
         // Given — 20 "creative" completions, Creator skill tree discovered
-        PlayerProfile profile = PlayerProfile.NewProfile();
+        PlayerProfile profile = PlayerProfile.NewProfile(TestData.TestUserId);
         profile.DiscoverSkillTree(SkillTreeType.Creator);
 
         // When — retroactive progress applied

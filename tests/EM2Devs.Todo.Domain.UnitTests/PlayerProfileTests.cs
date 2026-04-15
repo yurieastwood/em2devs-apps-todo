@@ -13,19 +13,21 @@ public sealed class PlayerProfileTests
 {
     private static readonly DateOnly _today = new(2026, 4, 7);
     private static readonly DateOnly _yesterday = _today.AddDays(-1);
+    private static readonly Guid _userId = new("11111111-1111-1111-1111-111111111111");
 
     [Fact]
     [Trait("Category", "Domain")]
     public void Should_StartWithStartingLevelAndZeroStreak_When_NewProfileCreated()
     {
         // Given / When
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
 
         // Then
         profile.Level.Value.ShouldBe(1);
         profile.Level.CurrentXp.Value.ShouldBe(0);
         profile.Streak.CurrentDays.ShouldBe(0);
         profile.LongestStreak.ShouldBe(0);
+        profile.UserId.ShouldBe(_userId);
     }
 
     [Fact]
@@ -33,7 +35,7 @@ public sealed class PlayerProfileTests
     public void Should_IncrementLevel_When_EnoughXpAwarded()
     {
         // Given — fresh profile
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
 
         // When — award enough XP to reach level 2 (threshold = 50)
         profile.AwardXp(new ExperiencePoints(60));
@@ -47,7 +49,7 @@ public sealed class PlayerProfileTests
     public void Should_NoOp_When_RecordingCompletionTwiceOnSameDay()
     {
         // Given — fresh profile, recorded once today
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
         profile.RecordCompletion(_today);
 
         // When — recorded again same day
@@ -63,7 +65,7 @@ public sealed class PlayerProfileTests
     public void Should_IncrementCurrentStreak_When_RecordingCompletionOnConsecutiveDay()
     {
         // Given — fresh profile, completed once yesterday
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
         profile.RecordCompletion(_yesterday);
 
         // When — completed again today
@@ -79,7 +81,7 @@ public sealed class PlayerProfileTests
     public void Should_PreserveLongestStreak_When_CurrentStreakResets()
     {
         // Given — build streak to 5, then reset it
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
         profile.RecordCompletion(new DateOnly(2026, 4, 1));
         profile.RecordCompletion(new DateOnly(2026, 4, 2));
         profile.RecordCompletion(new DateOnly(2026, 4, 3));
@@ -104,27 +106,56 @@ public sealed class PlayerProfileTests
         var streak = new Streak(3, _yesterday, 1);
 
         // When
-        var profile = PlayerProfile.Reconstitute(PlayerProfileId.New(), level, streak, longestStreak: 12);
+        var profile = PlayerProfile.Reconstitute(PlayerProfileId.New(), _userId, level, streak, longestStreak: 12);
 
         // Then
         profile.Level.Value.ShouldBe(7);
         profile.Streak.CurrentDays.ShouldBe(3);
         profile.LongestStreak.ShouldBe(12);
+        profile.UserId.ShouldBe(_userId);
     }
 
     [Fact]
     [Trait("Category", "Domain")]
-    public void Should_ShareSingletonId_When_TwoNewProfilesCreated()
+    public void Should_AssignDistinctIds_When_TwoNewProfilesCreatedForDifferentUsers()
     {
-        // Given / When — single-user demo mode has exactly one profile, identified by a
-        // deterministic Id. Two NewProfile() calls must produce the same Id so concurrent
-        // create-on-first-request races are arbitrated by the primary-key constraint.
-        var first = PlayerProfile.NewProfile();
-        var second = PlayerProfile.NewProfile();
+        // Given / When — per-user isolation means each profile gets a unique id.
+        // Slice 3 replaced the pre-auth SingletonId with per-user rows (enforced by the
+        // unique index on user_id). Two NewProfile() calls for two different users must
+        // produce different PlayerProfileIds.
+        var userA = new Guid("22222222-2222-2222-2222-222222222222");
+        var userB = new Guid("33333333-3333-3333-3333-333333333333");
+        var first = PlayerProfile.NewProfile(userA);
+        var second = PlayerProfile.NewProfile(userB);
 
         // Then
-        first.Id.ShouldBe(PlayerProfile.SingletonId);
-        second.Id.ShouldBe(PlayerProfile.SingletonId);
+        first.Id.ShouldNotBe(second.Id);
+        first.UserId.ShouldBe(userA);
+        second.UserId.ShouldBe(userB);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_PlayerProfileUserIdIsEmpty()
+    {
+        // Given / When / Then — UserId is required and must be non-empty.
+        var ex = Should.Throw<Exceptions.DomainException>(
+            () => PlayerProfile.NewProfile(Guid.Empty));
+        ex.Message.ShouldContain("UserId cannot be empty");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_ReconstitutedWithEmptyUserId()
+    {
+        // Given
+        var level = new Level(1, new ExperiencePoints(0));
+        var streak = new Streak(0, null, 0);
+
+        // When / Then
+        var ex = Should.Throw<Exceptions.DomainException>(
+            () => PlayerProfile.Reconstitute(PlayerProfileId.New(), Guid.Empty, level, streak, longestStreak: 0));
+        ex.Message.ShouldContain("UserId cannot be empty");
     }
 
     [Fact]
@@ -132,7 +163,7 @@ public sealed class PlayerProfileTests
     public void Should_ThrowArgumentNullException_When_AwardXpCalledWithNull()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
 
         // When / Then — null guard on AwardXp must fire before falling through to Level.AddXp
         // (ParamName "xp" distinguishes PlayerProfile.AwardXp's guard from Level.AddXp's "earned")
@@ -145,7 +176,7 @@ public sealed class PlayerProfileTests
     public void Should_ResetStreak_When_ProcessDayEndCalledAfterMissedDay()
     {
         // Given — 3-day streak ending yesterday
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
         profile.RecordCompletion(_today.AddDays(-2));
         profile.RecordCompletion(_today.AddDays(-1));
         profile.RecordCompletion(_today);
@@ -165,7 +196,7 @@ public sealed class PlayerProfileTests
     public void Should_NotDeductXpOrRevokeTitles_When_StreakResets()
     {
         // Given — profile with streak of 20, some XP earned, at level 3
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
         profile.AwardXp(new ExperiencePoints(150)); // Enough for level 3
         int levelBeforeReset = profile.Level.Value;
         int xpBeforeReset = profile.Level.CurrentXp.Value;
@@ -196,7 +227,7 @@ public sealed class PlayerProfileTests
     public void Should_DetectStreakMilestone_When_RecordingCompletionAtMilestoneDay()
     {
         // Given — profile with streak of 6 days
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
         DateOnly startDate = new(2026, 3, 1);
         for (int i = 0; i < 6; i++)
         {
@@ -220,7 +251,7 @@ public sealed class PlayerProfileTests
     public void Should_NoOp_When_ProcessDayEndCalledWithNoActiveStreak()
     {
         // Given — fresh profile, no streak at all
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
 
         // When
         profile.ProcessDayEnd(_today);
@@ -259,7 +290,7 @@ public sealed class PlayerProfileTests
     public void Should_ExposeEmptyTitleInventory_When_NewProfileCreated()
     {
         // Given / When
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
 
         // Then — title inventory is available on the public profile
         profile.TitleInventory.ShouldNotBeNull();
@@ -272,7 +303,7 @@ public sealed class PlayerProfileTests
     public void Should_ExposeActiveTitle_When_TitleSelectedOnProfile()
     {
         // Given — profile with a title earned and selected
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
         var title = new Title(TitleType.MorningArchitect, _today);
         profile.AwardTitle(title);
         profile.SelectActiveTitle(TitleType.MorningArchitect);
@@ -289,7 +320,7 @@ public sealed class PlayerProfileTests
     public void Should_ExposeActiveTitleDisplayName_When_TitleSelected()
     {
         // Given — profile with Morning Architect active
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
         profile.AwardTitle(new Title(TitleType.MorningArchitect, _today));
         profile.SelectActiveTitle(TitleType.MorningArchitect);
 
@@ -305,7 +336,7 @@ public sealed class PlayerProfileTests
     public void Should_AwardTitle_When_CalledOnProfile()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
         var title = new Title(TitleType.BossSlayer, _today);
 
         // When
@@ -320,7 +351,7 @@ public sealed class PlayerProfileTests
     public void Should_ThrowDomainException_When_SelectingUnearnedTitleOnProfile()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
 
         // When / Then
         var ex = Should.Throw<Exceptions.DomainException>(
@@ -333,7 +364,7 @@ public sealed class PlayerProfileTests
     public void Should_ThrowArgumentNullException_When_AwardingNullTitleOnProfile()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(_userId);
 
         // When / Then — null validation delegated to TitleInventory.AwardTitle
         Should.Throw<ArgumentNullException>(() => profile.AwardTitle(null!));

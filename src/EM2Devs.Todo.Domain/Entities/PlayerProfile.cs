@@ -1,3 +1,4 @@
+using EM2Devs.Todo.Domain.Exceptions;
 using EM2Devs.Todo.Domain.ValueObjects;
 
 namespace EM2Devs.Todo.Domain.Entities;
@@ -6,21 +7,21 @@ namespace EM2Devs.Todo.Domain.Entities;
 /// Persistent player progression aggregate.
 /// Owns the player's Level (XP) and Streak. Tracks longest streak as historical state.
 /// Replaces the previous in-memory state held inside InMemoryPlayerProfileRepository.
-/// Single-user demo mode: no UserId yet — added when auth lands.
+/// Slice 3 multi-user isolation: each authenticated user owns exactly one PlayerProfile
+/// identified by <see cref="UserId"/>. The singleton-row pattern used before Slice 3
+/// is gone; concurrent create-on-first-request races are now arbitrated by the unique
+/// index on <c>user_id</c> in <c>player_profiles</c>.
 /// </summary>
 public sealed class PlayerProfile
 {
-    /// <summary>
-    /// Fixed identifier for the single-user demo singleton profile row. Using a deterministic
-    /// Id lets <c>PostgresPlayerProfileRepository.GetOrCreateAsync</c> rely on the primary-key
-    /// constraint to arbitrate concurrent create-on-first-request races: the loser gets a
-    /// <c>DbUpdateException</c>, the winner's row survives, and a retry read returns the same
-    /// row. When auth lands and profiles become per-user, this constant goes away.
-    /// </summary>
-    public static readonly PlayerProfileId SingletonId =
-        new(new Guid("01010101-0101-0101-0101-010101010101"));
-
     public PlayerProfileId Id { get; }
+
+    /// <summary>
+    /// The authenticated user who owns this profile. Required and immutable.
+    /// A unique index on this column enforces exactly one profile per user.
+    /// </summary>
+    public Guid UserId { get; private set; }
+
     public Level Level { get; private set; }
     public Streak Streak { get; private set; }
     public int LongestStreak { get; private set; }
@@ -34,9 +35,15 @@ public sealed class PlayerProfile
     /// </summary>
     public IReadOnlyList<SkillTree> SkillTrees => _skillTrees.AsReadOnly();
 
-    private PlayerProfile(PlayerProfileId id, Level level, Streak streak, int longestStreak)
+    private PlayerProfile(PlayerProfileId id, Guid userId, Level level, Streak streak, int longestStreak)
     {
+        if (userId == Guid.Empty)
+        {
+            throw new DomainException("UserId cannot be empty.");
+        }
+
         Id = id;
+        UserId = userId;
         Level = level;
         Streak = streak;
         LongestStreak = longestStreak;
@@ -59,11 +66,12 @@ public sealed class PlayerProfile
         XpHistory = XpHistory.Empty();
     }
 
-    public static PlayerProfile NewProfile() =>
-        new(SingletonId, Level.StartingLevel(), Streak.NewStreak(), longestStreak: 0);
+    public static PlayerProfile NewProfile(Guid userId) =>
+        new(PlayerProfileId.New(), userId, Level.StartingLevel(), Streak.NewStreak(), longestStreak: 0);
 
-    public static PlayerProfile Reconstitute(PlayerProfileId id, Level level, Streak streak, int longestStreak) =>
-        new(id, level, streak, longestStreak);
+    public static PlayerProfile Reconstitute(
+        PlayerProfileId id, Guid userId, Level level, Streak streak, int longestStreak) =>
+        new(id, userId, level, streak, longestStreak);
 
     public void AwardXp(ExperiencePoints xp)
     {
@@ -133,7 +141,7 @@ public sealed class PlayerProfile
         int index = _skillTrees.FindIndex(t => t.Type == type);
         if (index < 0)
         {
-            throw new Exceptions.DomainException(
+            throw new DomainException(
                 $"Skill tree '{type}' has not been discovered yet.");
         }
 

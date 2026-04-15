@@ -20,6 +20,14 @@ public sealed class PlayerProfileConfiguration : IEntityTypeConfiguration<Player
                 id => id.Value,
                 value => new PlayerProfileId(value));
 
+        builder.Property(p => p.UserId)
+            .HasColumnName("user_id")
+            .IsRequired();
+
+        // Slice 3: per-user profile isolation. One PlayerProfile per User, enforced by the unique
+        // index on user_id. Concurrent create-on-first-request races arbitrated by this index.
+        builder.HasIndex(p => p.UserId).IsUnique();
+
         // Level value object — flattened to two columns
         builder.OwnsOne(p => p.Level, level =>
         {

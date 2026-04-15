@@ -5,8 +5,10 @@ namespace EM2Devs.Todo.Worker.Jobs;
 /// <summary>
 /// Slice 1 fallback <see cref="ICurrentUser"/> used by background jobs that run outside
 /// any HTTP request scope. Returns the seed demo user so cross-user filters in
-/// <c>PostgresTaskRepository</c> still work inside the worker. Removed in Slice 2 when
-/// the job gains per-user awareness (e.g., iterating owners of RecurringTasks).
+/// <c>PostgresTaskRepository</c> and <c>PostgresPlayerProfileRepository</c> still work
+/// inside the worker. Slice 3 still relies on this fallback for the daily streak job —
+/// the job currently processes only the demo user's profile. A later slice will iterate
+/// every user with an active profile instead.
 /// </summary>
 internal sealed class SystemCurrentUser : ICurrentUser
 {

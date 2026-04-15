@@ -310,7 +310,7 @@ public sealed class XpHistoryTests
     public void Should_StartWithEmptyHistory_When_NewProfileCreated()
     {
         // Given / When
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
 
         // Then
         profile.XpHistory.ShouldNotBeNull();
@@ -322,7 +322,7 @@ public sealed class XpHistoryTests
     public void Should_RecordXpEarning_When_CalledOnProfile()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
 
         // When
         profile.RecordXpEarning(_today, new ExperiencePoints(30), "task completion");
@@ -339,7 +339,7 @@ public sealed class XpHistoryTests
     public void Should_AccumulateCumulative_When_MultipleEarningsOnProfile()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
 
         // When
         profile.RecordXpEarning(_today, new ExperiencePoints(30), "task completion");
@@ -355,7 +355,7 @@ public sealed class XpHistoryTests
     public void Should_ThrowArgumentNullException_When_RecordXpEarningOnProfileWithNullXp()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
 
         // When / Then — validation delegated to XpHistory.RecordXpEarning
         var ex = Should.Throw<ArgumentNullException>(
@@ -368,7 +368,7 @@ public sealed class XpHistoryTests
     public void Should_ThrowDomainException_When_RecordXpEarningOnProfileWithEmptySource()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
 
         // When / Then — validation delegated to XpHistoryEntry constructor
         var ex = Should.Throw<DomainException>(
@@ -381,7 +381,7 @@ public sealed class XpHistoryTests
     public void Should_GetDailyTotal_When_QueriedOnProfile()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
         profile.RecordXpEarning(_today, new ExperiencePoints(30), "task completion");
         profile.RecordXpEarning(_today, new ExperiencePoints(20), "quest bonus");
 
@@ -398,7 +398,7 @@ public sealed class XpHistoryTests
     {
         // Given
         var weekStart = new DateOnly(2026, 4, 6);
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
         profile.RecordXpEarning(weekStart, new ExperiencePoints(30), "task completion");
         profile.RecordXpEarning(weekStart.AddDays(3), new ExperiencePoints(20), "quest bonus");
 

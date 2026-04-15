@@ -15,7 +15,8 @@ describe('getProfile', () => {
 			lastXpBreakdown: null,
 			xpHistory: [],
 			titles: { earned: [], active: null, progress: [] },
-			skillTrees: []
+			skillTrees: [],
+			streakFreeze: null
 		};
 
 		const mockFetch = vi.fn().mockResolvedValue({
@@ -63,7 +64,12 @@ describe('getProfile', () => {
 				finalXp: 41
 			},
 			xpHistory: [
-				{ date: '2026-04-10', xpEarned: 40, source: 'task-completed', cumulativeTotal: 140 },
+				{
+					date: '2026-04-10',
+					xpEarned: 40,
+					source: 'task-completed',
+					cumulativeTotal: 140
+				},
 				{ date: '2026-04-12', xpEarned: 40, source: 'task-completed', cumulativeTotal: 180 }
 			],
 			titles: {
@@ -80,7 +86,8 @@ describe('getProfile', () => {
 					unlockHint: null,
 					perks: [{ tier: 1, perkType: 'Tips', description: 'Personalised Scholar tips' }]
 				}
-			]
+			],
+			streakFreeze: null
 		};
 
 		const mockFetch = vi.fn().mockResolvedValue({

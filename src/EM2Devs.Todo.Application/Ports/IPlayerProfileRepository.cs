@@ -9,4 +9,10 @@ public interface IPlayerProfileRepository
     Task AwardXpAsync(ExperiencePoints xp, XpBreakdownReadModel? breakdown = null, DateOnly? historyDate = null, string? historySource = null, CancellationToken ct = default);
     Task RecordCompletionAsync(DateOnly completionDate, CancellationToken ct = default);
     Task ProcessDayEndAsync(DateOnly evaluationDate, CancellationToken ct = default);
+
+    /// <summary>
+    /// Activates a streak freeze for the current user's profile starting today.
+    /// Throws <see cref="Domain.Exceptions.DomainException"/> if already frozen.
+    /// </summary>
+    Task FreezeStreakAsync(DateOnly today, int days, CancellationToken ct = default);
 }

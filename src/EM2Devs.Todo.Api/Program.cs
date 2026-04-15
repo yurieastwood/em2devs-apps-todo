@@ -125,6 +125,7 @@ builder.Services.AddTransient<IRequestHandler<LoginCommand, Result<LoginResult>>
 
 // Profile query handler (Phase 3 profile expansion).
 builder.Services.AddTransient<IRequestHandler<GetPlayerProfileQuery, Result<PlayerProfileReadModel>>, GetPlayerProfileQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<FreezeStreakCommand, Result<PlayerProfileReadModel>>, FreezeStreakCommandHandler>();
 
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.XpAwardHandler>();

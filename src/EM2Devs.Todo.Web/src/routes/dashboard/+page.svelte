@@ -1,10 +1,15 @@
 <script lang="ts">
-	import type { PageData } from './$types';
+	import { enhance } from '$app/forms';
+	import type { ActionData, PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 
 	let profile = $derived(data.profile);
 	let error = $derived(data.error);
+	let freezeError = $derived(
+		form && 'freezeError' in form ? (form as { freezeError?: string }).freezeError : null
+	);
+	let freezeDays = $state(7);
 
 	let isMaxLevel = $derived(profile !== null && profile.xpToNextLevel === 0);
 
@@ -129,6 +134,40 @@
 				<span class="streak-label">Longest Streak</span>
 				<span class="streak-unit">days</span>
 			</div>
+		</section>
+
+		<section class="streak-freeze-section" data-testid="streak-freeze-section">
+			{#if profile.streakFreeze}
+				<div class="freeze-banner" data-testid="freeze-banner" role="status">
+					<span class="freeze-icon" aria-hidden="true">❄</span>
+					<div class="freeze-text">
+						<strong>Streak frozen</strong>
+						<span
+							>Active until {profile.streakFreeze.expiresAt} ({profile.streakFreeze
+								.days} day{profile.streakFreeze.days === 1 ? '' : 's'})</span
+						>
+					</div>
+				</div>
+			{:else}
+				<form
+					method="POST"
+					action="?/freezeStreak"
+					use:enhance
+					class="freeze-form"
+					data-testid="freeze-form"
+				>
+					<label for="freeze-days">Freeze duration</label>
+					<select id="freeze-days" name="days" bind:value={freezeDays}>
+						{#each [1, 3, 7] as option (option)}
+							<option value={option}>{option} day{option === 1 ? '' : 's'}</option>
+						{/each}
+					</select>
+					<button type="submit" data-testid="freeze-button">Freeze streak</button>
+				</form>
+				{#if freezeError}
+					<p class="error" role="alert" data-testid="freeze-error">{freezeError}</p>
+				{/if}
+			{/if}
 		</section>
 
 		<section class="xp-history-section" data-testid="xp-history-section">
@@ -454,6 +493,66 @@
 	.titles-section,
 	.skill-trees-section {
 		margin-top: 2rem;
+	}
+
+	.streak-freeze-section {
+		margin-top: 1rem;
+	}
+
+	.freeze-banner {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		border: 1px solid #bae6fd;
+		background: #e0f2fe;
+		border-radius: 0.5rem;
+		color: #075985;
+	}
+
+	.freeze-icon {
+		font-size: 1.5rem;
+	}
+
+	.freeze-text {
+		display: flex;
+		flex-direction: column;
+		font-size: 0.875rem;
+	}
+
+	.freeze-form {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.5rem;
+	}
+
+	.freeze-form label {
+		font-size: 0.875rem;
+		color: #374151;
+	}
+
+	.freeze-form select {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid #d1d5db;
+		border-radius: 0.25rem;
+		background: white;
+	}
+
+	.freeze-form button {
+		margin-left: auto;
+		padding: 0.375rem 0.75rem;
+		background: #2563eb;
+		color: white;
+		border: none;
+		border-radius: 0.25rem;
+		cursor: pointer;
+	}
+
+	.freeze-form button:hover {
+		background: #1d4ed8;
 	}
 
 	.empty-state {

@@ -1050,6 +1050,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProfileResponse"
+  /api/profile/streak/freeze:
+    post:
+      operationId: freezeStreak
+      summary: Activate a streak freeze for the authenticated user
+      description: |
+        Starts a streak freeze beginning today for the requested number of days
+        (1..7). While frozen the streak does not break on missed days. Returns
+        409 if a freeze is already active.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FreezeStreakRequest"
+      responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: A streak freeze is already active for this profile
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "200":
+          description: Updated profile with active freeze populated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
 components:
   responses:
     Unauthorized:
@@ -1654,6 +1685,10 @@ components:
           description: All seven skill trees; locked entries include an unlockHint, unlocked entries include tier progress and perks.
           items:
             $ref: "#/components/schemas/SkillTreeDto"
+        streakFreeze:
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/StreakFreezeDto"
       example:
         totalXp: 120
         level: 2
@@ -1692,6 +1727,44 @@ components:
             tasksToNextTier: null
             unlockHint: "Complete 10 creative tasks to unlock"
             perks: []
+    FreezeStreakRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - days
+      properties:
+        days:
+          type: integer
+          minimum: 1
+          maximum: 7
+          description: Number of days the freeze should last, starting today.
+      example:
+        days: 7
+    StreakFreezeDto:
+      type: object
+      description: Snapshot of the currently active streak freeze, if any.
+      required:
+        - frozenAt
+        - days
+        - expiresAt
+      properties:
+        frozenAt:
+          type: string
+          format: date
+          description: The local date the freeze started.
+        days:
+          type: integer
+          minimum: 1
+          maximum: 7
+          description: Duration of the freeze in days.
+        expiresAt:
+          type: string
+          format: date
+          description: The first date on which the freeze is no longer active (exclusive upper bound).
+      example:
+        frozenAt: "2026-04-12"
+        days: 7
+        expiresAt: "2026-04-19"
     XpHistoryEntry:
       type: object
       description: One XP earning event recorded against the player's history.

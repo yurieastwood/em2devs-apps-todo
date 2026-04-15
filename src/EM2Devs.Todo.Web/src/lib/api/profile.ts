@@ -47,6 +47,12 @@ export interface SkillTree {
 	perks: SkillTreePerk[];
 }
 
+export interface StreakFreeze {
+	frozenAt: string;
+	days: number;
+	expiresAt: string;
+}
+
 export interface PlayerProfile {
 	totalXp: number;
 	level: number;
@@ -57,6 +63,7 @@ export interface PlayerProfile {
 	xpHistory: XpHistoryEntry[];
 	titles: ProfileTitles;
 	skillTrees: SkillTree[];
+	streakFreeze: StreakFreeze | null;
 }
 
 export async function getProfile(
@@ -65,5 +72,19 @@ export async function getProfile(
 ): Promise<PlayerProfile> {
 	const url = new URL('/api/profile', baseUrl);
 	const response = await fetch(url);
+	return handleResponse<PlayerProfile>(response);
+}
+
+export async function freezeStreak(
+	fetch: typeof globalThis.fetch,
+	baseUrl: string,
+	days: number
+): Promise<PlayerProfile> {
+	const url = new URL('/api/profile/streak/freeze', baseUrl);
+	const response = await fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ days })
+	});
 	return handleResponse<PlayerProfile>(response);
 }

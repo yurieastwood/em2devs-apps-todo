@@ -16,7 +16,17 @@ public sealed record PlayerProfileReadModel(
     XpBreakdownReadModel? LastXpBreakdown = null,
     IReadOnlyList<XpHistoryEntryReadModel>? XpHistory = null,
     TitlesReadModel? Titles = null,
-    IReadOnlyList<SkillTreeReadModel>? SkillTrees = null);
+    IReadOnlyList<SkillTreeReadModel>? SkillTrees = null,
+    StreakFreezeReadModel? StreakFreeze = null);
+
+/// <summary>
+/// Snapshot of the currently active streak freeze, if any. ExpiresAt is the exclusive
+/// upper bound: the freeze covers <c>[FrozenAt, ExpiresAt)</c>.
+/// </summary>
+public sealed record StreakFreezeReadModel(
+    DateOnly FrozenAt,
+    int Days,
+    DateOnly ExpiresAt);
 
 /// <summary>
 /// Read model for the last XP breakdown awarded.

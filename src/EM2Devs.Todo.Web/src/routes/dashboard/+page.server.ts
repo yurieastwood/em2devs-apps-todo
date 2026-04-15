@@ -1,28 +1,38 @@
 import { fail } from '@sveltejs/kit';
 import { freezeStreak, getProfile } from '$lib/api/profile';
 import { dismiss, listNotifications, markRead, type Notification } from '$lib/api/notifications';
+import { getDailyBrief } from '$lib/api/dailyBrief';
 import { getBaseUrl } from '$lib/server/config';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ fetch }) => {
 	const baseUrl = getBaseUrl();
-	let profile = null;
-	let error: string | null = null;
-	try {
-		profile = await getProfile(fetch, baseUrl);
-	} catch (e) {
-		error = e instanceof Error ? e.message : 'An unexpected error occurred';
-	}
+	const [profileResult, briefResult, notificationsResult] = await Promise.all([
+		getProfile(fetch, baseUrl).then(
+			(profile) => ({ ok: true as const, profile }),
+			(e: unknown) => ({
+				ok: false as const,
+				error: e instanceof Error ? e.message : 'An unexpected error occurred'
+			})
+		),
+		getDailyBrief(fetch, baseUrl).then(
+			(brief) => ({ ok: true as const, brief }),
+			// Daily brief failure is non-fatal — we still render the rest of the dashboard.
+			() => ({ ok: false as const })
+		),
+		listNotifications(fetch, baseUrl, { includeRead: true }).then(
+			(notifications) => ({ ok: true as const, notifications }),
+			// Non-fatal: dashboard still renders if the notifications endpoint fails.
+			() => ({ ok: false as const, notifications: [] as Notification[] })
+		)
+	]);
 
-	let notifications: Notification[];
-	try {
-		notifications = await listNotifications(fetch, baseUrl, { includeRead: true });
-	} catch {
-		// Non-fatal: dashboard still renders if the notifications endpoint fails.
-		notifications = [];
-	}
-
-	return { profile, error, notifications };
+	return {
+		profile: profileResult.ok ? profileResult.profile : null,
+		error: profileResult.ok ? null : profileResult.error,
+		dailyBrief: briefResult.ok ? briefResult.brief : null,
+		notifications: notificationsResult.notifications
+	};
 };
 
 export const actions: Actions = {

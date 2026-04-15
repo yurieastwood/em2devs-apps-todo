@@ -6,6 +6,8 @@
 
 	let profile = $derived(data.profile);
 	let error = $derived(data.error);
+	let dailyBrief = $derived(data.dailyBrief);
+	let ifTimeAllowsOpen = $state(false);
 	let freezeError = $derived(
 		form && 'freezeError' in form ? (form as { freezeError?: string }).freezeError : null
 	);
@@ -77,6 +79,76 @@
 
 <main>
 	<h1>Progression Dashboard</h1>
+
+	{#if dailyBrief}
+		<section class="brief-section" data-testid="daily-brief-section">
+			<h2 class="brief-greeting" data-testid="daily-brief-greeting">
+				{dailyBrief.greeting}
+			</h2>
+			{#if dailyBrief.status === 'InsufficientTasks'}
+				<p class="empty-state" data-testid="daily-brief-empty">
+					Your brief will appear when you have at least 2 open tasks for today.
+				</p>
+			{:else}
+				<div class="brief-stats">
+					<div class="brief-card" data-testid="brief-core-plan-count">
+						<span class="brief-card-value">{dailyBrief.corePlanCount}</span>
+						<span class="brief-card-label">Core plan</span>
+					</div>
+					<div class="brief-card" data-testid="brief-overdue-count">
+						<span class="brief-card-value">{dailyBrief.overdueCount}</span>
+						<span class="brief-card-label">Overdue</span>
+					</div>
+					<div class="brief-card" data-testid="brief-streak-count">
+						<span class="brief-card-value">{dailyBrief.currentStreakDays}</span>
+						<span class="brief-card-label">Streak days</span>
+					</div>
+				</div>
+
+				<ul class="brief-list" data-testid="brief-core-plan-list">
+					{#each dailyBrief.corePlan as task (task.id)}
+						<li class="brief-item" data-testid="brief-core-plan-item">
+							<span class="brief-item-title">{task.title}</span>
+							<span class="brief-badge brief-badge-difficulty">{task.difficulty}</span
+							>
+							<span class="brief-badge brief-badge-priority">{task.priority}</span>
+							{#if task.estimatedMinutes !== null}
+								<span class="brief-item-minutes">{task.estimatedMinutes}m</span>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+
+				{#if dailyBrief.ifTimeAllows.length > 0}
+					<details
+						class="brief-overflow"
+						bind:open={ifTimeAllowsOpen}
+						data-testid="brief-if-time-allows"
+					>
+						<summary>If time allows ({dailyBrief.ifTimeAllowsCount})</summary>
+						<ul class="brief-list">
+							{#each dailyBrief.ifTimeAllows as task (task.id)}
+								<li class="brief-item" data-testid="brief-if-time-allows-item">
+									<span class="brief-item-title">{task.title}</span>
+									<span class="brief-badge brief-badge-difficulty"
+										>{task.difficulty}</span
+									>
+									<span class="brief-badge brief-badge-priority"
+										>{task.priority}</span
+									>
+									{#if task.estimatedMinutes !== null}
+										<span class="brief-item-minutes"
+											>{task.estimatedMinutes}m</span
+										>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					</details>
+				{/if}
+			{/if}
+		</section>
+	{/if}
 
 	<section class="notifications-section" data-testid="notifications-section">
 		<h2>Notifications</h2>
@@ -918,5 +990,109 @@
 
 	.perk-desc {
 		color: #374151;
+	}
+
+	.brief-section {
+		margin-bottom: 2rem;
+		padding: 1rem;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.5rem;
+		background: #fafbff;
+	}
+
+	.brief-greeting {
+		margin: 0 0 0.75rem 0;
+		font-size: 1.125rem;
+		color: #111827;
+	}
+
+	.brief-stats {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.75rem;
+		margin-bottom: 1rem;
+	}
+
+	.brief-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 0.75rem;
+		background: white;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.5rem;
+	}
+
+	.brief-card-value {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: #2563eb;
+	}
+
+	.brief-card-label {
+		font-size: 0.75rem;
+		color: #6b7280;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	.brief-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.brief-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		background: white;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.375rem;
+		font-size: 0.875rem;
+	}
+
+	.brief-item-title {
+		flex: 1;
+		color: #111827;
+	}
+
+	.brief-badge {
+		font-size: 0.6875rem;
+		padding: 0.125rem 0.5rem;
+		border-radius: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	.brief-badge-difficulty {
+		background: #eef2ff;
+		color: #4338ca;
+	}
+
+	.brief-badge-priority {
+		background: #fef3c7;
+		color: #92400e;
+	}
+
+	.brief-item-minutes {
+		color: #6b7280;
+		font-variant-numeric: tabular-nums;
+		font-size: 0.75rem;
+	}
+
+	.brief-overflow {
+		margin-top: 0.75rem;
+	}
+
+	.brief-overflow summary {
+		cursor: pointer;
+		font-size: 0.875rem;
+		color: #374151;
+		padding: 0.25rem 0;
 	}
 </style>

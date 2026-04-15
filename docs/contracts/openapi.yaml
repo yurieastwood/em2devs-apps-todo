@@ -1083,6 +1083,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProfileResponse"
+  /api/daily-brief:
+    get:
+      operationId: getDailyBrief
+      summary: Get today's daily brief for the authenticated user
+      description: |
+        Returns a stateless projection of the authenticated user's "today's brief"
+        — a prioritised core plan (tasks due today plus overdue), an optional
+        "if time allows" list (the next upcoming day that has tasks), and the
+        overdue tasks highlighted separately. Nothing is persisted; every call
+        recomputes from current data. When there are fewer than two core-plan
+        tasks, `status` is `InsufficientTasks` and lists may be empty.
+      responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "200":
+          description: Today's daily brief for the authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyBriefResponse"
   /api/profile/streak/freeze:
     post:
       operationId: freezeStreak
@@ -2169,3 +2189,122 @@ components:
         createdAt: "2026-04-12T12:00:00Z"
         status: Unread
         readAt: null
+    DailyBriefTaskDto:
+      type: object
+      description: A single task surfaced inside a daily brief.
+      required:
+        - id
+        - title
+        - difficulty
+        - priority
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        difficulty:
+          type: string
+          description: "One of: Trivial, Easy, Normal, Hard, Epic."
+          example: "Normal"
+        priority:
+          type: string
+          description: "One of: Low, Medium, High, Critical."
+          example: "Medium"
+        estimatedMinutes:
+          type: integer
+          nullable: true
+          minimum: 1
+        scheduledDate:
+          type: string
+          format: date
+          nullable: true
+    DailyBriefResponse:
+      type: object
+      description: Stateless daily brief for the authenticated user.
+      required:
+        - date
+        - greeting
+        - currentStreakDays
+        - corePlanCount
+        - ifTimeAllowsCount
+        - overdueCount
+        - corePlan
+        - ifTimeAllows
+        - overdue
+        - status
+      properties:
+        date:
+          type: string
+          format: date
+          description: The calendar day the brief was generated for (UTC).
+        greeting:
+          type: string
+          description: Personalised greeting, e.g. "Good morning, Demo User".
+        currentStreakDays:
+          type: integer
+          minimum: 0
+        corePlanCount:
+          type: integer
+          minimum: 0
+        ifTimeAllowsCount:
+          type: integer
+          minimum: 0
+        overdueCount:
+          type: integer
+          minimum: 0
+        corePlan:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyBriefTaskDto"
+        ifTimeAllows:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyBriefTaskDto"
+        overdue:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyBriefTaskDto"
+        status:
+          type: string
+          description: |
+            `Available` when the brief has enough content to display;
+            `InsufficientTasks` when fewer than two core-plan items exist.
+          enum:
+            - Available
+            - InsufficientTasks
+      example:
+        date: "2026-04-12"
+        greeting: "Good morning, Demo User"
+        currentStreakDays: 3
+        corePlanCount: 2
+        ifTimeAllowsCount: 1
+        overdueCount: 1
+        corePlan:
+          - id: "550e8400-e29b-41d4-a716-446655440000"
+            title: "Review quarterly plan"
+            difficulty: "Normal"
+            priority: "Medium"
+            estimatedMinutes: 30
+            scheduledDate: "2026-04-12"
+          - id: "550e8400-e29b-41d4-a716-446655440001"
+            title: "Respond to overdue email"
+            difficulty: "Easy"
+            priority: "High"
+            estimatedMinutes: 10
+            scheduledDate: "2026-04-11"
+        ifTimeAllows:
+          - id: "550e8400-e29b-41d4-a716-446655440002"
+            title: "Tidy inbox"
+            difficulty: "Trivial"
+            priority: "Low"
+            estimatedMinutes: 15
+            scheduledDate: "2026-04-13"
+        overdue:
+          - id: "550e8400-e29b-41d4-a716-446655440001"
+            title: "Respond to overdue email"
+            difficulty: "Easy"
+            priority: "High"
+            estimatedMinutes: 10
+            scheduledDate: "2026-04-11"
+        status: "Available"

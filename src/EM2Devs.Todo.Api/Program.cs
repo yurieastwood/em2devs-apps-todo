@@ -54,6 +54,7 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.Services.AddScoped<IPlayerProfileRepository, PostgresPlayerProfileRepository>();
     builder.Services.AddScoped<IStreakSnapshotRepository, PostgresStreakSnapshotRepository>();
     builder.Services.AddScoped<IUserRepository, PostgresUserRepository>();
+    builder.Services.AddScoped<INotificationRepository, PostgresNotificationRepository>();
 }
 else
 {
@@ -68,6 +69,9 @@ else
     builder.Services.AddScoped<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
     builder.Services.AddSingleton<IUserRepository>(sp =>
         new InMemoryUserRepository(sp.GetRequiredService<IPasswordHasher>()));
+    // Notifications: scoped repo with singleton store, mirrors the task pattern
+    builder.Services.AddSingleton<InMemoryNotificationStore>();
+    builder.Services.AddScoped<INotificationRepository, InMemoryNotificationRepository>();
 }
 
 // TODO: Add conditional Postgres/InMemory registration for Quest/Epic repositories when their persistence implementations are added
@@ -135,6 +139,19 @@ builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Even
     EM2Devs.Todo.Application.Events.TaskDeletedHandler>();
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
     EM2Devs.Todo.Application.Events.QuestCompletionXpHandler>();
+
+// Surface achievement-style events in the in-app notifications inbox.
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.LevelUpEvent>,
+    EM2Devs.Todo.Application.Events.NotificationCreationHandler>();
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.StreakMilestoneReachedEvent>,
+    EM2Devs.Todo.Application.Events.NotificationCreationHandler>();
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
+    EM2Devs.Todo.Application.Events.NotificationCreationHandler>();
+
+// Notification inbox handlers.
+builder.Services.AddTransient<IRequestHandler<ListNotificationsQuery, Result<IReadOnlyList<Notification>>>, ListNotificationsQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<MarkNotificationReadCommand, Result<Notification>>, MarkNotificationReadCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<DismissNotificationCommand, Result<Notification>>, DismissNotificationCommandHandler>();
 
 // FluentValidation + pipeline behavior (ADR-018)
 builder.Services.AddValidatorsFromAssemblyContaining<CreateTaskCommandValidator>();

@@ -20,6 +20,7 @@ builder.Services.AddScoped<ITaskRepository, PostgresTaskRepository>();
 builder.Services.AddScoped<IRecurringTaskRepository, PostgresRecurringTaskRepository>();
 builder.Services.AddScoped<IPlayerProfileRepository, PostgresPlayerProfileRepository>();
 builder.Services.AddScoped<IStreakSnapshotRepository, PostgresStreakSnapshotRepository>();
+builder.Services.AddScoped<INotificationRepository, PostgresNotificationRepository>();
 
 // Singleton cache shared across scoped repo instances for the "last XP breakdown" UI hint.
 builder.Services.AddSingleton<ILastXpBreakdownCache, LastXpBreakdownCache>();

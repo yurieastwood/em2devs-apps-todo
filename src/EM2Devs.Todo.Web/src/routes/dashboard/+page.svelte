@@ -11,6 +11,49 @@
 	);
 	let freezeDays = $state(7);
 
+	let notifications = $derived(data.notifications ?? []);
+	let sortedNotifications = $derived(
+		[...notifications]
+			.sort((a, b) => {
+				// Unread first, then newest-first.
+				const statusOrder = (s: string) => (s === 'Unread' ? 0 : 1);
+				const byStatus = statusOrder(a.status) - statusOrder(b.status);
+				if (byStatus !== 0) return byStatus;
+				return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+			})
+			.slice(0, 10)
+	);
+
+	function iconFor(type: string): string {
+		switch (type) {
+			case 'AchievementAlert':
+				return 'trophy';
+			case 'TaskReminder':
+				return 'bell';
+			case 'DailyBriefReady':
+				return 'sun';
+			case 'WeeklyReviewPrompt':
+				return 'calendar';
+			case 'CapacityWarning':
+				return 'alert';
+			default:
+				return 'info';
+		}
+	}
+
+	function formatRelative(iso: string): string {
+		const ts = new Date(iso).getTime();
+		if (Number.isNaN(ts)) return '';
+		const diffMs = Date.now() - ts;
+		const mins = Math.floor(diffMs / 60000);
+		if (mins < 1) return 'just now';
+		if (mins < 60) return `${mins}m ago`;
+		const hours = Math.floor(mins / 60);
+		if (hours < 24) return `${hours}h ago`;
+		const days = Math.floor(hours / 24);
+		return `${days}d ago`;
+	}
+
 	let isMaxLevel = $derived(profile !== null && profile.xpToNextLevel === 0);
 
 	let progressPercent = $derived(
@@ -34,6 +77,39 @@
 
 <main>
 	<h1>Progression Dashboard</h1>
+
+	<section class="notifications-section" data-testid="notifications-section">
+		<h2>Notifications</h2>
+		{#if sortedNotifications.length === 0}
+			<p class="empty">You're all caught up.</p>
+		{:else}
+			<ul class="notifications-list">
+				{#each sortedNotifications as n (n.id)}
+					<li class="notification" data-status={n.status} data-testid="notification-item">
+						<span class="icon" aria-hidden="true" data-icon={iconFor(n.type)}></span>
+						<div class="body">
+							<p class="message">{n.message}</p>
+							<p class="meta">
+								<time datetime={n.createdAt}>{formatRelative(n.createdAt)}</time>
+							</p>
+						</div>
+						<div class="actions">
+							{#if n.status === 'Unread'}
+								<form method="POST" action="?/markNotificationRead" use:enhance>
+									<input type="hidden" name="id" value={n.id} />
+									<button type="submit" class="link-button">Mark read</button>
+								</form>
+							{/if}
+							<form method="POST" action="?/dismissNotification" use:enhance>
+								<input type="hidden" name="id" value={n.id} />
+								<button type="submit" class="link-button dismiss">Dismiss</button>
+							</form>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
 
 	{#if error}
 		<p class="error" role="alert">{error}</p>
@@ -290,6 +366,100 @@
 
 	h1 {
 		margin-bottom: 1.5rem;
+	}
+
+	.notifications-section {
+		margin-bottom: 2rem;
+		padding: 1rem;
+		background: #f8fafc;
+		border-radius: 8px;
+		border: 1px solid #e2e8f0;
+	}
+
+	.notifications-section h2 {
+		margin: 0 0 0.75rem 0;
+	}
+
+	.notifications-section .empty {
+		color: #64748b;
+		margin: 0;
+	}
+
+	.notifications-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.notification {
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		gap: 0.75rem;
+		align-items: center;
+		background: #fff;
+		padding: 0.6rem 0.75rem;
+		border-radius: 6px;
+		border: 1px solid #e2e8f0;
+	}
+
+	.notification[data-status='Read'] {
+		opacity: 0.65;
+	}
+
+	.notification .icon {
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		background: #dbeafe;
+		display: inline-block;
+	}
+
+	.notification .icon[data-icon='trophy'] {
+		background: #fef3c7;
+	}
+
+	.notification .icon[data-icon='alert'] {
+		background: #fee2e2;
+	}
+
+	.notification .message {
+		margin: 0;
+		font-weight: 500;
+	}
+
+	.notification .meta {
+		margin: 0;
+		font-size: 0.8rem;
+		color: #64748b;
+	}
+
+	.notification .actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.notification .actions form {
+		margin: 0;
+	}
+
+	.link-button {
+		background: none;
+		border: none;
+		padding: 0;
+		color: #2563eb;
+		cursor: pointer;
+		font-size: 0.85rem;
+	}
+
+	.link-button.dismiss {
+		color: #64748b;
+	}
+
+	.link-button:hover {
+		text-decoration: underline;
 	}
 
 	h2 {

@@ -28,10 +28,10 @@ public sealed record TitleInventory
     // EF Core materialization constructor. The backing collection and ActiveTitle
     // are populated via EF after construction (field-access mode for _earnedTitles,
     // property for ActiveTitle).
-    private TitleInventory()
+    private TitleInventory() // Stryker disable once all
     {
-        _earnedTitles = [];
-        ActiveTitle = null;
+        _earnedTitles = []; // Stryker disable once all
+        ActiveTitle = null; // Stryker disable once all
     }
 
     public static TitleInventory Empty() => new([], null);

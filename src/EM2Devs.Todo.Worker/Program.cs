@@ -23,7 +23,6 @@ builder.Services.AddScoped<IStreakSnapshotRepository, PostgresStreakSnapshotRepo
 
 // Singleton cache shared across scoped repo instances for the "last XP breakdown" UI hint.
 builder.Services.AddSingleton<ILastXpBreakdownCache, LastXpBreakdownCache>();
-builder.Services.AddSingleton<IXpHistoryCache, InMemoryXpHistoryCache>();
 
 // TimeProvider for deterministic test substitution.
 builder.Services.AddSingleton(TimeProvider.System);

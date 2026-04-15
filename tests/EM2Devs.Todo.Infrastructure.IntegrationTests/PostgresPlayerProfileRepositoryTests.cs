@@ -32,7 +32,7 @@ public sealed class PostgresPlayerProfileRepositoryTests : IAsyncLifetime, IDisp
         await _dbContext.Database.EnsureCreatedAsync();
         _breakdownCache = new LastXpBreakdownCache();
         _repository = new PostgresPlayerProfileRepository(
-            _dbContext, _breakdownCache, new InMemoryXpHistoryCache(), new FakeCurrentUser(TestData.TestUserId));
+            _dbContext, _breakdownCache, new FakeCurrentUser(TestData.TestUserId));
     }
 
     private sealed class FakeCurrentUser : ICurrentUser
@@ -71,7 +71,7 @@ public sealed class PostgresPlayerProfileRepositoryTests : IAsyncLifetime, IDisp
             .Options;
         await using TodoDbContext fresh = new(options);
         var freshRepo = new PostgresPlayerProfileRepository(
-            fresh, _breakdownCache, new InMemoryXpHistoryCache(), new FakeCurrentUser(TestData.TestUserId));
+            fresh, _breakdownCache, new FakeCurrentUser(TestData.TestUserId));
 
         PlayerProfileReadModel profile = await freshRepo.GetProfileAsync();
 

@@ -108,9 +108,28 @@ public sealed class TodoTaskConfiguration : IEntityTypeConfiguration<TodoTask>
                 id => id != null ? id.Value : (Guid?)null,
                 value => value.HasValue ? new QuestId(value.Value) : null);
 
+        // Tags: owned collection persisted in a separate table, accessed via
+        // the private _tags backing field.
+        builder.OwnsMany<Tag>("Tags", tags =>
+        {
+            tags.ToTable("task_tags");
+            tags.WithOwner().HasForeignKey("task_id");
+            tags.Property<int>("Id").ValueGeneratedOnAdd();
+            tags.HasKey("Id");
+
+            tags.Property(t => t.Value)
+                .HasColumnName("value")
+                .HasMaxLength(Tag.MaxLength)
+                .IsRequired();
+        });
+
+        builder.Metadata.FindNavigation("Tags")!
+            .SetField("_tags");
+        builder.Metadata.FindNavigation("Tags")!
+            .SetPropertyAccessMode(PropertyAccessMode.Field);
+
         // Domain-only collections and value objects not yet persisted
         // (kept in-memory; demo functionality unaffected)
-        builder.Ignore(t => t.Tags);
         builder.Ignore(t => t.ProcrastinationSignals);
         builder.Ignore(t => t.CommitmentNote);
         builder.Ignore(t => t.IsOverdue);

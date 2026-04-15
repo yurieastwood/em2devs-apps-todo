@@ -2,6 +2,7 @@ import { fail } from '@sveltejs/kit';
 import {
 	listTasks,
 	createTask,
+	quickAddTask,
 	updateTaskStatus,
 	reopenTask,
 	deleteTask,
@@ -46,16 +47,45 @@ export const actions: Actions = {
 	create: async ({ request, fetch }) => {
 		const formData = await request.formData();
 		const title = formData.get('title')?.toString()?.trim() ?? '';
+		const scheduledDateRaw = formData.get('scheduledDate')?.toString()?.trim() ?? '';
+		const tagsRaw = formData.get('tags')?.toString()?.trim() ?? '';
 
 		if (!title) {
 			return fail(400, { action: 'create', error: 'Title is required.' });
 		}
 
+		const tags = tagsRaw
+			? tagsRaw
+					.split(',')
+					.map((t) => t.trim())
+					.filter((t) => t.length > 0)
+			: undefined;
+
 		try {
-			await createTask(fetch, getBaseUrl(), title);
+			await createTask(fetch, getBaseUrl(), {
+				title,
+				scheduledDate: scheduledDateRaw || undefined,
+				tags
+			});
 			return { action: 'create', success: true };
 		} catch (e) {
 			return failFromError(e, 'Failed to create task', 'create');
+		}
+	},
+
+	quickAdd: async ({ request, fetch }) => {
+		const formData = await request.formData();
+		const input = formData.get('input')?.toString()?.trim() ?? '';
+
+		if (!input) {
+			return fail(400, { action: 'quickAdd', error: 'Input is required.' });
+		}
+
+		try {
+			await quickAddTask(fetch, getBaseUrl(), input);
+			return { action: 'quickAdd', success: true };
+		} catch (e) {
+			return failFromError(e, 'Failed to quick-add task', 'quickAdd');
 		}
 	},
 

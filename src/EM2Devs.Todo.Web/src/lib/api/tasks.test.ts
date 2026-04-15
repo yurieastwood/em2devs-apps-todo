@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
 	listTasks,
 	createTask,
+	quickAddTask,
 	getTask,
 	updateTaskStatus,
 	updateTask,
@@ -44,7 +45,8 @@ describe('listTasks', () => {
 				estimatedMinutes: null,
 				dueDate: null,
 				completedAt: null,
-				scheduledDate: null
+				scheduledDate: null,
+				tags: []
 			},
 			{
 				id: '2',
@@ -56,7 +58,8 @@ describe('listTasks', () => {
 				estimatedMinutes: null,
 				dueDate: null,
 				completedAt: null,
-				scheduledDate: null
+				scheduledDate: null,
+				tags: []
 			}
 		];
 
@@ -88,7 +91,8 @@ describe('createTask', () => {
 			estimatedMinutes: null,
 			dueDate: null,
 			completedAt: null,
-			scheduledDate: null
+			scheduledDate: null,
+			tags: []
 		};
 		const fetchMock = mockOk(created);
 
@@ -133,7 +137,8 @@ describe('updateTaskStatus', () => {
 			estimatedMinutes: null,
 			dueDate: null,
 			completedAt: null,
-			scheduledDate: null
+			scheduledDate: null,
+			tags: []
 		};
 		const fetchMock = mockOk(updated);
 
@@ -198,7 +203,8 @@ describe('updateTask', () => {
 			estimatedMinutes: null,
 			dueDate: null,
 			completedAt: null,
-			scheduledDate: null
+			scheduledDate: null,
+			tags: []
 		};
 		const fetchMock = mockOk(updated);
 
@@ -241,7 +247,8 @@ describe('reopenTask', () => {
 			estimatedMinutes: null,
 			dueDate: null,
 			completedAt: null,
-			scheduledDate: null
+			scheduledDate: null,
+			tags: []
 		};
 		const fetchMock = mockOk(reopened);
 
@@ -277,7 +284,8 @@ describe('getTask', () => {
 			estimatedMinutes: null,
 			dueDate: null,
 			completedAt: null,
-			scheduledDate: null
+			scheduledDate: null,
+			tags: []
 		};
 		const fetchMock = mockOk(expected);
 
@@ -296,5 +304,80 @@ describe('getTask', () => {
 		};
 
 		await expect(getTask(mockError(404, problem), BASE, 'xyz')).rejects.toThrow(ApiError);
+	});
+});
+
+describe('createTask with structured fields', () => {
+	it('sends scheduledDate and tags when provided as object input', async () => {
+		const created: Task = {
+			id: '1',
+			title: 'Ship demo',
+			description: null,
+			status: 'Todo',
+			difficulty: 'Normal',
+			priority: 'Medium',
+			estimatedMinutes: null,
+			dueDate: null,
+			completedAt: null,
+			scheduledDate: '2026-04-15',
+			tags: ['work', 'milestone']
+		};
+		const fetchMock = mockOk(created);
+
+		const result = await createTask(fetchMock, BASE, {
+			title: 'Ship demo',
+			scheduledDate: '2026-04-15',
+			tags: ['work', 'milestone']
+		});
+
+		expect(result).toEqual(created);
+		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/tasks`), {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				title: 'Ship demo',
+				scheduledDate: '2026-04-15',
+				tags: ['work', 'milestone']
+			})
+		});
+	});
+});
+
+describe('quickAddTask', () => {
+	it('posts the raw input and returns the parsed task', async () => {
+		const created: Task = {
+			id: '1',
+			title: 'buy milk',
+			description: null,
+			status: 'Todo',
+			difficulty: 'Normal',
+			priority: 'High',
+			estimatedMinutes: null,
+			dueDate: null,
+			completedAt: null,
+			scheduledDate: '2026-04-13',
+			tags: ['groceries']
+		};
+		const fetchMock = mockOk(created);
+
+		const result = await quickAddTask(fetchMock, BASE, 'buy milk #groceries !High ^tomorrow');
+
+		expect(result).toEqual(created);
+		expect(fetchMock).toHaveBeenCalledWith(new URL(`${BASE}/api/tasks/quick-add`), {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ input: 'buy milk #groceries !High ^tomorrow' })
+		});
+	});
+
+	it('throws ApiError when the server rejects the input', async () => {
+		const problem = {
+			type: 'https://tools.ietf.org/html/rfc9457',
+			title: 'Validation failed',
+			status: 400,
+			detail: 'Input is required.'
+		};
+
+		await expect(quickAddTask(mockError(400, problem), BASE, '')).rejects.toThrow(ApiError);
 	});
 });

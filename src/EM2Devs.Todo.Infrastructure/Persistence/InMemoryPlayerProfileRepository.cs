@@ -96,4 +96,15 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 
         return Task.CompletedTask;
     }
+
+    public Task FreezeStreakAsync(DateOnly today, int days, CancellationToken ct = default)
+    {
+        lock (_lock)
+        {
+            PlayerProfile profile = GetOrCreate();
+            profile.FreezeStreak(today, days);
+        }
+
+        return Task.CompletedTask;
+    }
 }

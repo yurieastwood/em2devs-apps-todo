@@ -15,7 +15,8 @@ describe('getProfile', () => {
 			lastXpBreakdown: null,
 			xpHistory: [],
 			titles: { earned: [], active: null, progress: [] },
-			skillTrees: []
+			skillTrees: [],
+			streakFreeze: null
 		};
 
 		const mockFetch = vi.fn().mockResolvedValue({
@@ -85,7 +86,8 @@ describe('getProfile', () => {
 					unlockHint: null,
 					perks: [{ tier: 1, perkType: 'Tips', description: 'Personalised Scholar tips' }]
 				}
-			]
+			],
+			streakFreeze: null
 		};
 
 		const mockFetch = vi.fn().mockResolvedValue({

@@ -57,9 +57,18 @@ public sealed class PlayerProfileConfiguration : IEntityTypeConfiguration<Player
                 .HasColumnName("streak_grace_days_available")
                 .IsRequired();
 
-            // ActiveFreeze (Phase 1 streak freeze feature) is transient — not persisted
-            // across restarts. Domain reconstructs it via Freeze()/Unfreeze() within a session.
-            streak.Ignore(s => s.ActiveFreeze);
+            // ActiveFreeze persisted as two nullable columns. When null (no active freeze)
+            // both columns are null; EF materialises the owned type back to null on read.
+            streak.OwnsOne(s => s.ActiveFreeze, freeze =>
+            {
+                freeze.Property(f => f.FrozenAt)
+                    .HasColumnName("streak_freeze_frozen_at");
+
+                freeze.Property(f => f.Duration)
+                    .HasColumnName("streak_freeze_duration");
+            });
+
+            // IsFrozen is computed from ActiveFreeze on the domain type.
             streak.Ignore(s => s.IsFrozen);
         });
 

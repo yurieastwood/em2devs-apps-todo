@@ -24,6 +24,13 @@ public static class PlayerProfileProjection
             ? TakeLast(xpHistoryOverride, XpHistoryLimit)
             : ProjectXpHistory(profile.XpHistory);
 
+        StreakFreezeReadModel? freeze = profile.Streak.ActiveFreeze is { } f
+            ? new StreakFreezeReadModel(
+                FrozenAt: f.FrozenAt,
+                Days: f.Duration,
+                ExpiresAt: f.FrozenAt.AddDays(f.Duration))
+            : null;
+
         return new PlayerProfileReadModel(
             TotalXp: profile.Level.CurrentXp.Value,
             Level: profile.Level.Value,
@@ -33,7 +40,8 @@ public static class PlayerProfileProjection
             LastXpBreakdown: lastBreakdown,
             XpHistory: xpHistory,
             Titles: ProjectTitles(profile.TitleInventory),
-            SkillTrees: ProjectSkillTrees(profile.SkillTrees));
+            SkillTrees: ProjectSkillTrees(profile.SkillTrees),
+            StreakFreeze: freeze);
     }
 
     private static IReadOnlyList<XpHistoryEntryReadModel> TakeLast(

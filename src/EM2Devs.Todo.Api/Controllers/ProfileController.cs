@@ -1,6 +1,8 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using EM2Devs.Todo.Api.Extensions;
+using EM2Devs.Todo.Application.Commands;
 using EM2Devs.Todo.Application.Mediator;
 using EM2Devs.Todo.Application.Queries;
 using EM2Devs.Todo.Application.ReadModels;
@@ -29,6 +31,22 @@ public sealed class ProfileController : ControllerBase
         return result.Match<IActionResult>(
             profile => Ok(Map(profile)),
             error => Problem(error.Message, statusCode: 500));
+    }
+
+    /// <summary>
+    /// Activates a streak freeze for the authenticated user. Returns the updated
+    /// profile with the active freeze populated, or 409 if a freeze is already active.
+    /// </summary>
+    [HttpPost("streak/freeze")]
+    public async Task<IActionResult> FreezeStreak(
+        [FromBody] FreezeStreakRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        Result<PlayerProfileReadModel> result =
+            await _mediator.Send(new FreezeStreakCommand(request.Days), ct).ConfigureAwait(false);
+
+        return result.ToHttpResult(profile => Ok(Map(profile)));
     }
 
     private static ProfileResponse Map(PlayerProfileReadModel profile)
@@ -62,6 +80,10 @@ public sealed class ProfileController : ControllerBase
                 s.Perks.Select(p => new SkillTreePerkResponse(p.Tier, p.PerkType, p.Description)).ToList()))
             .ToList();
 
+        StreakFreezeResponse? streakFreeze = profile.StreakFreeze is { } f
+            ? new StreakFreezeResponse(f.FrozenAt, f.Days, f.ExpiresAt)
+            : null;
+
         return new ProfileResponse(
             profile.TotalXp,
             profile.Level,
@@ -71,9 +93,17 @@ public sealed class ProfileController : ControllerBase
             breakdown,
             xpHistory,
             titles,
-            skillTrees);
+            skillTrees,
+            streakFreeze);
     }
 }
+
+public sealed record FreezeStreakRequest(int Days);
+
+public sealed record StreakFreezeResponse(
+    DateOnly FrozenAt,
+    int Days,
+    DateOnly ExpiresAt);
 
 public sealed record XpBreakdownResponse(
     int BaseXp,
@@ -124,4 +154,5 @@ public sealed record ProfileResponse(
     XpBreakdownResponse? LastXpBreakdown,
     IReadOnlyList<XpHistoryEntryResponse> XpHistory,
     TitlesResponse Titles,
-    IReadOnlyList<SkillTreeResponse> SkillTrees);
+    IReadOnlyList<SkillTreeResponse> SkillTrees,
+    StreakFreezeResponse? StreakFreeze);

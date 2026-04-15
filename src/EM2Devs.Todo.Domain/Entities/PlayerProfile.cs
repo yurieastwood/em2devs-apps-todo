@@ -119,6 +119,24 @@ public sealed class PlayerProfile
     }
 
     /// <summary>
+    /// Activates a streak freeze for the specified duration starting today.
+    /// Delegates to <see cref="Streak.Freeze"/>; throws <see cref="DomainException"/>
+    /// if the streak is already frozen.
+    /// </summary>
+    public void FreezeStreak(DateOnly today, int days)
+    {
+        Streak = Streak.Freeze(today, days);
+    }
+
+    /// <summary>
+    /// Manually ends an active streak freeze. No-op if not frozen.
+    /// </summary>
+    public void UnfreezeStreak(DateOnly today)
+    {
+        Streak = Streak.Unfreeze(today);
+    }
+
+    /// <summary>
     /// Discovers (unlocks) a skill tree for the player. Idempotent — re-discovering
     /// an already-unlocked tree type is a no-op.
     /// </summary>

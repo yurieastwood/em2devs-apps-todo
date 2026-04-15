@@ -369,4 +369,52 @@ public sealed class PlayerProfileTests
         // When / Then — null validation delegated to TitleInventory.AwardTitle
         Should.Throw<ArgumentNullException>(() => profile.AwardTitle(null!));
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_FreezeStreak_When_NotAlreadyFrozen()
+    {
+        // Given — fresh profile with no active freeze
+        var profile = PlayerProfile.NewProfile(_userId);
+        profile.Streak.IsFrozen.ShouldBeFalse();
+
+        // When
+        profile.FreezeStreak(_today, days: 7);
+
+        // Then
+        profile.Streak.IsFrozen.ShouldBeTrue();
+        profile.Streak.ActiveFreeze.ShouldNotBeNull();
+        profile.Streak.ActiveFreeze!.FrozenAt.ShouldBe(_today);
+        profile.Streak.ActiveFreeze.Duration.ShouldBe(7);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_FreezingAlreadyFrozenStreak()
+    {
+        // Given — already frozen
+        var profile = PlayerProfile.NewProfile(_userId);
+        profile.FreezeStreak(_today, days: 3);
+
+        // When / Then — double-freeze not allowed
+        var ex = Should.Throw<Exceptions.DomainException>(
+            () => profile.FreezeStreak(_today, days: 7));
+        ex.Message.ShouldContain("already frozen");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_UnfreezeStreak_When_ActiveFreezePresent()
+    {
+        // Given — frozen profile
+        var profile = PlayerProfile.NewProfile(_userId);
+        profile.FreezeStreak(_today, days: 7);
+
+        // When
+        profile.UnfreezeStreak(_today.AddDays(2));
+
+        // Then
+        profile.Streak.IsFrozen.ShouldBeFalse();
+        profile.Streak.ActiveFreeze.ShouldBeNull();
+    }
 }

@@ -119,4 +119,57 @@ public sealed class GetDailyBriefQueryTests
         await Should.ThrowAsync<ArgumentNullException>(
             async () => await _handler.Handle(null!, default));
     }
+
+    [Fact]
+    public async Task Should_ExposeCalibratedMinutes_When_UserHasEnoughEstimationHistory()
+    {
+        // Seed three completed tasks that consistently took 50% longer than estimated.
+        TodoTask history1 = CompletedWithActual(30, 45);
+        TodoTask history2 = CompletedWithActual(60, 90);
+        TodoTask history3 = CompletedWithActual(20, 30);
+
+        // Plus a new open task for today with an estimate.
+        TodoTask today1 = WithEstimate(ScheduledOn("Today A", Today), 40);
+        TodoTask today2 = ScheduledOn("Today B", Today);
+        Seed(history1, history2, history3, today1, today2);
+
+        Result<DailyBriefReadModel> result = await _handler.Handle(new GetDailyBriefQuery(), default);
+
+        DailyBriefReadModel brief = result.Match(b => b, _ => throw new Xunit.Sdk.XunitException("expected success"));
+        DailyBriefTaskReadModel estimatedTask = brief.CorePlan.Single(t => t.Title == "Today A");
+        estimatedTask.EstimatedMinutes.ShouldBe(40);
+        // Bias factor = median(1.5, 1.5, 1.5) = 1.5 → 40 * 1.5 = 60.
+        estimatedTask.CalibratedMinutes.ShouldBe(60);
+    }
+
+    [Fact]
+    public async Task Should_ReturnNullCalibratedMinutes_When_NotEnoughEstimationHistory()
+    {
+        TodoTask today1 = WithEstimate(ScheduledOn("Today A", Today), 30);
+        TodoTask today2 = ScheduledOn("Today B", Today);
+        Seed(today1, today2);
+
+        Result<DailyBriefReadModel> result = await _handler.Handle(new GetDailyBriefQuery(), default);
+
+        DailyBriefReadModel brief = result.Match(b => b, _ => throw new Xunit.Sdk.XunitException("expected success"));
+        DailyBriefTaskReadModel estimatedTask = brief.CorePlan.Single(t => t.Title == "Today A");
+        estimatedTask.EstimatedMinutes.ShouldBe(30);
+        estimatedTask.CalibratedMinutes.ShouldBeNull();
+    }
+
+    private static TodoTask WithEstimate(TodoTask task, int minutes)
+    {
+        task.UpdateEstimatedTime(TimeEstimate.FromMinutes(minutes));
+        return task;
+    }
+
+    private static TodoTask CompletedWithActual(int estimated, int actual)
+    {
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("history"));
+        task.UpdateEstimatedTime(TimeEstimate.FromMinutes(estimated));
+        task.MoveToInProgress();
+        task.MarkAsDone();
+        task.RecordActualTime(TimeEstimate.FromMinutes(actual));
+        return task;
+    }
 }

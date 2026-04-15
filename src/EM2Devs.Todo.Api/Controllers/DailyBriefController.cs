@@ -57,6 +57,7 @@ public sealed class DailyBriefController : ControllerBase
             task.Difficulty,
             task.Priority,
             task.EstimatedMinutes,
+            task.CalibratedMinutes,
             task.ScheduledDate);
     }
 }
@@ -79,4 +80,5 @@ public sealed record DailyBriefTaskResponse(
     string Difficulty,
     string Priority,
     int? EstimatedMinutes,
+    int? CalibratedMinutes,
     DateOnly? ScheduledDate);

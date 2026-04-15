@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getProfile, type PlayerProfile } from './profile';
+import { getProfile, getEstimationBias, type PlayerProfile, type EstimationBias } from './profile';
 import { ApiError } from './tasks';
 
 const BASE = 'http://localhost:5001';
@@ -112,5 +112,57 @@ describe('getProfile', () => {
 		}) as unknown as typeof fetch;
 
 		await expect(getProfile(mockFetch, BASE)).rejects.toThrow(ApiError);
+	});
+});
+
+describe('getEstimationBias', () => {
+	it('returns calibrated bias data from the API', async () => {
+		const expected: EstimationBias = {
+			biasFactor: 1.3,
+			sampleSize: 12,
+			calibrationState: 'Calibrated'
+		};
+
+		const mockFetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve(expected),
+			headers: new Headers({ 'content-type': 'application/json' })
+		}) as unknown as typeof fetch;
+
+		const result = await getEstimationBias(mockFetch, BASE);
+
+		expect(mockFetch).toHaveBeenCalledWith(new URL(`${BASE}/api/profile/estimation-bias`));
+		expect(result).toEqual(expected);
+	});
+
+	it('returns NotEnoughData state when sample size is below the threshold', async () => {
+		const expected: EstimationBias = {
+			biasFactor: 1.0,
+			sampleSize: 1,
+			calibrationState: 'NotEnoughData'
+		};
+
+		const mockFetch = vi.fn().mockResolvedValue({
+			ok: true,
+			json: () => Promise.resolve(expected),
+			headers: new Headers({ 'content-type': 'application/json' })
+		}) as unknown as typeof fetch;
+
+		const result = await getEstimationBias(mockFetch, BASE);
+
+		expect(result.calibrationState).toBe('NotEnoughData');
+		expect(result.biasFactor).toBe(1.0);
+	});
+
+	it('throws ApiError on error response', async () => {
+		const mockFetch = vi.fn().mockResolvedValue({
+			ok: false,
+			status: 500,
+			statusText: 'Internal Server Error',
+			json: () => Promise.resolve({ title: 'Error', status: 500 }),
+			headers: new Headers({ 'content-type': 'application/problem+json' })
+		}) as unknown as typeof fetch;
+
+		await expect(getEstimationBias(mockFetch, BASE)).rejects.toThrow(ApiError);
 	});
 });

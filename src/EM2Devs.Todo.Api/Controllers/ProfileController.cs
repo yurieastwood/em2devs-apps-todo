@@ -34,6 +34,27 @@ public sealed class ProfileController : ControllerBase
     }
 
     /// <summary>
+    /// Returns the authenticated user's estimation calibration. Bias factor is a
+    /// multiplier against the raw estimate: &gt; 1.0 means the user underestimates;
+    /// &lt; 1.0 means the user overestimates. When the user has too few completed
+    /// tasks with actual times recorded, <c>calibrationState</c> is
+    /// <c>NotEnoughData</c> and the factor is neutral (1.0).
+    /// </summary>
+    [HttpGet("estimation-bias")]
+    public async Task<IActionResult> GetEstimationBias(CancellationToken ct)
+    {
+        Result<EstimationCalibrationReadModel> result =
+            await _mediator.Send(new GetEstimationBiasQuery(), ct).ConfigureAwait(false);
+
+        return result.Match<IActionResult>(
+            calibration => Ok(new EstimationBiasResponse(
+                calibration.BiasFactor,
+                calibration.SampleSize,
+                calibration.CalibrationState)),
+            error => Problem(error.Message, statusCode: 500));
+    }
+
+    /// <summary>
     /// Activates a streak freeze for the authenticated user. Returns the updated
     /// profile with the active freeze populated, or 409 if a freeze is already active.
     /// </summary>
@@ -99,6 +120,11 @@ public sealed class ProfileController : ControllerBase
 }
 
 public sealed record FreezeStreakRequest(int Days);
+
+public sealed record EstimationBiasResponse(
+    double BiasFactor,
+    int SampleSize,
+    string CalibrationState);
 
 public sealed record StreakFreezeResponse(
     DateOnly FrozenAt,

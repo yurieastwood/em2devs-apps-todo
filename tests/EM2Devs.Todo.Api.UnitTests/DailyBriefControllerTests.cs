@@ -77,5 +77,6 @@ public sealed class DailyBriefControllerTests : IDisposable
         string Difficulty,
         string Priority,
         int? EstimatedMinutes,
+        int? CalibratedMinutes,
         DateOnly? ScheduledDate);
 }

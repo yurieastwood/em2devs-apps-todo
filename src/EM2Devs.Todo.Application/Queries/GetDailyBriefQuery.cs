@@ -4,6 +4,7 @@ using EM2Devs.Todo.Application.ReadModels;
 using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.Services;
+using EM2Devs.Todo.Domain.ValueObjects;
 
 namespace EM2Devs.Todo.Application.Queries;
 
@@ -56,6 +57,11 @@ public sealed class GetDailyBriefQueryHandler
         IReadOnlyList<TodoTask> ifTimeAllows = TaskViewFilter.ForUpcoming(tasks, today)
             .FirstOrDefault(g => g.Tasks.Count > 0)?.Tasks ?? [];
 
+        // Compute per-user estimation calibration from historical (estimated, actual) pairs.
+        // NotEnoughData yields a neutral 1.0 factor and null CalibratedMinutes (UI falls back
+        // to the raw estimate in that case).
+        EstimationCalibration calibration = TimeEstimationCalibrator.Calibrate(tasks);
+
         PlayerProfileReadModel profile = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);
 
         string displayName = string.IsNullOrWhiteSpace(_currentUser.DisplayName)
@@ -74,22 +80,26 @@ public sealed class GetDailyBriefQueryHandler
             corePlan.Count,
             ifTimeAllows.Count,
             overdue.Count,
-            corePlan.Select(MapTask).ToList(),
-            ifTimeAllows.Select(MapTask).ToList(),
-            overdue.Select(MapTask).ToList(),
+            corePlan.Select(t => MapTask(t, calibration)).ToList(),
+            ifTimeAllows.Select(t => MapTask(t, calibration)).ToList(),
+            overdue.Select(t => MapTask(t, calibration)).ToList(),
             status);
 
         return brief;
     }
 
-    private static DailyBriefTaskReadModel MapTask(TodoTask task)
+    private static DailyBriefTaskReadModel MapTask(TodoTask task, EstimationCalibration calibration)
     {
+        int? estimated = task.EstimatedTime?.Minutes;
+        int? calibrated = estimated.HasValue ? calibration.ApplyTo(estimated.Value) : null;
+
         return new DailyBriefTaskReadModel(
             task.Id.Value,
             task.Title.Value,
             task.Difficulty.ToString(),
             task.Priority.ToString(),
-            task.EstimatedTime?.Minutes,
+            estimated,
+            calibrated,
             task.ScheduledDate);
     }
 

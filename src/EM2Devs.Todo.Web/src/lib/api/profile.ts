@@ -75,6 +75,23 @@ export async function getProfile(
 	return handleResponse<PlayerProfile>(response);
 }
 
+export type EstimationCalibrationState = 'NotEnoughData' | 'Calibrated';
+
+export interface EstimationBias {
+	biasFactor: number;
+	sampleSize: number;
+	calibrationState: EstimationCalibrationState;
+}
+
+export async function getEstimationBias(
+	fetch: typeof globalThis.fetch,
+	baseUrl: string
+): Promise<EstimationBias> {
+	const url = new URL('/api/profile/estimation-bias', baseUrl);
+	const response = await fetch(url);
+	return handleResponse<EstimationBias>(response);
+}
+
 export async function freezeStreak(
 	fetch: typeof globalThis.fetch,
 	baseUrl: string,

@@ -23,7 +23,7 @@ public sealed class RecordActualTimeCommandHandlerTests
 
     private static TodoTask CreateDoneTaskWithEstimate(int estimateMinutes = 30)
     {
-        TodoTask task = TodoTask.Create(new TaskTitle("Task"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Task"));
         task.UpdateEstimatedTime(TimeEstimate.FromMinutes(estimateMinutes));
         task.MoveToInProgress();
         task.MarkAsDone();
@@ -74,7 +74,7 @@ public sealed class RecordActualTimeCommandHandlerTests
     public async Task Should_ReturnConflictError_When_TaskIsNotDone()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Task"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Task"));
         task.UpdateEstimatedTime(TimeEstimate.FromMinutes(30));
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>()).Returns(task);
 
@@ -93,7 +93,7 @@ public sealed class RecordActualTimeCommandHandlerTests
     public async Task Should_ReturnConflictError_When_TaskHasNoEstimate()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Task"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Task"));
         task.MoveToInProgress();
         task.MarkAsDone();
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>()).Returns(task);

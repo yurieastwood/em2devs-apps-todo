@@ -25,7 +25,7 @@ public sealed class BossTaskCompletionTests
     public void Should_CreateBreakdownWithSubtasks_When_BossTaskProvided()
     {
         // Given
-        var parentTask = TodoTask.Create(new TaskTitle("Write architecture decision record"));
+        var parentTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Write architecture decision record"));
         parentTask.PromoteToBossTask();
 
         var subtaskTitles = new[]
@@ -90,7 +90,7 @@ public sealed class BossTaskCompletionTests
     public void Should_CreateSubtasksFromBreakdown_When_Accepted()
     {
         // Given
-        var parentTask = TodoTask.Create(new TaskTitle("Prepare annual tax filing"));
+        var parentTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Prepare annual tax filing"));
         parentTask.PromoteToBossTask();
 
         var subtaskTitles = new[]
@@ -104,7 +104,7 @@ public sealed class BossTaskCompletionTests
         var breakdown = BossTaskBreakdown.Create(parentTask.Id, subtaskTitles);
 
         // When
-        var subtasks = breakdown.Accept();
+        var subtasks = breakdown.Accept(TestData.TestUserId);
 
         // Then
         subtasks.Count.ShouldBe(4);
@@ -127,7 +127,7 @@ public sealed class BossTaskCompletionTests
         });
 
         // When
-        var subtasks = breakdown.Accept();
+        var subtasks = breakdown.Accept(TestData.TestUserId);
 
         // Then
         subtasks.Count.ShouldBe(2);
@@ -145,7 +145,7 @@ public sealed class BossTaskCompletionTests
         });
 
         // When
-        var subtasks = breakdown.Accept();
+        var subtasks = breakdown.Accept(TestData.TestUserId);
 
         // Then
         subtasks.Count.ShouldBe(5);
@@ -160,7 +160,7 @@ public sealed class BossTaskCompletionTests
     public void Should_AllowPriorityChange_When_BossTaskReEvaluated()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Redesign landing page"),
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Redesign landing page"),
             priority: TaskPriority.High);
         task.PromoteToBossTask();
 
@@ -176,7 +176,7 @@ public sealed class BossTaskCompletionTests
     public void Should_AllowDifficultyChange_When_BossTaskReEvaluated()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Redesign landing page"),
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Redesign landing page"),
             difficulty: TaskDifficulty.Hard);
         task.PromoteToBossTask();
 
@@ -192,7 +192,7 @@ public sealed class BossTaskCompletionTests
     public void Should_AllowDeadlineChange_When_BossTaskReEvaluated()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Redesign landing page"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Redesign landing page"));
         task.PromoteToBossTask();
 
         // When
@@ -496,7 +496,7 @@ public sealed class BossTaskCompletionTests
         // Given — recurring task instance
         var sourceId = RecurringTaskId.New();
         var scheduledDate = DateOnly.FromDateTime(DateTime.UtcNow);
-        var task = TodoTask.CreateFromRecurring(
+        var task = TodoTask.CreateFromRecurring(TestData.TestUserId,
             new TaskTitle("Weekly report"), sourceId, scheduledDate);
 
         // When — promote to boss task
@@ -536,7 +536,7 @@ public sealed class BossTaskCompletionTests
         var nextDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7);
 
         // When — generate next instance
-        var nextInstance = recurringTask.GenerateNextInstance(nextDate);
+        var nextInstance = recurringTask.GenerateNextInstance(TestData.TestUserId, nextDate);
 
         // Then — next instance should be normal (not boss)
         nextInstance.IsBossTask.ShouldBeFalse();
@@ -551,7 +551,7 @@ public sealed class BossTaskCompletionTests
     public void Should_ClearBossStatus_When_BossTaskDeleted()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Obsolete research"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Obsolete research"));
         task.PromoteToBossTask();
         task.IsBossTask.ShouldBeTrue();
 
@@ -568,7 +568,7 @@ public sealed class BossTaskCompletionTests
     public void Should_AllowDeletingNonBossTask_When_DeleteCalled()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Normal task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Normal task"));
 
         // When
         task.Delete();
@@ -582,7 +582,7 @@ public sealed class BossTaskCompletionTests
     public void Should_ThrowDomainException_When_DeletingAlreadyDeletedTask()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Already deleted"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Already deleted"));
         task.Delete();
 
         // When / Then
@@ -595,7 +595,7 @@ public sealed class BossTaskCompletionTests
     public void Should_ThrowDomainException_When_DeletingCompletedTask()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Done task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Done task"));
         task.MoveToInProgress();
         task.MarkAsDone();
 
@@ -610,7 +610,7 @@ public sealed class BossTaskCompletionTests
     {
         // Given — deleting a boss task awards no XP
         // This is a behavioral assertion: deletion doesn't go through completion flow
-        var task = TodoTask.Create(new TaskTitle("Obsolete research"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Obsolete research"));
         task.PromoteToBossTask();
 
         // When

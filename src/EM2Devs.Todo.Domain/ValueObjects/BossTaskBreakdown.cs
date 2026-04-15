@@ -40,10 +40,10 @@ public sealed record BossTaskBreakdown
     /// <summary>
     /// Accepts the breakdown, creating TodoTask instances for each suggested subtask.
     /// </summary>
-    public IReadOnlyList<Entities.TodoTask> Accept()
+    public IReadOnlyList<Entities.TodoTask> Accept(Guid userId)
     {
         return SuggestedSubtasks
-            .Select(title => Entities.TodoTask.Create(title))
+            .Select(title => Entities.TodoTask.Create(userId, title))
             .ToList()
             .AsReadOnly();
     }

@@ -30,6 +30,10 @@ namespace EM2Devs.Todo.Worker.Jobs;
 [DisallowConcurrentExecution]
 public sealed partial class RecurringTaskGenerationJob : IJob
 {
+    // Slice 1: background job fallback user. Matches the seed demo user in
+    // AddUsersAndSeed migration. Removed in Slice 2 when RecurringTask gains UserId.
+    private static readonly Guid _demoUserId = new("00000000-0000-0000-0000-000000000001");
+
     private readonly IRecurringTaskRepository _recurringRepository;
     private readonly ITaskRepository _taskRepository;
     private readonly TodoDbContext _dbContext;
@@ -76,7 +80,9 @@ public sealed partial class RecurringTaskGenerationJob : IJob
                 continue;
             }
 
-            TodoTask instance = recurring.GenerateNextInstance(today);
+            // Slice 1: RecurringTask is not yet scoped to a user. Until Slice 2 adds a
+            // UserId to RecurringTask, generated instances belong to the seed demo user.
+            TodoTask instance = recurring.GenerateNextInstance(_demoUserId, today);
             try
             {
                 await _taskRepository.SaveAsync(instance, context.CancellationToken).ConfigureAwait(false);

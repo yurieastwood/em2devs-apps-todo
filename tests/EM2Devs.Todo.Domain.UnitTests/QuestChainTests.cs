@@ -77,7 +77,7 @@ public sealed class QuestChainTests
         QuestChain chain = CreateWeeklyMealPrep();
         DateOnly saturday = new(2026, 3, 7);
 
-        Quest quest = chain.GenerateInstance(saturday);
+        Quest quest = chain.GenerateInstance(TestData.TestUserId, saturday);
 
         quest.Title.Value.ShouldBe("Weekly Meal Prep");
         quest.Tasks.Count.ShouldBe(4);
@@ -93,7 +93,7 @@ public sealed class QuestChainTests
     public void Should_RecordInstanceOutcome_When_QuestCompleted()
     {
         QuestChain chain = CreateWeeklyMealPrep();
-        Quest q = chain.GenerateInstance(new DateOnly(2026, 3, 7));
+        Quest q = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 3, 7));
 
         chain.RecordInstanceOutcome(q.Id, completed: true, timeToComplete: TimeSpan.FromHours(2));
 
@@ -132,9 +132,9 @@ public sealed class QuestChainTests
     public void Should_ComputeStreak_FromTrailingCompletedInstances()
     {
         QuestChain chain = CreateWeeklyMealPrep();
-        Quest q1 = chain.GenerateInstance(new DateOnly(2026, 1, 3));
-        Quest q2 = chain.GenerateInstance(new DateOnly(2026, 1, 10));
-        Quest q3 = chain.GenerateInstance(new DateOnly(2026, 1, 17));
+        Quest q1 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 3));
+        Quest q2 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 10));
+        Quest q3 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 17));
         chain.RecordInstanceOutcome(q1.Id, true, TimeSpan.FromHours(1));
         chain.RecordInstanceOutcome(q2.Id, true, TimeSpan.FromHours(1));
         chain.RecordInstanceOutcome(q3.Id, true, TimeSpan.FromHours(1));
@@ -147,9 +147,9 @@ public sealed class QuestChainTests
     public void Should_ResetStreak_OnMissedInstance()
     {
         QuestChain chain = CreateWeeklyMealPrep();
-        Quest q1 = chain.GenerateInstance(new DateOnly(2026, 1, 3));
-        Quest q2 = chain.GenerateInstance(new DateOnly(2026, 1, 10));
-        Quest q3 = chain.GenerateInstance(new DateOnly(2026, 1, 17));
+        Quest q1 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 3));
+        Quest q2 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 10));
+        Quest q3 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 17));
         chain.RecordInstanceOutcome(q1.Id, true, TimeSpan.FromHours(1));
         chain.RecordInstanceOutcome(q2.Id, false, null);
         chain.RecordInstanceOutcome(q3.Id, true, TimeSpan.FromHours(1));
@@ -172,7 +172,7 @@ public sealed class QuestChainTests
         QuestChain chain = CreateWeeklyMealPrep();
         for (int i = 0; i < 4; i++)
         {
-            Quest q = chain.GenerateInstance(new DateOnly(2026, 1, 3).AddDays(i * 7));
+            Quest q = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 3).AddDays(i * 7));
             chain.RecordInstanceOutcome(q.Id, true, TimeSpan.FromHours(1));
         }
 
@@ -187,7 +187,7 @@ public sealed class QuestChainTests
         QuestChain chain = CreateWeeklyMealPrep();
         for (int i = 0; i < 15; i++)
         {
-            Quest q = chain.GenerateInstance(new DateOnly(2026, 1, 3).AddDays(i * 7));
+            Quest q = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 3).AddDays(i * 7));
             chain.RecordInstanceOutcome(q.Id, true, TimeSpan.FromHours(1));
         }
 
@@ -199,8 +199,8 @@ public sealed class QuestChainTests
     public void Should_ReportStats_ForHistory()
     {
         QuestChain chain = CreateWeeklyMealPrep();
-        Quest q1 = chain.GenerateInstance(new DateOnly(2026, 1, 3));
-        Quest q2 = chain.GenerateInstance(new DateOnly(2026, 1, 10));
+        Quest q1 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 3));
+        Quest q2 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 10));
         chain.RecordInstanceOutcome(q1.Id, true, TimeSpan.FromHours(2));
         chain.RecordInstanceOutcome(q2.Id, false, null);
         chain.AddXpEarned(new ExperiencePoints(50));
@@ -546,7 +546,7 @@ public sealed class QuestChainTests
     public void Should_IncludeChainTitle_InGeneratedQuestDescription()
     {
         QuestChain chain = CreateWeeklyMealPrep();
-        Quest q = chain.GenerateInstance(new DateOnly(2026, 3, 7));
+        Quest q = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 3, 7));
         q.Description.ShouldBe("Instance of chain Weekly Meal Prep");
     }
 
@@ -558,7 +558,7 @@ public sealed class QuestChainTests
         QuestChain chain = CreateWeeklyMealPrep();
         for (int i = 0; i < 10; i++)
         {
-            Quest q = chain.GenerateInstance(new DateOnly(2026, 1, 3).AddDays(i * 7));
+            Quest q = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 3).AddDays(i * 7));
             chain.RecordInstanceOutcome(q.Id, true, TimeSpan.FromHours(1));
         }
 
@@ -573,8 +573,8 @@ public sealed class QuestChainTests
         // Kills mutation: completed && HasValue → completed || HasValue.
         // Under OR, a not-completed entry with TimeToComplete set would pollute the average.
         QuestChain chain = CreateWeeklyMealPrep();
-        Quest q1 = chain.GenerateInstance(new DateOnly(2026, 1, 3));
-        Quest q2 = chain.GenerateInstance(new DateOnly(2026, 1, 10));
+        Quest q1 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 3));
+        Quest q2 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 10));
         chain.RecordInstanceOutcome(q1.Id, completed: true, timeToComplete: TimeSpan.FromHours(10));
         // Record "not completed" but with a huge time value (e.g. abandoned mid-way)
         chain.RecordInstanceOutcome(q2.Id, completed: false, timeToComplete: TimeSpan.FromHours(1000));
@@ -589,8 +589,8 @@ public sealed class QuestChainTests
     {
         // Kills mutation: Average→Min/Max. With times 2h and 6h, avg=4h, min=2h, max=6h.
         QuestChain chain = CreateWeeklyMealPrep();
-        Quest q1 = chain.GenerateInstance(new DateOnly(2026, 1, 3));
-        Quest q2 = chain.GenerateInstance(new DateOnly(2026, 1, 10));
+        Quest q1 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 3));
+        Quest q2 = chain.GenerateInstance(TestData.TestUserId, new DateOnly(2026, 1, 10));
         chain.RecordInstanceOutcome(q1.Id, true, TimeSpan.FromHours(2));
         chain.RecordInstanceOutcome(q2.Id, true, TimeSpan.FromHours(6));
 

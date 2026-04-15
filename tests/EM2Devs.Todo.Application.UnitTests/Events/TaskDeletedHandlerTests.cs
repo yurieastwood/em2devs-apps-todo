@@ -28,10 +28,10 @@ public sealed class TaskDeletedHandlerTests
     {
         // Given — quest with 4 tasks, we delete one
         Quest quest = Quest.Create(new QuestTitle("Launch campaign"), "Test");
-        TodoTask task1 = TodoTask.Create(new TaskTitle("Design flyer"));
-        TodoTask task2 = TodoTask.Create(new TaskTitle("Write copy"));
-        TodoTask task3 = TodoTask.Create(new TaskTitle("Review"));
-        TodoTask task4 = TodoTask.Create(new TaskTitle("Publish"));
+        TodoTask task1 = TodoTask.Create(TestUserId, new TaskTitle("Design flyer"));
+        TodoTask task2 = TodoTask.Create(TestUserId, new TaskTitle("Write copy"));
+        TodoTask task3 = TodoTask.Create(TestUserId, new TaskTitle("Review"));
+        TodoTask task4 = TodoTask.Create(TestUserId, new TaskTitle("Publish"));
         quest.AddTask(task1);
         quest.AddTask(task2);
         quest.AddTask(task3);
@@ -57,10 +57,10 @@ public sealed class TaskDeletedHandlerTests
         // Given — quest with 4 tasks, 2 completed. Progress = 50%.
         // Delete one incomplete task → 2/3 completed = 66%.
         Quest quest = Quest.Create(new QuestTitle("Launch campaign"), "Test");
-        TodoTask task1 = TodoTask.Create(new TaskTitle("Task 1"));
-        TodoTask task2 = TodoTask.Create(new TaskTitle("Task 2"));
-        TodoTask task3 = TodoTask.Create(new TaskTitle("Task 3"));
-        TodoTask task4 = TodoTask.Create(new TaskTitle("Task 4"));
+        TodoTask task1 = TodoTask.Create(TestUserId, new TaskTitle("Task 1"));
+        TodoTask task2 = TodoTask.Create(TestUserId, new TaskTitle("Task 2"));
+        TodoTask task3 = TodoTask.Create(TestUserId, new TaskTitle("Task 3"));
+        TodoTask task4 = TodoTask.Create(TestUserId, new TaskTitle("Task 4"));
         quest.AddTask(task1);
         quest.AddTask(task2);
         quest.AddTask(task3);

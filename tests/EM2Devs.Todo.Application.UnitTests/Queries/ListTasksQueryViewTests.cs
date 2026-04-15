@@ -33,7 +33,7 @@ public sealed class ListTasksQueryViewTests
 
     private static TodoTask CreateScheduled(string title, DateOnly scheduledDate)
     {
-        return TodoTask.CreateFromRecurring(
+        return TodoTask.CreateFromRecurring(TestUserId,
             new TaskTitle(title),
             RecurringTaskId.New(),
             scheduledDate);
@@ -44,8 +44,8 @@ public sealed class ListTasksQueryViewTests
     public async Task Should_ReturnInboxTasks_When_ViewIsInbox()
     {
         // Inbox = open tasks with no assigned quest. Completed/Deleted tasks are excluded.
-        TodoTask open = TodoTask.Create(new TaskTitle("Open inbox item"));
-        TodoTask completed = TodoTask.Create(new TaskTitle("Completed item"));
+        TodoTask open = TodoTask.Create(TestUserId, new TaskTitle("Open inbox item"));
+        TodoTask completed = TodoTask.Create(TestUserId, new TaskTitle("Completed item"));
         completed.MoveToInProgress();
         completed.MarkAsDone();
         SeedTasks(open, completed);
@@ -63,7 +63,7 @@ public sealed class ListTasksQueryViewTests
     {
         TodoTask scheduledToday = CreateScheduled("Due today", Today);
         TodoTask scheduledTomorrow = CreateScheduled("Due tomorrow", Today.AddDays(1));
-        TodoTask withoutSchedule = TodoTask.Create(new TaskTitle("No date"));
+        TodoTask withoutSchedule = TodoTask.Create(TestUserId, new TaskTitle("No date"));
         SeedTasks(scheduledToday, scheduledTomorrow, withoutSchedule);
 
         Result<IReadOnlyList<TodoTask>> result = await _handler.Handle(new ListTasksQuery(null, "today"), CancellationToken.None);
@@ -94,7 +94,7 @@ public sealed class ListTasksQueryViewTests
     public async Task Should_ReturnCompletedTasks_When_ViewIsCompleted()
     {
         TodoTask active = CreateScheduled("Open", Today);
-        TodoTask completed = TodoTask.Create(new TaskTitle("Completed"));
+        TodoTask completed = TodoTask.Create(TestUserId, new TaskTitle("Completed"));
         completed.MoveToInProgress();
         completed.MarkAsDone();
         SeedTasks(active, completed);
@@ -110,7 +110,7 @@ public sealed class ListTasksQueryViewTests
     [Trait("Category", "Application")]
     public async Task Should_IgnoreCase_When_ViewNameIsMixedCase()
     {
-        TodoTask withoutSchedule = TodoTask.Create(new TaskTitle("Inbox item"));
+        TodoTask withoutSchedule = TodoTask.Create(TestUserId, new TaskTitle("Inbox item"));
         SeedTasks(withoutSchedule);
 
         Result<IReadOnlyList<TodoTask>> result = await _handler.Handle(new ListTasksQuery(null, "Inbox"), CancellationToken.None);
@@ -147,8 +147,8 @@ public sealed class ListTasksQueryViewTests
     [Trait("Category", "Application")]
     public async Task Should_ApplyStatusFilter_When_OnlyStatusProvided()
     {
-        TodoTask todo = TodoTask.Create(new TaskTitle("Todo item"));
-        TodoTask done = TodoTask.Create(new TaskTitle("Done item"));
+        TodoTask todo = TodoTask.Create(TestUserId, new TaskTitle("Todo item"));
+        TodoTask done = TodoTask.Create(TestUserId, new TaskTitle("Done item"));
         done.MoveToInProgress();
         done.MarkAsDone();
         SeedTasks(todo, done);

@@ -9,7 +9,7 @@ namespace EM2Devs.Todo.Domain.UnitTests;
 public sealed class TodoTaskTagsAndSearchTests
 {
     private static TodoTask NewTask(string title = "Write report") =>
-        TodoTask.Create(new TaskTitle(title));
+        TodoTask.Create(TestData.TestUserId, new TaskTitle(title));
 
     [Fact]
     [Trait("Category", "Domain")]

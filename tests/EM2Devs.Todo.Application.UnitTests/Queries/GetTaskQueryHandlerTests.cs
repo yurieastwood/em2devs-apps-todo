@@ -24,7 +24,7 @@ public sealed class GetTaskQueryHandlerTests
     public async Task Should_ReturnSuccess_When_TaskExists()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test task"));
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("Test task"));
         _repository.GetByIdAsync(Arg.Any<TaskId>(), Arg.Any<CancellationToken>())
             .Returns(task);
 

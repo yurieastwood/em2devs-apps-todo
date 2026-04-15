@@ -21,10 +21,10 @@ public sealed class EnergyTaskSorterTests
     public void Should_SurfaceHardTasksFirst_When_EnergyIsPeak()
     {
         // Given
-        var easyTask = TodoTask.Create(new TaskTitle("Reply to email"), TaskDifficulty.Easy);
-        var hardTask = TodoTask.Create(new TaskTitle("Refactor auth module"), TaskDifficulty.Hard);
-        var normalTask = TodoTask.Create(new TaskTitle("Code review"), TaskDifficulty.Normal);
-        var epicTask = TodoTask.Create(new TaskTitle("System redesign"), TaskDifficulty.Epic);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reply to email"), TaskDifficulty.Easy);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Refactor auth module"), TaskDifficulty.Hard);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Code review"), TaskDifficulty.Normal);
+        var epicTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("System redesign"), TaskDifficulty.Epic);
         var tasks = new List<TodoTask> { easyTask, hardTask, normalTask, epicTask };
 
         // When
@@ -42,9 +42,9 @@ public sealed class EnergyTaskSorterTests
     public void Should_SurfaceHardTasksFirst_When_EnergyIsHigh()
     {
         // Given
-        var easyTask = TodoTask.Create(new TaskTitle("File expense report"), TaskDifficulty.Easy);
-        var hardTask = TodoTask.Create(new TaskTitle("Design API"), TaskDifficulty.Hard);
-        var normalTask = TodoTask.Create(new TaskTitle("Stand-up meeting"), TaskDifficulty.Normal);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("File expense report"), TaskDifficulty.Easy);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Design API"), TaskDifficulty.Hard);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Stand-up meeting"), TaskDifficulty.Normal);
         var tasks = new List<TodoTask> { easyTask, hardTask, normalTask };
 
         // When
@@ -61,9 +61,9 @@ public sealed class EnergyTaskSorterTests
     public void Should_SurfaceNormalTasksFirst_When_EnergyIsMedium()
     {
         // Given
-        var easyTask = TodoTask.Create(new TaskTitle("Clean desk"), TaskDifficulty.Easy);
-        var hardTask = TodoTask.Create(new TaskTitle("Refactor module"), TaskDifficulty.Hard);
-        var normalTask = TodoTask.Create(new TaskTitle("Update docs"), TaskDifficulty.Normal);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Clean desk"), TaskDifficulty.Easy);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Refactor module"), TaskDifficulty.Hard);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Update docs"), TaskDifficulty.Normal);
         var tasks = new List<TodoTask> { easyTask, hardTask, normalTask };
 
         // When
@@ -78,10 +78,10 @@ public sealed class EnergyTaskSorterTests
     public void Should_SurfaceEasyTasksFirst_When_EnergyIsLow()
     {
         // Given
-        var easyTask = TodoTask.Create(new TaskTitle("Reply to email"), TaskDifficulty.Easy);
-        var hardTask = TodoTask.Create(new TaskTitle("Design new feature"), TaskDifficulty.Hard);
-        var normalTask = TodoTask.Create(new TaskTitle("Code review"), TaskDifficulty.Normal);
-        var trivialTask = TodoTask.Create(new TaskTitle("Check notifications"), TaskDifficulty.Trivial);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reply to email"), TaskDifficulty.Easy);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Design new feature"), TaskDifficulty.Hard);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Code review"), TaskDifficulty.Normal);
+        var trivialTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Check notifications"), TaskDifficulty.Trivial);
         var tasks = new List<TodoTask> { hardTask, normalTask, easyTask, trivialTask };
 
         // When
@@ -103,9 +103,9 @@ public sealed class EnergyTaskSorterTests
     public void Should_ReturnAllTasks_When_SortedByEnergyMatch()
     {
         // Given
-        var easyTask = TodoTask.Create(new TaskTitle("Reply to email"), TaskDifficulty.Easy);
-        var hardTask = TodoTask.Create(new TaskTitle("Design new feature"), TaskDifficulty.Hard);
-        var normalTask = TodoTask.Create(new TaskTitle("Code review"), TaskDifficulty.Normal);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reply to email"), TaskDifficulty.Easy);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Design new feature"), TaskDifficulty.Hard);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Code review"), TaskDifficulty.Normal);
         var tasks = new List<TodoTask> { easyTask, hardTask, normalTask };
 
         // When
@@ -123,11 +123,11 @@ public sealed class EnergyTaskSorterTests
     public void Should_ReturnAllTasks_When_SortedByHighEnergy()
     {
         // Given
-        var easyTask = TodoTask.Create(new TaskTitle("Reply to email"), TaskDifficulty.Easy);
-        var hardTask = TodoTask.Create(new TaskTitle("Design new feature"), TaskDifficulty.Hard);
-        var normalTask = TodoTask.Create(new TaskTitle("Code review"), TaskDifficulty.Normal);
-        var epicTask = TodoTask.Create(new TaskTitle("System redesign"), TaskDifficulty.Epic);
-        var trivialTask = TodoTask.Create(new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reply to email"), TaskDifficulty.Easy);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Design new feature"), TaskDifficulty.Hard);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Code review"), TaskDifficulty.Normal);
+        var epicTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("System redesign"), TaskDifficulty.Epic);
+        var trivialTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
         var tasks = new List<TodoTask> { easyTask, hardTask, normalTask, epicTask, trivialTask };
 
         // When
@@ -165,7 +165,7 @@ public sealed class EnergyTaskSorterTests
     public void Should_ReturnSingleTask_When_OnlyOneTaskProvided()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Single task"), TaskDifficulty.Normal);
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Single task"), TaskDifficulty.Normal);
         var tasks = new List<TodoTask> { task };
 
         // When
@@ -191,8 +191,8 @@ public sealed class EnergyTaskSorterTests
     public void Should_SurfaceEpicAndHardFirst_When_EnergyIsPeakWithMixedDifficulties()
     {
         // Given — verifies that Peak energy surfaces the most difficult tasks
-        var trivialTask = TodoTask.Create(new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
-        var epicTask = TodoTask.Create(new TaskTitle("System redesign"), TaskDifficulty.Epic);
+        var trivialTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
+        var epicTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("System redesign"), TaskDifficulty.Epic);
         var tasks = new List<TodoTask> { trivialTask, epicTask };
 
         // When
@@ -208,11 +208,11 @@ public sealed class EnergyTaskSorterTests
     public void Should_PreserveAllDifficulties_When_SortedByMediumEnergy()
     {
         // Given
-        var trivialTask = TodoTask.Create(new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
-        var easyTask = TodoTask.Create(new TaskTitle("Reply to email"), TaskDifficulty.Easy);
-        var normalTask = TodoTask.Create(new TaskTitle("Code review"), TaskDifficulty.Normal);
-        var hardTask = TodoTask.Create(new TaskTitle("Design API"), TaskDifficulty.Hard);
-        var epicTask = TodoTask.Create(new TaskTitle("System redesign"), TaskDifficulty.Epic);
+        var trivialTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reply to email"), TaskDifficulty.Easy);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Code review"), TaskDifficulty.Normal);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Design API"), TaskDifficulty.Hard);
+        var epicTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("System redesign"), TaskDifficulty.Epic);
         var tasks = new List<TodoTask> { trivialTask, easyTask, normalTask, hardTask, epicTask };
 
         // When
@@ -228,8 +228,8 @@ public sealed class EnergyTaskSorterTests
     public void Should_OrderTrivialBeforeEasy_When_EnergyIsLow()
     {
         // Given — low energy should prefer easiest tasks first
-        var easyTask = TodoTask.Create(new TaskTitle("Reply to email"), TaskDifficulty.Easy);
-        var trivialTask = TodoTask.Create(new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reply to email"), TaskDifficulty.Easy);
+        var trivialTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
         var tasks = new List<TodoTask> { easyTask, trivialTask };
 
         // When
@@ -245,8 +245,8 @@ public sealed class EnergyTaskSorterTests
     public void Should_OrderEpicBeforeHard_When_EnergyIsPeak()
     {
         // Given — peak energy should prefer most difficult tasks first
-        var hardTask = TodoTask.Create(new TaskTitle("Design API"), TaskDifficulty.Hard);
-        var epicTask = TodoTask.Create(new TaskTitle("System redesign"), TaskDifficulty.Epic);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Design API"), TaskDifficulty.Hard);
+        var epicTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("System redesign"), TaskDifficulty.Epic);
         var tasks = new List<TodoTask> { hardTask, epicTask };
 
         // When
@@ -267,8 +267,8 @@ public sealed class EnergyTaskSorterTests
     {
         // Given — at High energy (target=Hard), Epic and Normal are both distance 1
         // Tie-break: High energy prefers harder, so Epic should come before Normal
-        var normalTask = TodoTask.Create(new TaskTitle("Code review"), TaskDifficulty.Normal);
-        var epicTask = TodoTask.Create(new TaskTitle("System redesign"), TaskDifficulty.Epic);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Code review"), TaskDifficulty.Normal);
+        var epicTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("System redesign"), TaskDifficulty.Epic);
         var tasks = new List<TodoTask> { normalTask, epicTask };
 
         // When
@@ -285,8 +285,8 @@ public sealed class EnergyTaskSorterTests
     {
         // Given — at Medium energy (target=Normal), Easy and Hard are both distance 1
         // Tie-break: Medium energy prefers easier, so Easy should come before Hard
-        var hardTask = TodoTask.Create(new TaskTitle("Design API"), TaskDifficulty.Hard);
-        var easyTask = TodoTask.Create(new TaskTitle("Reply to email"), TaskDifficulty.Easy);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Design API"), TaskDifficulty.Hard);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reply to email"), TaskDifficulty.Easy);
         var tasks = new List<TodoTask> { hardTask, easyTask };
 
         // When
@@ -303,9 +303,9 @@ public sealed class EnergyTaskSorterTests
     {
         // Given — at Low energy (target=Trivial), Easy and special equidistant case
         // Verifies that low energy direction tie-breaks toward easier
-        var easyTask = TodoTask.Create(new TaskTitle("Reply to email"), TaskDifficulty.Easy);
-        var normalTask = TodoTask.Create(new TaskTitle("Code review"), TaskDifficulty.Normal);
-        var hardTask = TodoTask.Create(new TaskTitle("Design API"), TaskDifficulty.Hard);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reply to email"), TaskDifficulty.Easy);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Code review"), TaskDifficulty.Normal);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Design API"), TaskDifficulty.Hard);
         var tasks = new List<TodoTask> { hardTask, normalTask, easyTask };
 
         // When
@@ -322,11 +322,11 @@ public sealed class EnergyTaskSorterTests
     public void Should_OrderFullSpectrum_When_EnergyIsHighWithAllDifficulties()
     {
         // Given — comprehensive test with all difficulty levels at High energy
-        var trivialTask = TodoTask.Create(new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
-        var easyTask = TodoTask.Create(new TaskTitle("Reply to email"), TaskDifficulty.Easy);
-        var normalTask = TodoTask.Create(new TaskTitle("Code review"), TaskDifficulty.Normal);
-        var hardTask = TodoTask.Create(new TaskTitle("Design API"), TaskDifficulty.Hard);
-        var epicTask = TodoTask.Create(new TaskTitle("System redesign"), TaskDifficulty.Epic);
+        var trivialTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reply to email"), TaskDifficulty.Easy);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Code review"), TaskDifficulty.Normal);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Design API"), TaskDifficulty.Hard);
+        var epicTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("System redesign"), TaskDifficulty.Epic);
         var tasks = new List<TodoTask> { trivialTask, easyTask, normalTask, hardTask, epicTask };
 
         // When
@@ -345,11 +345,11 @@ public sealed class EnergyTaskSorterTests
     public void Should_OrderFullSpectrum_When_EnergyIsLowWithAllDifficulties()
     {
         // Given — comprehensive test with all difficulty levels at Low energy
-        var trivialTask = TodoTask.Create(new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
-        var easyTask = TodoTask.Create(new TaskTitle("Reply to email"), TaskDifficulty.Easy);
-        var normalTask = TodoTask.Create(new TaskTitle("Code review"), TaskDifficulty.Normal);
-        var hardTask = TodoTask.Create(new TaskTitle("Design API"), TaskDifficulty.Hard);
-        var epicTask = TodoTask.Create(new TaskTitle("System redesign"), TaskDifficulty.Epic);
+        var trivialTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reply to email"), TaskDifficulty.Easy);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Code review"), TaskDifficulty.Normal);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Design API"), TaskDifficulty.Hard);
+        var epicTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("System redesign"), TaskDifficulty.Epic);
         var tasks = new List<TodoTask> { epicTask, hardTask, normalTask, easyTask, trivialTask };
 
         // When
@@ -368,11 +368,11 @@ public sealed class EnergyTaskSorterTests
     public void Should_OrderFullSpectrum_When_EnergyIsPeakWithAllDifficulties()
     {
         // Given
-        var trivialTask = TodoTask.Create(new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
-        var easyTask = TodoTask.Create(new TaskTitle("Reply to email"), TaskDifficulty.Easy);
-        var normalTask = TodoTask.Create(new TaskTitle("Code review"), TaskDifficulty.Normal);
-        var hardTask = TodoTask.Create(new TaskTitle("Design API"), TaskDifficulty.Hard);
-        var epicTask = TodoTask.Create(new TaskTitle("System redesign"), TaskDifficulty.Epic);
+        var trivialTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Check inbox"), TaskDifficulty.Trivial);
+        var easyTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reply to email"), TaskDifficulty.Easy);
+        var normalTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Code review"), TaskDifficulty.Normal);
+        var hardTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("Design API"), TaskDifficulty.Hard);
+        var epicTask = TodoTask.Create(TestData.TestUserId, new TaskTitle("System redesign"), TaskDifficulty.Epic);
         var tasks = new List<TodoTask> { trivialTask, easyTask, normalTask, hardTask, epicTask };
 
         // When

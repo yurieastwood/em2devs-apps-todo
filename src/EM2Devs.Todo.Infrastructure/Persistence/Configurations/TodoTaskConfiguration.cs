@@ -20,6 +20,12 @@ public sealed class TodoTaskConfiguration : IEntityTypeConfiguration<TodoTask>
                 id => id.Value,
                 value => new TaskId(value));
 
+        builder.Property(t => t.UserId)
+            .HasColumnName("user_id")
+            .IsRequired();
+
+        builder.HasIndex(t => t.UserId);
+
         builder.Property(t => t.Title)
             .HasColumnName("title")
             .HasMaxLength(200)

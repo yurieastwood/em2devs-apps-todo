@@ -11,6 +11,10 @@ builder.AddServiceDefaults();
 // Aspire-provided DbContext via the "tododb" connection string.
 builder.AddNpgsqlDbContext<TodoDbContext>("tododb");
 
+// Background jobs run outside of any HTTP request — provide a system-level
+// ICurrentUser so task-scoped repositories can still filter by UserId.
+builder.Services.AddScoped<ICurrentUser, SystemCurrentUser>();
+
 // Postgres-backed repositories.
 builder.Services.AddScoped<ITaskRepository, PostgresTaskRepository>();
 builder.Services.AddScoped<IRecurringTaskRepository, PostgresRecurringTaskRepository>();

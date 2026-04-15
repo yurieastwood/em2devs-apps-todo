@@ -402,7 +402,7 @@ public sealed class EpicTests
         Quest quest = Quest.Create(new QuestTitle($"Quest-{Guid.NewGuid():N}"), "Test quest");
         for (int i = 0; i < totalTasks; i++)
         {
-            TodoTask task = TodoTask.Create(new TaskTitle($"Task {i + 1}"));
+            TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle($"Task {i + 1}"));
             quest.AddTask(task);
 
             if (i < completedTasks)

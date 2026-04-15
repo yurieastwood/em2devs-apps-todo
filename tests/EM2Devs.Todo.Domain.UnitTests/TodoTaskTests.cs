@@ -20,7 +20,7 @@ public sealed class TodoTaskTests
         var title = new TaskTitle("Write architecture tests");
 
         // When
-        var task = TodoTask.Create(title);
+        var task = TodoTask.Create(TestData.TestUserId, title);
 
         // Then
         task.Status.ShouldBe(TaskStatus.Todo);
@@ -134,7 +134,7 @@ public sealed class TodoTaskTests
     public void Should_TransitionToInProgress_When_TaskIsTodo()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Start working"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Start working"));
 
         // When
         task.MoveToInProgress();
@@ -148,7 +148,7 @@ public sealed class TodoTaskTests
     public void Should_TransitionToDone_When_TaskIsInProgress()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Finish working"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Finish working"));
         task.MoveToInProgress();
 
         // When
@@ -163,7 +163,7 @@ public sealed class TodoTaskTests
     public void Should_ThrowDomainException_When_TransitioningFromTodoToDone()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Skip ahead"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Skip ahead"));
 
         // When / Then
         var ex = Should.Throw<DomainException>(() => task.MarkAsDone());
@@ -175,7 +175,7 @@ public sealed class TodoTaskTests
     public void Should_ThrowDomainException_When_TransitioningFromDoneToAnyStatus()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Already finished"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Already finished"));
         task.MoveToInProgress();
         task.MarkAsDone();
 
@@ -192,7 +192,7 @@ public sealed class TodoTaskTests
     public void Should_NotBeBossTask_When_NewTaskIsCreated()
     {
         // Given / When
-        var task = TodoTask.Create(new TaskTitle("Normal task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Normal task"));
 
         // Then
         task.IsBossTask.ShouldBeFalse();
@@ -203,7 +203,7 @@ public sealed class TodoTaskTests
     public void Should_BecomeBossTask_When_Promoted()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Hard task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Hard task"));
 
         // When
         task.PromoteToBossTask();
@@ -217,7 +217,7 @@ public sealed class TodoTaskTests
     public void Should_StopBeingBossTask_When_Demoted()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Was hard"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Was hard"));
         task.PromoteToBossTask();
 
         // When
@@ -232,7 +232,7 @@ public sealed class TodoTaskTests
     public void Should_RemainBossTask_When_PromotedTwice()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Already boss"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Already boss"));
         task.PromoteToBossTask();
 
         // When
@@ -247,7 +247,7 @@ public sealed class TodoTaskTests
     public void Should_ThrowDomainException_When_PromotingDoneTask()
     {
         // Given
-        var task = TodoTask.Create(new TaskTitle("Finished"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Finished"));
         task.MoveToInProgress();
         task.MarkAsDone();
 
@@ -273,7 +273,7 @@ public sealed class TodoTaskTests
     public void Should_UpdateTitle_When_NewTitleIsValid()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Old title"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Old title"));
 
         // When
         task.UpdateTitle(new TaskTitle("New title"));
@@ -287,7 +287,7 @@ public sealed class TodoTaskTests
     public void Should_ThrowArgumentNullException_When_UpdatingTitleWithNull()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
 
         // When / Then
         Should.Throw<ArgumentNullException>(() => task.UpdateTitle(null!));
@@ -298,7 +298,7 @@ public sealed class TodoTaskTests
     public void Should_UpdateDescription_When_DescriptionProvided()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
         task.Description.ShouldBeNull();
 
         // When
@@ -313,7 +313,7 @@ public sealed class TodoTaskTests
     public void Should_UpdateDifficulty_When_NewDifficultyProvided()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
         task.Difficulty.ShouldBe(TaskDifficulty.Normal);
 
         // When
@@ -328,7 +328,7 @@ public sealed class TodoTaskTests
     public void Should_DefaultToMediumPriority_When_Created()
     {
         // When
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
 
         // Then
         task.Priority.ShouldBe(TaskPriority.Medium);
@@ -339,7 +339,7 @@ public sealed class TodoTaskTests
     public void Should_UpdatePriority_When_NewPriorityProvided()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
         task.Priority.ShouldBe(TaskPriority.Medium);
 
         // When
@@ -354,7 +354,7 @@ public sealed class TodoTaskTests
     public void Should_NotChangeDifficulty_When_PriorityUpdated()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"), TaskDifficulty.Hard);
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"), TaskDifficulty.Hard);
 
         // When
         task.UpdatePriority(TaskPriority.Low);
@@ -369,7 +369,7 @@ public sealed class TodoTaskTests
     public void Should_DefaultToNoEstimatedTime_When_Created()
     {
         // When
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
 
         // Then
         task.EstimatedTime.ShouldBeNull();
@@ -380,7 +380,7 @@ public sealed class TodoTaskTests
     public void Should_SetEstimatedTime_When_Updated()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Write report"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Write report"));
 
         // When
         task.UpdateEstimatedTime(TimeEstimate.FromMinutes(120));
@@ -395,7 +395,7 @@ public sealed class TodoTaskTests
     public void Should_ClearEstimatedTime_When_SetToNull()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Write report"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Write report"));
         task.UpdateEstimatedTime(TimeEstimate.FromMinutes(60));
 
         // When
@@ -410,7 +410,7 @@ public sealed class TodoTaskTests
     public void Should_UpdateDueDate_When_NewDateProvided()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
         task.DueDate.ShouldBeNull();
 
         // When
@@ -427,7 +427,7 @@ public sealed class TodoTaskTests
     {
         // Given
         DateTimeOffset dueDate = new(2026, 6, 15, 0, 0, 0, TimeSpan.Zero);
-        TodoTask task = TodoTask.Create(new TaskTitle("Test"), dueDate: dueDate);
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"), dueDate: dueDate);
         task.DueDate.ShouldNotBeNull();
 
         // When
@@ -442,7 +442,7 @@ public sealed class TodoTaskTests
     public void Should_ReopenTask_When_TaskIsDone()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Completed task"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Completed task"));
         task.MoveToInProgress();
         task.MarkAsDone();
         task.Status.ShouldBe(TaskStatus.Done);
@@ -460,7 +460,7 @@ public sealed class TodoTaskTests
     public void Should_ThrowDomainException_When_ReopeningNonCompletedTask()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Not done"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Not done"));
 
         // When / Then
         DomainException ex = Should.Throw<DomainException>(() => task.Reopen());
@@ -472,7 +472,7 @@ public sealed class TodoTaskTests
     public void Should_UpdateDescription_When_TaskIsCompleted()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Done task"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Done task"));
         task.MoveToInProgress();
         task.MarkAsDone();
 
@@ -491,7 +491,7 @@ public sealed class TodoTaskTests
     public void Should_IncrementRescheduleCount_When_Rescheduled()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Reschedule me"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Reschedule me"));
         task.RescheduleCount.ShouldBe(0);
 
         // When
@@ -506,7 +506,7 @@ public sealed class TodoTaskTests
     public void Should_TrackMultipleReschedules_When_RescheduledRepeatedly()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Keep rescheduling"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Keep rescheduling"));
 
         // When
         task.Reschedule();
@@ -522,7 +522,7 @@ public sealed class TodoTaskTests
     public void Should_ThrowDomainException_When_ReschedulingCompletedTask()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Done"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Done"));
         task.MoveToInProgress();
         task.MarkAsDone();
 
@@ -536,7 +536,7 @@ public sealed class TodoTaskTests
     public void Should_ThrowDomainException_When_ReschedulingSkippedTask()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Skipped"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Skipped"));
         task.Skip();
 
         // When / Then
@@ -551,7 +551,7 @@ public sealed class TodoTaskTests
     public void Should_IncrementViewCount_When_ViewRecorded()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("View me"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("View me"));
         task.ViewCount.ShouldBe(0);
 
         // When
@@ -566,7 +566,7 @@ public sealed class TodoTaskTests
     public void Should_TrackMultipleViews_When_ViewedRepeatedly()
     {
         // Given
-        TodoTask task = TodoTask.Create(new TaskTitle("Popular task"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Popular task"));
 
         // When
         for (int i = 0; i < 5; i++)
@@ -586,7 +586,7 @@ public sealed class TodoTaskTests
     {
         // Given / When
         DateTimeOffset before = DateTimeOffset.UtcNow;
-        TodoTask task = TodoTask.Create(new TaskTitle("New task"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("New task"));
         DateTimeOffset after = DateTimeOffset.UtcNow;
 
         // Then
@@ -602,7 +602,7 @@ public sealed class TodoTaskTests
         DateTimeOffset customDate = new(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
         // When
-        TodoTask task = TodoTask.Create(new TaskTitle("Old task"), createdAt: customDate);
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Old task"), createdAt: customDate);
 
         // Then
         task.CreatedAt.ShouldBe(customDate);
@@ -615,9 +615,47 @@ public sealed class TodoTaskTests
     public void Should_CreateWithSpecifiedPriority_When_PriorityProvided()
     {
         // When
-        TodoTask task = TodoTask.Create(new TaskTitle("High priority"), priority: TaskPriority.High);
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("High priority"), priority: TaskPriority.High);
 
         // Then
         task.Priority.ShouldBe(TaskPriority.High);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_UserIdIsEmpty()
+    {
+        // Given / When / Then
+        DomainException ex = Should.Throw<DomainException>(
+            () => TodoTask.Create(Guid.Empty, new TaskTitle("No owner")));
+        ex.Message.ShouldBe("UserId cannot be empty.");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_StoreUserId_When_TaskCreatedWithValidUserId()
+    {
+        // Given
+        Guid ownerId = new("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
+        // When
+        TodoTask task = TodoTask.Create(ownerId, new TaskTitle("Owned task"));
+
+        // Then
+        task.UserId.ShouldBe(ownerId);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_CreateFromRecurringCalledWithEmptyUserId()
+    {
+        // Given / When / Then
+        DomainException ex = Should.Throw<DomainException>(
+            () => TodoTask.CreateFromRecurring(
+                Guid.Empty,
+                new TaskTitle("Recurring"),
+                RecurringTaskId.New(),
+                DateOnly.FromDateTime(DateTime.UtcNow)));
+        ex.Message.ShouldBe("UserId cannot be empty.");
     }
 }

@@ -73,8 +73,8 @@ public sealed class QuestTests
     {
         // Given
         Quest quest = CreateQuest();
-        TodoTask task1 = TodoTask.Create(new TaskTitle("Write abstract"));
-        TodoTask task2 = TodoTask.Create(new TaskTitle("Create slide deck"));
+        TodoTask task1 = TodoTask.Create(TestData.TestUserId, new TaskTitle("Write abstract"));
+        TodoTask task2 = TodoTask.Create(TestData.TestUserId, new TaskTitle("Create slide deck"));
 
         // When
         quest.AddTask(task1);
@@ -142,7 +142,7 @@ public sealed class QuestTests
     {
         // Given
         Quest quest = CreateQuest();
-        TodoTask task = TodoTask.Create(new TaskTitle("Write abstract"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Write abstract"));
         quest.AddTask(task);
 
         // When / Then
@@ -156,8 +156,8 @@ public sealed class QuestTests
     {
         // Given
         Quest quest = CreateQuest();
-        TodoTask task1 = TodoTask.Create(new TaskTitle("First task"));
-        TodoTask task2 = TodoTask.Create(new TaskTitle("Second task"));
+        TodoTask task1 = TodoTask.Create(TestData.TestUserId, new TaskTitle("First task"));
+        TodoTask task2 = TodoTask.Create(TestData.TestUserId, new TaskTitle("Second task"));
         quest.AddTask(task1);
         quest.AddTask(task2);
 
@@ -240,7 +240,7 @@ public sealed class QuestTests
     {
         // Given
         Quest quest = CreateQuest();
-        TodoTask task = TodoTask.Create(new TaskTitle("Removable"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Removable"));
         quest.AddTask(task);
 
         // When
@@ -280,10 +280,10 @@ public sealed class QuestTests
     {
         // Given — 2 tasks, 1 done = 50%; remove the incomplete one → 100%
         Quest quest = CreateQuest();
-        TodoTask done = TodoTask.Create(new TaskTitle("Done task"));
+        TodoTask done = TodoTask.Create(TestData.TestUserId, new TaskTitle("Done task"));
         done.MoveToInProgress();
         done.MarkAsDone();
-        TodoTask incomplete = TodoTask.Create(new TaskTitle("Incomplete"));
+        TodoTask incomplete = TodoTask.Create(TestData.TestUserId, new TaskTitle("Incomplete"));
         quest.AddTask(done);
         quest.AddTask(incomplete);
         quest.Progress.ShouldBe(50);
@@ -381,7 +381,7 @@ public sealed class QuestTests
         Quest quest = CreateQuest();
         for (int i = 0; i < count; i++)
         {
-            quest.AddTask(TodoTask.Create(new TaskTitle($"Task {i + 1}")));
+            quest.AddTask(TodoTask.Create(TestData.TestUserId, new TaskTitle($"Task {i + 1}")));
         }
 
         return quest;
@@ -509,7 +509,7 @@ public sealed class QuestTests
     {
         // Given — quest with one task (at index 0)
         Quest quest = CreateQuest();
-        TodoTask task = TodoTask.Create(new TaskTitle("Original"));
+        TodoTask task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Original"));
         quest.AddTask(task);
         quest.Tasks[0].Status.ShouldBe(TaskStatus.Todo);
 
@@ -527,7 +527,7 @@ public sealed class QuestTests
     {
         // Given
         Quest quest = CreateQuest();
-        TodoTask orphan = TodoTask.Create(new TaskTitle("Not in quest"));
+        TodoTask orphan = TodoTask.Create(TestData.TestUserId, new TaskTitle("Not in quest"));
 
         // When / Then
         DomainException ex = Should.Throw<DomainException>(() => quest.ReplaceTask(orphan));

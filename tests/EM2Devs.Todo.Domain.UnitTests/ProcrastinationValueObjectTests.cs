@@ -244,7 +244,7 @@ public sealed class ProcrastinationValueObjectTests
     [Trait("Category", "Domain")]
     public void Should_SetWaitingReason_When_ReasonProvided()
     {
-        var task = TodoTask.Create(new TaskTitle("Waiting task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Waiting task"));
         task.SetWaitingReason("Waiting on someone");
         task.WaitingReason.ShouldBe("Waiting on someone");
     }
@@ -253,7 +253,7 @@ public sealed class ProcrastinationValueObjectTests
     [Trait("Category", "Domain")]
     public void Should_ThrowDomainException_When_WaitingReasonIsEmpty()
     {
-        var task = TodoTask.Create(new TaskTitle("Test"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
         DomainException ex = Should.Throw<DomainException>(() => task.SetWaitingReason(""));
         ex.Message.ShouldContain("empty");
     }
@@ -262,7 +262,7 @@ public sealed class ProcrastinationValueObjectTests
     [Trait("Category", "Domain")]
     public void Should_ThrowDomainException_When_WaitingReasonIsWhitespace()
     {
-        var task = TodoTask.Create(new TaskTitle("Test"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
         Should.Throw<DomainException>(() => task.SetWaitingReason("   "));
     }
 
@@ -270,7 +270,7 @@ public sealed class ProcrastinationValueObjectTests
     [Trait("Category", "Domain")]
     public void Should_ClearWaitingReason_When_Called()
     {
-        var task = TodoTask.Create(new TaskTitle("Test"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
         task.SetWaitingReason("Waiting");
         task.ClearWaitingReason();
         task.WaitingReason.ShouldBeNull();
@@ -280,7 +280,7 @@ public sealed class ProcrastinationValueObjectTests
     [Trait("Category", "Domain")]
     public void Should_AddProcrastinationSignal_When_SignalProvided()
     {
-        var task = TodoTask.Create(new TaskTitle("Test"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
         var signal = new ProcrastinationSignal(ProcrastinationSignalType.RepeatedRescheduling, 2);
         task.AddProcrastinationSignal(signal);
         task.ProcrastinationSignals.Count.ShouldBe(1);
@@ -291,7 +291,7 @@ public sealed class ProcrastinationValueObjectTests
     [Trait("Category", "Domain")]
     public void Should_ThrowArgumentNullException_When_AddingNullSignal()
     {
-        var task = TodoTask.Create(new TaskTitle("Test"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
         Should.Throw<ArgumentNullException>(() => task.AddProcrastinationSignal(null!));
     }
 
@@ -299,7 +299,7 @@ public sealed class ProcrastinationValueObjectTests
     [Trait("Category", "Domain")]
     public void Should_ClearAllSignals_When_ClearProcrastinationSignalsCalled()
     {
-        var task = TodoTask.Create(new TaskTitle("Test"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Test"));
         task.AddProcrastinationSignal(new ProcrastinationSignal(ProcrastinationSignalType.RepeatedRescheduling, 2));
         task.AddProcrastinationSignal(new ProcrastinationSignal(ProcrastinationSignalType.OverduePastThreshold, 2));
         task.ProcrastinationSignals.Count.ShouldBe(2);
@@ -311,7 +311,7 @@ public sealed class ProcrastinationValueObjectTests
     [Trait("Category", "Domain")]
     public void Should_HaveNullWaitingReason_When_TaskCreated()
     {
-        var task = TodoTask.Create(new TaskTitle("New task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("New task"));
         task.WaitingReason.ShouldBeNull();
     }
 
@@ -319,7 +319,7 @@ public sealed class ProcrastinationValueObjectTests
     [Trait("Category", "Domain")]
     public void Should_HaveNullCommitmentNote_When_TaskCreated()
     {
-        var task = TodoTask.Create(new TaskTitle("New task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("New task"));
         task.CommitmentNote.ShouldBeNull();
     }
 
@@ -327,7 +327,7 @@ public sealed class ProcrastinationValueObjectTests
     [Trait("Category", "Domain")]
     public void Should_HaveEmptyProcrastinationSignals_When_TaskCreated()
     {
-        var task = TodoTask.Create(new TaskTitle("New task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("New task"));
         task.ProcrastinationSignals.ShouldBeEmpty();
     }
 }

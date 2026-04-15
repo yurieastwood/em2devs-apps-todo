@@ -10,7 +10,7 @@ public sealed class TodoTaskActualTimeTests
 {
     private static TodoTask NewCompleted(int estimatedMinutes = 120)
     {
-        var task = TodoTask.Create(new TaskTitle("Write Q2 report"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Write Q2 report"));
         task.UpdateEstimatedTime(TimeEstimate.FromMinutes(estimatedMinutes));
         task.MoveToInProgress();
         task.MarkAsDone();
@@ -35,7 +35,7 @@ public sealed class TodoTaskActualTimeTests
     [Trait("Category", "Domain")]
     public void Should_ThrowDomainException_When_NotYetCompleted()
     {
-        var task = TodoTask.Create(new TaskTitle("x"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("x"));
         task.UpdateEstimatedTime(TimeEstimate.FromMinutes(60));
 
         Should.Throw<DomainException>(() =>
@@ -46,7 +46,7 @@ public sealed class TodoTaskActualTimeTests
     [Trait("Category", "Domain")]
     public void Should_ThrowDomainException_When_NoEstimate()
     {
-        var task = TodoTask.Create(new TaskTitle("x"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("x"));
         task.MoveToInProgress();
         task.MarkAsDone();
 
@@ -68,7 +68,7 @@ public sealed class TodoTaskActualTimeTests
     {
         // Task is NOT Done — if null check runs first, we get ArgumentNullException.
         // If null check is removed, we'd get DomainException for status instead.
-        var task = TodoTask.Create(new TaskTitle("Not done task"));
+        var task = TodoTask.Create(TestData.TestUserId, new TaskTitle("Not done task"));
         var ex = Should.Throw<ArgumentNullException>(() => task.RecordActualTime(null!));
         ex.ParamName.ShouldBe("actual");
     }

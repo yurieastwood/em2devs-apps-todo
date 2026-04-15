@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.ReadModels;
 
@@ -5,27 +6,33 @@ namespace EM2Devs.Todo.Infrastructure.Persistence;
 
 /// <summary>
 /// Singleton in-memory implementation of <see cref="IXpHistoryCache"/>.
-/// Thread-safe via a plain lock (append volume is low).
+/// Thread-safe: a <see cref="ConcurrentDictionary{TKey,TValue}"/> keyed by UserId,
+/// with a lock around each user's list for append/read consistency.
 /// </summary>
 public sealed class InMemoryXpHistoryCache : IXpHistoryCache
 {
-    private readonly object _lock = new();
-    private readonly List<XpHistoryEntryReadModel> _entries = [];
+    private readonly ConcurrentDictionary<Guid, List<XpHistoryEntryReadModel>> _entries = new();
 
-    public void Append(DateOnly earnedOn, int xpEarned, string source)
+    public void Append(Guid userId, DateOnly earnedOn, int xpEarned, string source)
     {
-        lock (_lock)
+        List<XpHistoryEntryReadModel> list = _entries.GetOrAdd(userId, _ => []);
+        lock (list)
         {
-            int cumulative = (_entries.Count == 0 ? 0 : _entries[^1].CumulativeTotal) + xpEarned;
-            _entries.Add(new XpHistoryEntryReadModel(earnedOn, xpEarned, source, cumulative));
+            int cumulative = (list.Count == 0 ? 0 : list[^1].CumulativeTotal) + xpEarned;
+            list.Add(new XpHistoryEntryReadModel(earnedOn, xpEarned, source, cumulative));
         }
     }
 
-    public IReadOnlyList<XpHistoryEntryReadModel> GetAll()
+    public IReadOnlyList<XpHistoryEntryReadModel> GetForUser(Guid userId)
     {
-        lock (_lock)
+        if (!_entries.TryGetValue(userId, out List<XpHistoryEntryReadModel>? list))
         {
-            return _entries.ToList().AsReadOnly();
+            return Array.Empty<XpHistoryEntryReadModel>();
+        }
+
+        lock (list)
+        {
+            return list.ToList().AsReadOnly();
         }
     }
 }

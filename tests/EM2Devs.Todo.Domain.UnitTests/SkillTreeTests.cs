@@ -489,7 +489,7 @@ public sealed class SkillTreeTests
     public void Should_StartWithNoSkillTrees_When_NewProfileCreated()
     {
         // Given / When
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
 
         // Then
         profile.SkillTrees.ShouldBeEmpty();
@@ -500,7 +500,7 @@ public sealed class SkillTreeTests
     public void Should_UnlockSkillTree_When_DiscoverCalledOnProfile()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
 
         // When
         profile.DiscoverSkillTree(SkillTreeType.Builder);
@@ -516,7 +516,7 @@ public sealed class SkillTreeTests
     public void Should_NotDuplicateSkillTree_When_DiscoveringSameTypeTwice()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
         profile.DiscoverSkillTree(SkillTreeType.Builder);
 
         // When
@@ -531,7 +531,7 @@ public sealed class SkillTreeTests
     public void Should_AdvanceSkillTree_When_RecordingCategoryTaskOnProfile()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
         profile.DiscoverSkillTree(SkillTreeType.Builder);
 
         // When
@@ -546,7 +546,7 @@ public sealed class SkillTreeTests
     public void Should_HaveMultipleSkillTrees_When_MultipleDiscovered()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
 
         // When
         profile.DiscoverSkillTree(SkillTreeType.Creator);
@@ -561,7 +561,7 @@ public sealed class SkillTreeTests
     public void Should_ThrowDomainException_When_RecordingProgressForUndiscoveredTree()
     {
         // Given
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
 
         // When / Then
         var ex = Should.Throw<Exceptions.DomainException>(

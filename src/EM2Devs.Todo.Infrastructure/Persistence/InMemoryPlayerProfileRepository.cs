@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.ReadModels;
 using EM2Devs.Todo.Domain.Entities;
@@ -6,30 +7,51 @@ using EM2Devs.Todo.Domain.ValueObjects;
 namespace EM2Devs.Todo.Infrastructure.Persistence;
 
 /// <summary>
+/// Shared-state backing store for <see cref="InMemoryPlayerProfileRepository"/>.
+/// Registered as a singleton so multiple scoped repository instances see the same data,
+/// while the repository itself is scoped to pick up the scoped <see cref="ICurrentUser"/>.
+/// </summary>
+public sealed class InMemoryPlayerProfileStore
+{
+    public ConcurrentDictionary<Guid, PlayerProfile> Profiles { get; } = new();
+}
+
+/// <summary>
 /// In-memory player profile repository for tests and the no-DB fallback.
-/// Holds a single PlayerProfile aggregate instance and delegates state changes to it.
+/// Slice 3 multi-user isolation: one profile per UserId, keyed by <see cref="ICurrentUser.UserId"/>.
 /// </summary>
 public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 {
     private readonly object _lock = new();
+    private readonly InMemoryPlayerProfileStore _store;
     private readonly ILastXpBreakdownCache _breakdownCache;
     private readonly IXpHistoryCache _xpHistoryCache;
-    private PlayerProfile _profile = PlayerProfile.NewProfile();
+    private readonly ICurrentUser _currentUser;
 
     public InMemoryPlayerProfileRepository(
+        InMemoryPlayerProfileStore store,
         ILastXpBreakdownCache breakdownCache,
-        IXpHistoryCache xpHistoryCache)
+        IXpHistoryCache xpHistoryCache,
+        ICurrentUser currentUser)
     {
+        ArgumentNullException.ThrowIfNull(store);
+        ArgumentNullException.ThrowIfNull(currentUser);
+        _store = store;
         _breakdownCache = breakdownCache;
         _xpHistoryCache = xpHistoryCache;
+        _currentUser = currentUser;
     }
+
+    private PlayerProfile GetOrCreate() =>
+        _store.Profiles.GetOrAdd(_currentUser.UserId, uid => PlayerProfile.NewProfile(uid));
 
     public Task<PlayerProfileReadModel> GetProfileAsync(CancellationToken ct = default)
     {
         lock (_lock)
         {
+            PlayerProfile profile = GetOrCreate();
             return Task.FromResult(PlayerProfileProjection.Project(
-                _profile, _breakdownCache.GetCurrent(), _xpHistoryCache.GetAll()));
+                profile, _breakdownCache.GetCurrent(), _xpHistoryCache.GetForUser(_currentUser.UserId)));
         }
     }
 
@@ -39,13 +61,14 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 
         lock (_lock)
         {
-            _profile.AwardXp(xp);
+            PlayerProfile profile = GetOrCreate();
+            profile.AwardXp(xp);
             _breakdownCache.SetCurrent(breakdown);
 
             if (historyDate is not null && !string.IsNullOrWhiteSpace(historySource))
             {
-                _profile.RecordXpEarning(historyDate.Value, xp, historySource);
-                _xpHistoryCache.Append(historyDate.Value, xp.Value, historySource);
+                profile.RecordXpEarning(historyDate.Value, xp, historySource);
+                _xpHistoryCache.Append(_currentUser.UserId, historyDate.Value, xp.Value, historySource);
             }
         }
 
@@ -56,7 +79,8 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
     {
         lock (_lock)
         {
-            _profile.RecordCompletion(completionDate);
+            PlayerProfile profile = GetOrCreate();
+            profile.RecordCompletion(completionDate);
         }
 
         return Task.CompletedTask;
@@ -66,7 +90,8 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
     {
         lock (_lock)
         {
-            _profile.ProcessDayEnd(evaluationDate);
+            PlayerProfile profile = GetOrCreate();
+            profile.ProcessDayEnd(evaluationDate);
         }
 
         return Task.CompletedTask;

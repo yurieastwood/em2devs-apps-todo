@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Testcontainers.PostgreSql;
+using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.ReadModels;
 using EM2Devs.Todo.Domain.ValueObjects;
 using EM2Devs.Todo.Infrastructure.Persistence;
@@ -30,7 +31,16 @@ public sealed class PostgresPlayerProfileRepositoryTests : IAsyncLifetime, IDisp
         _dbContext = new TodoDbContext(options);
         await _dbContext.Database.EnsureCreatedAsync();
         _breakdownCache = new LastXpBreakdownCache();
-        _repository = new PostgresPlayerProfileRepository(_dbContext, _breakdownCache, new InMemoryXpHistoryCache());
+        _repository = new PostgresPlayerProfileRepository(
+            _dbContext, _breakdownCache, new InMemoryXpHistoryCache(), new FakeCurrentUser(TestData.TestUserId));
+    }
+
+    private sealed class FakeCurrentUser : ICurrentUser
+    {
+        public FakeCurrentUser(Guid userId) { UserId = userId; }
+        public Guid UserId { get; }
+        public string DisplayName => "Test";
+        public bool IsAuthenticated => true;
     }
 
     public async Task DisposeAsync()
@@ -60,7 +70,8 @@ public sealed class PostgresPlayerProfileRepositoryTests : IAsyncLifetime, IDisp
             .UseNpgsql(_postgres.GetConnectionString())
             .Options;
         await using TodoDbContext fresh = new(options);
-        var freshRepo = new PostgresPlayerProfileRepository(fresh, _breakdownCache, new InMemoryXpHistoryCache());
+        var freshRepo = new PostgresPlayerProfileRepository(
+            fresh, _breakdownCache, new InMemoryXpHistoryCache(), new FakeCurrentUser(TestData.TestUserId));
 
         PlayerProfileReadModel profile = await freshRepo.GetProfileAsync();
 

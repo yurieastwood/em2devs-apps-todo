@@ -11,7 +11,7 @@ public sealed class MultipleSkillTreesActiveTests
     [Trait("Category", "Domain")]
     public void Should_HoldMultipleSkillTreesConcurrently()
     {
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
         profile.DiscoverSkillTree(SkillTreeType.Creator);
         profile.DiscoverSkillTree(SkillTreeType.Builder);
 
@@ -24,7 +24,7 @@ public sealed class MultipleSkillTreesActiveTests
     [Trait("Category", "Domain")]
     public void Should_ApplyProgressToEachTreeIndependently()
     {
-        var profile = PlayerProfile.NewProfile();
+        var profile = PlayerProfile.NewProfile(TestData.TestUserId);
         profile.DiscoverSkillTree(SkillTreeType.Creator);
         profile.DiscoverSkillTree(SkillTreeType.Builder);
 

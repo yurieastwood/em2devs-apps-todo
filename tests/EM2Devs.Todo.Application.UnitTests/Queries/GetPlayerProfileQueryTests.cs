@@ -25,7 +25,7 @@ public sealed class GetPlayerProfileQueryTests
     public async Task Should_ReturnProjectedProfile_When_ProfileHasEarnedTitleAndActiveTitle()
     {
         // Given
-        PlayerProfile profile = PlayerProfile.NewProfile();
+        PlayerProfile profile = PlayerProfile.NewProfile(TestData.TestUserId);
         profile.AwardTitle(new Title(TitleType.EarlyBird, new DateOnly(2026, 1, 15)));
         profile.AwardTitle(new Title(TitleType.NightOwl, new DateOnly(2026, 2, 1)));
         profile.SelectActiveTitle(TitleType.EarlyBird);
@@ -50,7 +50,7 @@ public sealed class GetPlayerProfileQueryTests
     public async Task Should_SurfaceSkillTreeProgressAndPerks_When_TreeAdvancedToTierTwo()
     {
         // Given
-        PlayerProfile profile = PlayerProfile.NewProfile();
+        PlayerProfile profile = PlayerProfile.NewProfile(TestData.TestUserId);
         profile.DiscoverSkillTree(SkillTreeType.Scholar);
         // Advance Scholar to tier 2 by completing the required 30 tasks.
         for (int i = 0; i < 30; i++)
@@ -86,7 +86,7 @@ public sealed class GetPlayerProfileQueryTests
     public async Task Should_LimitXpHistoryToLast20Entries_When_ProfileHasManyEntries()
     {
         // Given
-        PlayerProfile profile = PlayerProfile.NewProfile();
+        PlayerProfile profile = PlayerProfile.NewProfile(TestData.TestUserId);
         var day = new DateOnly(2026, 1, 1);
         for (int i = 1; i <= 25; i++)
         {

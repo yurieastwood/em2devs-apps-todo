@@ -62,7 +62,9 @@ else
     builder.Services.AddSingleton<InMemoryTaskStore>();
     builder.Services.AddScoped<ITaskRepository, InMemoryTaskRepository>();
     builder.Services.AddSingleton<IRecurringTaskRepository, InMemoryRecurringTaskRepository>();
-    builder.Services.AddSingleton<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
+    // Scoped so the repo can depend on the scoped ICurrentUser; per-user state lives in the singleton store.
+    builder.Services.AddSingleton<InMemoryPlayerProfileStore>();
+    builder.Services.AddScoped<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
     builder.Services.AddSingleton<IUserRepository>(sp =>
         new InMemoryUserRepository(sp.GetRequiredService<IPasswordHasher>()));
 }

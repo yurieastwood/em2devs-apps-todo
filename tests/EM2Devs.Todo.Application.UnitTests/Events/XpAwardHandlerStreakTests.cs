@@ -22,7 +22,6 @@ public sealed class XpAwardHandlerStreakTests
         var profileRepo = new InMemoryPlayerProfileRepository(
             new InMemoryPlayerProfileStore(),
             new LastXpBreakdownCache(),
-            new InMemoryXpHistoryCache(),
             new FakeCurrentUser(TestData.TestUserId));
         var mediator = new NoopMediator();
         var questRepo = Substitute.For<IQuestRepository>();
@@ -57,7 +56,6 @@ public sealed class XpAwardHandlerStreakTests
         var profileRepo = new InMemoryPlayerProfileRepository(
             new InMemoryPlayerProfileStore(),
             new LastXpBreakdownCache(),
-            new InMemoryXpHistoryCache(),
             new FakeCurrentUser(TestData.TestUserId));
         DateOnly yesterday = new(2026, 4, 6);
         for (int i = 0; i < 5; i++)

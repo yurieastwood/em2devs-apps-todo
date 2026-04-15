@@ -16,27 +16,23 @@ public sealed class PostgresPlayerProfileRepository : IPlayerProfileRepository
 {
     private readonly TodoDbContext _dbContext;
     private readonly ILastXpBreakdownCache _breakdownCache;
-    private readonly IXpHistoryCache _xpHistoryCache;
     private readonly ICurrentUser _currentUser;
 
     public PostgresPlayerProfileRepository(
         TodoDbContext dbContext,
         ILastXpBreakdownCache breakdownCache,
-        IXpHistoryCache xpHistoryCache,
         ICurrentUser currentUser)
     {
         ArgumentNullException.ThrowIfNull(currentUser);
         _dbContext = dbContext;
         _breakdownCache = breakdownCache;
-        _xpHistoryCache = xpHistoryCache;
         _currentUser = currentUser;
     }
 
     public async Task<PlayerProfileReadModel> GetProfileAsync(CancellationToken ct = default)
     {
         PlayerProfile profile = await GetOrCreateForCurrentUserAsync(ct).ConfigureAwait(false);
-        return PlayerProfileProjection.Project(
-            profile, _breakdownCache.GetCurrent(), _xpHistoryCache.GetForUser(_currentUser.UserId));
+        return PlayerProfileProjection.Project(profile, _breakdownCache.GetCurrent());
     }
 
     public async Task AwardXpAsync(ExperiencePoints xp, XpBreakdownReadModel? breakdown = null, DateOnly? historyDate = null, string? historySource = null, CancellationToken ct = default)
@@ -50,7 +46,6 @@ public sealed class PostgresPlayerProfileRepository : IPlayerProfileRepository
         if (historyDate is not null && !string.IsNullOrWhiteSpace(historySource))
         {
             profile.RecordXpEarning(historyDate.Value, xp, historySource);
-            _xpHistoryCache.Append(_currentUser.UserId, historyDate.Value, xp.Value, historySource);
         }
 
         await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);

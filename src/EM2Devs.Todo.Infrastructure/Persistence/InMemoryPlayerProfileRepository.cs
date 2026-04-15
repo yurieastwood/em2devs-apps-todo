@@ -25,20 +25,17 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
     private readonly object _lock = new();
     private readonly InMemoryPlayerProfileStore _store;
     private readonly ILastXpBreakdownCache _breakdownCache;
-    private readonly IXpHistoryCache _xpHistoryCache;
     private readonly ICurrentUser _currentUser;
 
     public InMemoryPlayerProfileRepository(
         InMemoryPlayerProfileStore store,
         ILastXpBreakdownCache breakdownCache,
-        IXpHistoryCache xpHistoryCache,
         ICurrentUser currentUser)
     {
         ArgumentNullException.ThrowIfNull(store);
         ArgumentNullException.ThrowIfNull(currentUser);
         _store = store;
         _breakdownCache = breakdownCache;
-        _xpHistoryCache = xpHistoryCache;
         _currentUser = currentUser;
     }
 
@@ -50,8 +47,7 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
         lock (_lock)
         {
             PlayerProfile profile = GetOrCreate();
-            return Task.FromResult(PlayerProfileProjection.Project(
-                profile, _breakdownCache.GetCurrent(), _xpHistoryCache.GetForUser(_currentUser.UserId)));
+            return Task.FromResult(PlayerProfileProjection.Project(profile, _breakdownCache.GetCurrent()));
         }
     }
 
@@ -68,7 +64,6 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
             if (historyDate is not null && !string.IsNullOrWhiteSpace(historySource))
             {
                 profile.RecordXpEarning(historyDate.Value, xp, historySource);
-                _xpHistoryCache.Append(_currentUser.UserId, historyDate.Value, xp.Value, historySource);
             }
         }
 

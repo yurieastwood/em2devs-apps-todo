@@ -15,6 +15,13 @@ public sealed record XpHistory
         _entries = entries;
     }
 
+    // EF Core materialization constructor. Owned-collection entries are populated
+    // via backing-field access after construction.
+    private XpHistory()
+    {
+        _entries = [];
+    }
+
     public static XpHistory Empty() => new([]);
 
     /// <summary>

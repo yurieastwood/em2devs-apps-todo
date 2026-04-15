@@ -15,14 +15,11 @@ public static class PlayerProfileProjection
 
     public static PlayerProfileReadModel Project(
         PlayerProfile profile,
-        XpBreakdownReadModel? lastBreakdown,
-        IReadOnlyList<XpHistoryEntryReadModel>? xpHistoryOverride = null)
+        XpBreakdownReadModel? lastBreakdown)
     {
         ArgumentNullException.ThrowIfNull(profile);
 
-        IReadOnlyList<XpHistoryEntryReadModel> xpHistory = xpHistoryOverride is not null
-            ? TakeLast(xpHistoryOverride, XpHistoryLimit)
-            : ProjectXpHistory(profile.XpHistory);
+        IReadOnlyList<XpHistoryEntryReadModel> xpHistory = ProjectXpHistory(profile.XpHistory);
 
         StreakFreezeReadModel? freeze = profile.Streak.ActiveFreeze is { } f
             ? new StreakFreezeReadModel(
@@ -42,23 +39,6 @@ public static class PlayerProfileProjection
             Titles: ProjectTitles(profile.TitleInventory),
             SkillTrees: ProjectSkillTrees(profile.SkillTrees),
             StreakFreeze: freeze);
-    }
-
-    private static IReadOnlyList<XpHistoryEntryReadModel> TakeLast(
-        IReadOnlyList<XpHistoryEntryReadModel> entries, int limit)
-    {
-        int count = entries.Count;
-        int start = Math.Max(0, count - limit);
-        if (start == 0)
-        {
-            return entries;
-        }
-        var result = new List<XpHistoryEntryReadModel>(count - start);
-        for (int i = start; i < count; i++)
-        {
-            result.Add(entries[i]);
-        }
-        return result;
     }
 
     private static List<XpHistoryEntryReadModel> ProjectXpHistory(XpHistory history)

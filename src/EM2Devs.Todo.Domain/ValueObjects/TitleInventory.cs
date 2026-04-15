@@ -25,6 +25,15 @@ public sealed record TitleInventory
         ActiveTitle = activeTitle;
     }
 
+    // EF Core materialization constructor. The backing collection and ActiveTitle
+    // are populated via EF after construction (field-access mode for _earnedTitles,
+    // property for ActiveTitle).
+    private TitleInventory()
+    {
+        _earnedTitles = [];
+        ActiveTitle = null;
+    }
+
     public static TitleInventory Empty() => new([], null);
 
     public TitleInventory AwardTitle(Title title)

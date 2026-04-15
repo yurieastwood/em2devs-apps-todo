@@ -71,6 +71,104 @@
 		if (value > 1.0) return `+${Math.round((value - 1) * 100)}%`;
 		return `${Math.round((value - 1) * 100)}%`;
 	}
+
+	// --- XP animation state ---
+	const XP_COUNTUP_DURATION_MS = 600;
+	const XP_FLASH_DURATION_MS = 700;
+	const XP_FLOAT_DURATION_MS = 1200;
+
+	let displayedXp = $state(0);
+	let xpBarFlash = $state(false);
+	let xpGainAmount = $state<number | null>(null);
+
+	let previousTotalXp = -1;
+	let previousProgressPercent = -1;
+	let countUpHandle: number | null = null;
+	let flashTimeout: ReturnType<typeof setTimeout> | null = null;
+	let gainTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	function prefersReducedMotion(): boolean {
+		if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+		return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	}
+
+	function animateCountUp(from: number, to: number): void {
+		if (countUpHandle !== null && typeof cancelAnimationFrame !== 'undefined') {
+			cancelAnimationFrame(countUpHandle);
+			countUpHandle = null;
+		}
+		if (prefersReducedMotion() || typeof requestAnimationFrame === 'undefined') {
+			displayedXp = to;
+			return;
+		}
+		const start = performance.now();
+		const delta = to - from;
+		const step = (now: number) => {
+			const elapsed = now - start;
+			const t = Math.min(1, elapsed / XP_COUNTUP_DURATION_MS);
+			// ease-out cubic
+			const eased = 1 - Math.pow(1 - t, 3);
+			displayedXp = Math.round(from + delta * eased);
+			if (t < 1) {
+				countUpHandle = requestAnimationFrame(step);
+			} else {
+				countUpHandle = null;
+				displayedXp = to;
+			}
+		};
+		countUpHandle = requestAnimationFrame(step);
+	}
+
+	$effect(() => {
+		if (!profile) return;
+		const current = profile.totalXp;
+		if (previousTotalXp === -1) {
+			// Initialize without animating on first render
+			previousTotalXp = current;
+			displayedXp = current;
+			return;
+		}
+		if (current !== previousTotalXp) {
+			const delta = current - previousTotalXp;
+			animateCountUp(previousTotalXp, current);
+			if (delta > 0) {
+				if (gainTimeout !== null) clearTimeout(gainTimeout);
+				xpGainAmount = delta;
+				gainTimeout = setTimeout(() => {
+					xpGainAmount = null;
+					gainTimeout = null;
+				}, XP_FLOAT_DURATION_MS);
+			}
+			previousTotalXp = current;
+		}
+	});
+
+	$effect(() => {
+		const current = progressPercent;
+		if (previousProgressPercent === -1) {
+			previousProgressPercent = current;
+			return;
+		}
+		if (current !== previousProgressPercent) {
+			previousProgressPercent = current;
+			if (flashTimeout !== null) clearTimeout(flashTimeout);
+			xpBarFlash = true;
+			flashTimeout = setTimeout(() => {
+				xpBarFlash = false;
+				flashTimeout = null;
+			}, XP_FLASH_DURATION_MS);
+		}
+	});
+
+	$effect(() => {
+		return () => {
+			if (countUpHandle !== null && typeof cancelAnimationFrame !== 'undefined') {
+				cancelAnimationFrame(countUpHandle);
+			}
+			if (flashTimeout !== null) clearTimeout(flashTimeout);
+			if (gainTimeout !== null) clearTimeout(gainTimeout);
+		};
+	});
 </script>
 
 <svelte:head>
@@ -206,7 +304,7 @@
 		<section class="xp-section">
 			<div class="progress-header">
 				<span class="xp-total" data-testid="xp-total"
-					>{profile.totalXp.toLocaleString()} XP</span
+					>{displayedXp.toLocaleString()} XP</span
 				>
 				{#if isMaxLevel}
 					<span class="xp-next">Max Level</span>
@@ -217,14 +315,22 @@
 				{/if}
 			</div>
 			{#if !isMaxLevel}
-				<div
-					class="progress-bar"
-					role="progressbar"
-					aria-valuenow={progressPercent}
-					aria-valuemin={0}
-					aria-valuemax={100}
-				>
-					<div class="progress-fill" style:width="{progressPercent}%"></div>
+				<div class="progress-bar-wrap">
+					<div
+						class="progress-bar"
+						class:xp-bar-flash={xpBarFlash}
+						role="progressbar"
+						aria-valuenow={progressPercent}
+						aria-valuemin={0}
+						aria-valuemax={100}
+					>
+						<div class="progress-fill" style:width="{progressPercent}%"></div>
+					</div>
+					{#if xpGainAmount !== null}
+						<span class="xp-gain-float" aria-hidden="true" data-testid="xp-gain-float"
+							>+{xpGainAmount} XP</span
+						>
+					{/if}
 				</div>
 				<p class="progress-label">{progressPercent}% to Level {profile.level + 1}</p>
 			{:else}
@@ -635,11 +741,71 @@
 		font-size: 0.875rem;
 	}
 
+	.progress-bar-wrap {
+		position: relative;
+	}
+
 	.progress-bar {
 		height: 1.5rem;
 		background: #e5e7eb;
 		border-radius: 0.75rem;
 		overflow: hidden;
+		position: relative;
+		transition: box-shadow 0.3s ease;
+	}
+
+	.progress-bar.xp-bar-flash {
+		animation: xp-bar-flash-anim 0.7s ease-out;
+	}
+
+	@keyframes xp-bar-flash-anim {
+		0% {
+			box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+		}
+		30% {
+			box-shadow: 0 0 16px 4px rgba(124, 58, 237, 0.6);
+		}
+		100% {
+			box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+		}
+	}
+
+	.xp-gain-float {
+		position: absolute;
+		right: 0.5rem;
+		top: -0.25rem;
+		color: #059669;
+		font-weight: 700;
+		font-size: 0.95rem;
+		pointer-events: none;
+		animation: xp-gain-float-anim 1.2s ease-out forwards;
+	}
+
+	@keyframes xp-gain-float-anim {
+		0% {
+			transform: translateY(0);
+			opacity: 0;
+		}
+		15% {
+			opacity: 1;
+		}
+		100% {
+			transform: translateY(-1.75rem);
+			opacity: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.progress-bar.xp-bar-flash {
+			animation: none;
+		}
+		.xp-gain-float {
+			animation: none;
+			opacity: 0;
+		}
+		.progress-fill {
+			transition: none;
+		}
 	}
 
 	.progress-fill {

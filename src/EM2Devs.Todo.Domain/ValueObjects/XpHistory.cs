@@ -17,9 +17,9 @@ public sealed record XpHistory
 
     // EF Core materialization constructor. Owned-collection entries are populated
     // via backing-field access after construction.
-    private XpHistory()
+    private XpHistory() // Stryker disable once all
     {
-        _entries = [];
+        _entries = []; // Stryker disable once all
     }
 
     public static XpHistory Empty() => new([]);

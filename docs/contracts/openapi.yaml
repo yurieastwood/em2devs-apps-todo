@@ -1764,9 +1764,11 @@ components:
           items:
             $ref: "#/components/schemas/SkillTreeDto"
         streakFreeze:
+          type: object
           nullable: true
           allOf:
             - $ref: "#/components/schemas/StreakFreezeDto"
+          description: Present when the user's streak is currently frozen; null otherwise.
       example:
         totalXp: 120
         level: 2

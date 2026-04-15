@@ -14,13 +14,52 @@ public sealed class RecurringTaskTests
 {
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_RecurringTaskUserIdIsEmpty()
+    {
+        // When / Then
+        DomainException ex = Should.Throw<DomainException>(() =>
+            RecurringTask.Create(Guid.Empty, new TaskTitle("Empty user"), RecurrencePattern.Daily));
+        ex.Message.ShouldContain("UserId cannot be empty");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_StoreUserId_When_RecurringTaskIsCreated()
+    {
+        // Given
+        Guid userId = new("22222222-2222-2222-2222-222222222222");
+
+        // When
+        RecurringTask recurring = RecurringTask.Create(userId, new TaskTitle("With user"), RecurrencePattern.Daily);
+
+        // Then
+        recurring.UserId.ShouldBe(userId);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_PropagateUserIdToGeneratedInstance_When_InstanceGenerated()
+    {
+        // Given
+        Guid userId = new("33333333-3333-3333-3333-333333333333");
+        RecurringTask recurring = RecurringTask.Create(userId, new TaskTitle("Owned"), RecurrencePattern.Daily);
+
+        // When
+        TodoTask instance = recurring.GenerateNextInstance(DateOnly.FromDateTime(DateTime.UtcNow));
+
+        // Then
+        instance.UserId.ShouldBe(userId);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_CreateWithCorrectProperties_When_DailyRecurringTaskIsCreated()
     {
         // Given
         var title = new TaskTitle("Morning standup prep");
 
         // When
-        var recurring = RecurringTask.Create(title, RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, title, RecurrencePattern.Daily);
 
         // Then
         recurring.Id.Value.ShouldNotBe(Guid.Empty);
@@ -36,7 +75,7 @@ public sealed class RecurringTaskTests
         var title = new TaskTitle("Weekly meal prep");
 
         // When
-        var recurring = RecurringTask.Create(title, RecurrencePattern.Weekly);
+        var recurring = RecurringTask.Create(TestData.TestUserId, title, RecurrencePattern.Weekly);
 
         // Then
         recurring.Pattern.ShouldBe(RecurrencePattern.Weekly);
@@ -50,7 +89,7 @@ public sealed class RecurringTaskTests
         var title = new TaskTitle("Submit expense report");
 
         // When
-        var recurring = RecurringTask.Create(title, RecurrencePattern.Monthly);
+        var recurring = RecurringTask.Create(TestData.TestUserId, title, RecurrencePattern.Monthly);
 
         // Then
         recurring.Pattern.ShouldBe(RecurrencePattern.Monthly);
@@ -61,13 +100,12 @@ public sealed class RecurringTaskTests
     public void Should_GenerateTodoTaskInstance_When_NextInstanceRequested()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Morning standup prep"),
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Morning standup prep"),
             RecurrencePattern.Daily);
 
         // When
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var instance = recurring.GenerateNextInstance(TestData.TestUserId, today);
+        var instance = recurring.GenerateNextInstance(today);
 
         // Then
         instance.ShouldNotBeNull();
@@ -83,14 +121,13 @@ public sealed class RecurringTaskTests
     public void Should_GenerateDistinctInstances_When_MultipleInstancesRequested()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Morning standup prep"),
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Morning standup prep"),
             RecurrencePattern.Daily);
 
         // When
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var first = recurring.GenerateNextInstance(TestData.TestUserId, today);
-        var second = recurring.GenerateNextInstance(TestData.TestUserId, today.AddDays(1));
+        var first = recurring.GenerateNextInstance(today);
+        var second = recurring.GenerateNextInstance(today.AddDays(1));
 
         // Then
         first.Id.ShouldNotBe(second.Id);
@@ -101,8 +138,7 @@ public sealed class RecurringTaskTests
     public void Should_BeActiveByDefault_When_Created()
     {
         // When
-        RecurringTask recurring = RecurringTask.Create(
-            new TaskTitle("Active task"), RecurrencePattern.Daily);
+        RecurringTask recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Active task"), RecurrencePattern.Daily);
 
         // Then
         recurring.IsActive.ShouldBeTrue();
@@ -113,8 +149,7 @@ public sealed class RecurringTaskTests
     public void Should_BecomeInactive_When_Paused()
     {
         // Given
-        RecurringTask recurring = RecurringTask.Create(
-            new TaskTitle("Pausable"), RecurrencePattern.Daily);
+        RecurringTask recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Pausable"), RecurrencePattern.Daily);
 
         // When
         recurring.Pause();
@@ -128,8 +163,7 @@ public sealed class RecurringTaskTests
     public void Should_BecomeActive_When_Resumed()
     {
         // Given
-        RecurringTask recurring = RecurringTask.Create(
-            new TaskTitle("Resumable"), RecurrencePattern.Daily);
+        RecurringTask recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Resumable"), RecurrencePattern.Daily);
         recurring.Pause();
 
         // When
@@ -144,8 +178,7 @@ public sealed class RecurringTaskTests
     public void Should_ThrowDomainException_When_PausingAlreadyPaused()
     {
         // Given
-        RecurringTask recurring = RecurringTask.Create(
-            new TaskTitle("Already paused"), RecurrencePattern.Daily);
+        RecurringTask recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Already paused"), RecurrencePattern.Daily);
         recurring.Pause();
 
         // When / Then
@@ -158,8 +191,7 @@ public sealed class RecurringTaskTests
     public void Should_ThrowDomainException_When_ResumingAlreadyActive()
     {
         // Given
-        RecurringTask recurring = RecurringTask.Create(
-            new TaskTitle("Already active"), RecurrencePattern.Daily);
+        RecurringTask recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Already active"), RecurrencePattern.Daily);
 
         // When / Then
         DomainException ex = Should.Throw<DomainException>(() => recurring.Resume());
@@ -171,13 +203,12 @@ public sealed class RecurringTaskTests
     public void Should_ThrowDomainException_When_GeneratingFromPausedTask()
     {
         // Given
-        RecurringTask recurring = RecurringTask.Create(
-            new TaskTitle("Paused gen"), RecurrencePattern.Daily);
+        RecurringTask recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Paused gen"), RecurrencePattern.Daily);
         recurring.Pause();
 
         // When / Then
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        DomainException ex = Should.Throw<DomainException>(() => recurring.GenerateNextInstance(TestData.TestUserId, today));
+        DomainException ex = Should.Throw<DomainException>(() => recurring.GenerateNextInstance(today));
         ex.Message.ShouldContain("paused");
     }
 
@@ -186,12 +217,11 @@ public sealed class RecurringTaskTests
     public void Should_SetDueDate_When_GeneratedFromRecurringTask()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Morning standup prep"), RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Morning standup prep"), RecurrencePattern.Daily);
         var scheduledDate = new DateOnly(2026, 4, 1);
 
         // When
-        var instance = recurring.GenerateNextInstance(TestData.TestUserId, scheduledDate);
+        var instance = recurring.GenerateNextInstance(scheduledDate);
 
         // Then
         instance.DueDate.ShouldNotBeNull();
@@ -215,9 +245,8 @@ public sealed class RecurringTaskTests
     public void Should_MarkAsSkipped_When_SkipCalled()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Skippable"), RecurrencePattern.Daily);
-        var instance = recurring.GenerateNextInstance(TestData.TestUserId, DateOnly.FromDateTime(DateTime.UtcNow));
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Skippable"), RecurrencePattern.Daily);
+        var instance = recurring.GenerateNextInstance(DateOnly.FromDateTime(DateTime.UtcNow));
 
         // When
         instance.Skip();
@@ -258,10 +287,9 @@ public sealed class RecurringTaskTests
     public void Should_NotBeOverdue_When_Skipped()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Overdue check"), RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Overdue check"), RecurrencePattern.Daily);
         var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
-        var instance = recurring.GenerateNextInstance(TestData.TestUserId, yesterday);
+        var instance = recurring.GenerateNextInstance(yesterday);
 
         // When
         instance.Skip();
@@ -275,10 +303,9 @@ public sealed class RecurringTaskTests
     public void Should_BeOverdue_When_ScheduledDateIsPastAndStatusIsTodo()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Overdue test"), RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Overdue test"), RecurrencePattern.Daily);
         var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
-        TodoTask instance = recurring.GenerateNextInstance(TestData.TestUserId, yesterday);
+        TodoTask instance = recurring.GenerateNextInstance(yesterday);
 
         // Then — status is Todo, scheduled date is past → overdue
         instance.IsOverdue.ShouldBeTrue();
@@ -289,10 +316,9 @@ public sealed class RecurringTaskTests
     public void Should_NotBeOverdue_When_ScheduledDateIsToday()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Today test"), RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Today test"), RecurrencePattern.Daily);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        TodoTask instance = recurring.GenerateNextInstance(TestData.TestUserId, today);
+        TodoTask instance = recurring.GenerateNextInstance(today);
 
         // Then — scheduled date is today, not past → not overdue
         instance.IsOverdue.ShouldBeFalse();
@@ -303,10 +329,9 @@ public sealed class RecurringTaskTests
     public void Should_NotBeOverdue_When_ScheduledDateIsFuture()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Future test"), RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Future test"), RecurrencePattern.Daily);
         var tomorrow = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
-        TodoTask instance = recurring.GenerateNextInstance(TestData.TestUserId, tomorrow);
+        TodoTask instance = recurring.GenerateNextInstance(tomorrow);
 
         // Then
         instance.IsOverdue.ShouldBeFalse();
@@ -317,10 +342,9 @@ public sealed class RecurringTaskTests
     public void Should_NotBeOverdue_When_TaskIsDone()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Done test"), RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Done test"), RecurrencePattern.Daily);
         var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
-        TodoTask instance = recurring.GenerateNextInstance(TestData.TestUserId, yesterday);
+        TodoTask instance = recurring.GenerateNextInstance(yesterday);
         instance.MoveToInProgress();
         instance.MarkAsDone();
 
@@ -353,8 +377,7 @@ public sealed class RecurringTaskTests
     public void Should_ThrowArgumentNullException_When_RecurringTaskUpdateTitleCalledWithNull()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Null check"), RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Null check"), RecurrencePattern.Daily);
 
         // When / Then
         Should.Throw<ArgumentNullException>(() => recurring.UpdateTitle(null!));
@@ -365,8 +388,7 @@ public sealed class RecurringTaskTests
     public void Should_UpdateTitle_When_UpdateTitleCalled()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Old title"), RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Old title"), RecurrencePattern.Daily);
 
         // When
         recurring.UpdateTitle(new TaskTitle("New title"));
@@ -380,8 +402,7 @@ public sealed class RecurringTaskTests
     public void Should_UpdatePattern_When_UpdatePatternCalled()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Pattern change"), RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Pattern change"), RecurrencePattern.Daily);
 
         // When
         recurring.UpdatePattern(RecurrencePattern.Weekly);
@@ -395,8 +416,7 @@ public sealed class RecurringTaskTests
     public void Should_ThrowDomainException_When_UpdatePatternCalledWithInvalidValue()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Invalid pattern"), RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Invalid pattern"), RecurrencePattern.Daily);
 
         // When / Then
         DomainException ex = Should.Throw<DomainException>(
@@ -414,8 +434,7 @@ public sealed class RecurringTaskTests
         var endDate = new DateOnly(2026, 6, 30);
 
         // When
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Sprint retrospective"),
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Sprint retrospective"),
             RecurrencePattern.Weekly,
             endDate);
 
@@ -428,8 +447,7 @@ public sealed class RecurringTaskTests
     public void Should_HaveNullEndDate_When_CreatedWithoutEndDate()
     {
         // When
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Endless task"),
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Endless task"),
             RecurrencePattern.Daily);
 
         // Then
@@ -442,14 +460,13 @@ public sealed class RecurringTaskTests
     {
         // Given
         var endDate = new DateOnly(2026, 6, 30);
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Sprint retrospective"),
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Sprint retrospective"),
             RecurrencePattern.Weekly,
             endDate);
 
         // When
         var scheduledDate = new DateOnly(2026, 6, 29);
-        var instance = recurring.GenerateNextInstance(TestData.TestUserId, scheduledDate);
+        var instance = recurring.GenerateNextInstance(scheduledDate);
 
         // Then
         instance.ShouldNotBeNull();
@@ -461,13 +478,12 @@ public sealed class RecurringTaskTests
     {
         // Given
         var endDate = new DateOnly(2026, 6, 30);
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Sprint retrospective"),
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Sprint retrospective"),
             RecurrencePattern.Weekly,
             endDate);
 
         // When
-        var instance = recurring.GenerateNextInstance(TestData.TestUserId, endDate);
+        var instance = recurring.GenerateNextInstance(endDate);
 
         // Then
         instance.ShouldNotBeNull();
@@ -479,14 +495,13 @@ public sealed class RecurringTaskTests
     {
         // Given
         var endDate = new DateOnly(2026, 6, 30);
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Sprint retrospective"),
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Sprint retrospective"),
             RecurrencePattern.Weekly,
             endDate);
 
         // When / Then
         var scheduledDate = new DateOnly(2026, 7, 1);
-        var ex = Should.Throw<DomainException>(() => recurring.GenerateNextInstance(TestData.TestUserId, scheduledDate));
+        var ex = Should.Throw<DomainException>(() => recurring.GenerateNextInstance(scheduledDate));
         ex.Message.ShouldContain("end date");
     }
 
@@ -499,8 +514,7 @@ public sealed class RecurringTaskTests
 
         // When / Then
         var ex = Should.Throw<DomainException>(() =>
-            RecurringTask.Create(
-                new TaskTitle("Past end date"),
+            RecurringTask.Create(TestData.TestUserId, new TaskTitle("Past end date"),
                 RecurrencePattern.Daily,
                 pastDate));
         ex.Message.ShouldContain("end date");
@@ -514,8 +528,7 @@ public sealed class RecurringTaskTests
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         // When
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Today end date"),
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Today end date"),
             RecurrencePattern.Daily,
             today);
 
@@ -530,11 +543,10 @@ public sealed class RecurringTaskTests
     public void Should_BeCompletedLate_When_CompletedAfterScheduledDate()
     {
         // Given — a recurring task instance scheduled for yesterday
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Morning standup prep"),
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Morning standup prep"),
             RecurrencePattern.Daily);
         var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
-        var instance = recurring.GenerateNextInstance(TestData.TestUserId, yesterday);
+        var instance = recurring.GenerateNextInstance(yesterday);
 
         // When — complete it today (late)
         instance.MoveToInProgress();
@@ -549,11 +561,10 @@ public sealed class RecurringTaskTests
     public void Should_NotBeCompletedLate_When_CompletedOnScheduledDate()
     {
         // Given — a recurring task instance scheduled for today
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Morning standup prep"),
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Morning standup prep"),
             RecurrencePattern.Daily);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var instance = recurring.GenerateNextInstance(TestData.TestUserId, today);
+        var instance = recurring.GenerateNextInstance(today);
 
         // When — complete it today (on time)
         instance.MoveToInProgress();
@@ -583,11 +594,10 @@ public sealed class RecurringTaskTests
     public void Should_NotBeCompletedLate_When_NotYetCompleted()
     {
         // Given
-        var recurring = RecurringTask.Create(
-            new TaskTitle("Morning standup prep"),
+        var recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Morning standup prep"),
             RecurrencePattern.Daily);
         var yesterday = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
-        var instance = recurring.GenerateNextInstance(TestData.TestUserId, yesterday);
+        var instance = recurring.GenerateNextInstance(yesterday);
 
         // Then — not completed yet, so WasCompletedLate is false
         instance.WasCompletedLate.ShouldBeFalse();

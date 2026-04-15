@@ -23,7 +23,7 @@ public sealed class RecurringTaskGenerationDueTests
     public void Should_BeDue_When_NeverGenerated()
     {
         // Given — no instances yet, so lastScheduledDate is null
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Daily);
 
         // Then
         recurring.IsDueForGeneration(lastScheduledDate: null, today: _today).ShouldBeTrue();
@@ -33,7 +33,7 @@ public sealed class RecurringTaskGenerationDueTests
     [Trait("Category", "Domain")]
     public void Should_NotBeDue_When_DailyLastScheduledIsToday()
     {
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Daily);
 
         recurring.IsDueForGeneration(lastScheduledDate: _today, today: _today).ShouldBeFalse();
     }
@@ -42,7 +42,7 @@ public sealed class RecurringTaskGenerationDueTests
     [Trait("Category", "Domain")]
     public void Should_BeDue_When_DailyLastScheduledIsYesterday()
     {
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Daily);
 
         recurring.IsDueForGeneration(lastScheduledDate: _today.AddDays(-1), today: _today).ShouldBeTrue();
     }
@@ -51,7 +51,7 @@ public sealed class RecurringTaskGenerationDueTests
     [Trait("Category", "Domain")]
     public void Should_NotBeDue_When_WeeklyLastScheduled6DaysAgo()
     {
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Weekly);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Weekly);
 
         recurring.IsDueForGeneration(lastScheduledDate: _today.AddDays(-6), today: _today).ShouldBeFalse();
     }
@@ -60,7 +60,7 @@ public sealed class RecurringTaskGenerationDueTests
     [Trait("Category", "Domain")]
     public void Should_BeDue_When_WeeklyLastScheduled7DaysAgo()
     {
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Weekly);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Weekly);
 
         recurring.IsDueForGeneration(lastScheduledDate: _today.AddDays(-7), today: _today).ShouldBeTrue();
     }
@@ -70,7 +70,7 @@ public sealed class RecurringTaskGenerationDueTests
     public void Should_NotBeDue_When_MonthlyLastScheduledSameMonth()
     {
         // Given — both dates in April 2026
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Monthly);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Monthly);
 
         // Then
         recurring
@@ -83,7 +83,7 @@ public sealed class RecurringTaskGenerationDueTests
     public void Should_BeDue_When_MonthlyLastScheduledDifferentMonth()
     {
         // Given — March 31, evaluating on April 7
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Monthly);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Monthly);
 
         // Then
         recurring
@@ -95,7 +95,7 @@ public sealed class RecurringTaskGenerationDueTests
     [Trait("Category", "Domain")]
     public void Should_NotBeDue_When_Paused()
     {
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Daily);
         recurring.Pause();
 
         // Even with no instances yet, a paused task is not due.
@@ -109,7 +109,7 @@ public sealed class RecurringTaskGenerationDueTests
         // Given — cast an out-of-range int to RecurrencePattern to exercise the
         // switch's default arm. Prevents a silently-added enum value from quietly
         // generating instances without an explicit schedule decision.
-        var recurring = RecurringTask.Create(_title, (RecurrencePattern)999);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, (RecurrencePattern)999);
 
         // Then — default arm returns false, even with a prior instance present
         recurring
@@ -125,7 +125,7 @@ public sealed class RecurringTaskGenerationDueTests
     {
         // Given — end date is in the future from now, but we test with a "today" past it
         var endDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(10);
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily, endDate: endDate);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Daily, endDate: endDate);
 
         // Then — evaluating at a date past end date → not due
         recurring.IsDueForGeneration(lastScheduledDate: null, today: endDate.AddDays(1)).ShouldBeFalse();
@@ -137,7 +137,7 @@ public sealed class RecurringTaskGenerationDueTests
     {
         // Given
         var endDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(10);
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily, endDate: endDate);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Daily, endDate: endDate);
 
         // Then — today equals end date → still due
         recurring.IsDueForGeneration(lastScheduledDate: endDate.AddDays(-1), today: endDate).ShouldBeTrue();
@@ -149,7 +149,7 @@ public sealed class RecurringTaskGenerationDueTests
     {
         // Given
         var endDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30);
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily, endDate: endDate);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Daily, endDate: endDate);
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         // Then
@@ -161,7 +161,7 @@ public sealed class RecurringTaskGenerationDueTests
     public void Should_BeDue_When_NoEndDateSet()
     {
         // Given — no end date, should behave as before
-        var recurring = RecurringTask.Create(_title, RecurrencePattern.Daily);
+        var recurring = RecurringTask.Create(TestData.TestUserId, _title, RecurrencePattern.Daily);
 
         // Then
         recurring.IsDueForGeneration(lastScheduledDate: _today.AddDays(-1), today: _today).ShouldBeTrue();

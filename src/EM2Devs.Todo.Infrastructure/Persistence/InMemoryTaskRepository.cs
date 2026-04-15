@@ -90,4 +90,21 @@ public sealed class InMemoryTaskRepository : ITaskRepository
             .Max();
         return Task.FromResult(max);
     }
+
+    public Task SaveForGenerationAsync(TodoTask task, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+        _store.Tasks[task.Id.Value] = task;
+        return Task.CompletedTask;
+    }
+
+    public Task<DateOnly?> GetMaxScheduledDateForGenerationAsync(RecurringTaskId sourceId, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(sourceId);
+        DateOnly? max = _store.Tasks.Values
+            .Where(t => t.SourceRecurringTaskId == sourceId)
+            .Select(t => t.ScheduledDate)
+            .Max();
+        return Task.FromResult(max);
+    }
 }

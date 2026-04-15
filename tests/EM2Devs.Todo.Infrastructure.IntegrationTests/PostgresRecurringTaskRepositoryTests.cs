@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Testcontainers.PostgreSql;
+using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
@@ -29,7 +30,15 @@ public sealed class PostgresRecurringTaskRepositoryTests : IAsyncLifetime, IDisp
 
         _dbContext = new TodoDbContext(options);
         await _dbContext.Database.EnsureCreatedAsync();
-        _repository = new PostgresRecurringTaskRepository(_dbContext);
+        _repository = new PostgresRecurringTaskRepository(_dbContext, new FakeCurrentUser(TestData.TestUserId));
+    }
+
+    private sealed class FakeCurrentUser : ICurrentUser
+    {
+        public FakeCurrentUser(Guid userId) { UserId = userId; }
+        public Guid UserId { get; }
+        public string DisplayName => "Test";
+        public bool IsAuthenticated => true;
     }
 
     public async Task DisposeAsync()
@@ -41,7 +50,7 @@ public sealed class PostgresRecurringTaskRepositoryTests : IAsyncLifetime, IDisp
     [Fact]
     public async Task Should_PersistAndRetrieveRecurringTask_When_Created()
     {
-        RecurringTask recurring = RecurringTask.Create(new TaskTitle("Daily standup"), RecurrencePattern.Daily);
+        RecurringTask recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Daily standup"), RecurrencePattern.Daily);
 
         await _repository.SaveAsync(recurring);
         RecurringTask? retrieved = await _repository.GetByIdAsync(recurring.Id);
@@ -56,7 +65,7 @@ public sealed class PostgresRecurringTaskRepositoryTests : IAsyncLifetime, IDisp
     [Fact]
     public async Task Should_PersistTitleAndPatternUpdates_When_TemplateEdited()
     {
-        RecurringTask recurring = RecurringTask.Create(new TaskTitle("Weekly review"), RecurrencePattern.Weekly);
+        RecurringTask recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Weekly review"), RecurrencePattern.Weekly);
         await _repository.SaveAsync(recurring);
 
         recurring.UpdateTitle(new TaskTitle("Weekly retro"));
@@ -76,7 +85,7 @@ public sealed class PostgresRecurringTaskRepositoryTests : IAsyncLifetime, IDisp
     [Fact]
     public async Task Should_PersistPauseState_When_Paused()
     {
-        RecurringTask recurring = RecurringTask.Create(new TaskTitle("Monthly invoice"), RecurrencePattern.Monthly);
+        RecurringTask recurring = RecurringTask.Create(TestData.TestUserId, new TaskTitle("Monthly invoice"), RecurrencePattern.Monthly);
         await _repository.SaveAsync(recurring);
 
         recurring.Pause();

@@ -21,6 +21,12 @@ public sealed class RecurringTaskConfiguration : IEntityTypeConfiguration<Recurr
                 id => id.Value,
                 value => new RecurringTaskId(value));
 
+        builder.Property(r => r.UserId)
+            .HasColumnName("user_id")
+            .IsRequired();
+
+        builder.HasIndex(r => r.UserId);
+
         builder.Property(r => r.Title)
             .HasColumnName("title")
             .HasMaxLength(200)

@@ -61,8 +61,10 @@ else
     // Scoped so it can depend on the scoped ICurrentUser; state lives in the singleton store.
     builder.Services.AddSingleton<InMemoryTaskStore>();
     builder.Services.AddScoped<ITaskRepository, InMemoryTaskRepository>();
-    builder.Services.AddSingleton<IRecurringTaskRepository, InMemoryRecurringTaskRepository>();
-    // Scoped so the repo can depend on the scoped ICurrentUser; per-user state lives in the singleton store.
+    // Slice 2: scoped recurring task repo with singleton store, mirrors the task pattern
+    builder.Services.AddSingleton<InMemoryRecurringTaskStore>();
+    builder.Services.AddScoped<IRecurringTaskRepository, InMemoryRecurringTaskRepository>();
+    // Slice 3: scoped player profile repo with singleton store, per-user via ICurrentUser
     builder.Services.AddSingleton<InMemoryPlayerProfileStore>();
     builder.Services.AddScoped<IPlayerProfileRepository, InMemoryPlayerProfileRepository>();
     builder.Services.AddSingleton<IUserRepository>(sp =>

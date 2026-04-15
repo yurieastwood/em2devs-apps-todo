@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { onDestroy } from 'svelte';
 	import type { HubConnection } from '@microsoft/signalr';
+	import { resolve } from '$app/paths';
 	import {
 		connectNotifications,
 		disconnectNotifications,
@@ -247,6 +248,17 @@
 
 <main>
 	<h1>Progression Dashboard</h1>
+
+	{#if data.showWeeklyReviewNudge}
+		<a
+			href={resolve('/weekly-review')}
+			class="weekly-review-nudge"
+			data-testid="weekly-review-nudge"
+		>
+			<span class="weekly-review-nudge-text">Time for your weekly review</span>
+			<span class="weekly-review-nudge-arrow" aria-hidden="true">→</span>
+		</a>
+	{/if}
 
 	{#if dailyBrief}
 		<section class="brief-section" data-testid="daily-brief-section">
@@ -623,6 +635,24 @@
 
 	h1 {
 		margin-bottom: 1.5rem;
+	}
+
+	.weekly-review-nudge {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.75rem 1rem;
+		margin-bottom: 1.5rem;
+		background: #ecfeff;
+		border: 1px solid #67e8f9;
+		border-radius: 0.5rem;
+		color: #0e7490;
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.weekly-review-nudge:hover {
+		background: #cffafe;
 	}
 
 	.notifications-section {

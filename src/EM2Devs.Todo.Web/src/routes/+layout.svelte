@@ -40,6 +40,11 @@
 				class:active={page.url.pathname === '/dashboard'}
 				data-testid="nav-dashboard">Dashboard</a
 			>
+			<a
+				href={resolve('/weekly-review')}
+				class:active={page.url.pathname.startsWith('/weekly-review')}
+				data-testid="nav-weekly-review">Weekly review</a
+			>
 		</div>
 		<div class="nav-user">
 			<span class="user-name" data-testid="user-display-name">{user.displayName}</span>

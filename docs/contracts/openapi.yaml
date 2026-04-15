@@ -510,11 +510,7 @@ paths:
               parameters:
                 questId: $response.body#/id
         "400":
-          description: Validation error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
+          $ref: "#/components/responses/BadRequest"
   /api/quests/{questId}:
     get:
       operationId: getQuest
@@ -678,11 +674,7 @@ paths:
               parameters:
                 epicId: $response.body#/id
         "400":
-          description: Validation error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
+          $ref: "#/components/responses/BadRequest"
   /api/epics/{epicId}:
     get:
       operationId: getEpic
@@ -858,11 +850,7 @@ paths:
               parameters:
                 recurringTaskId: $response.body#/id
         "400":
-          description: Validation error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
+          $ref: "#/components/responses/BadRequest"
   /api/recurring-tasks/{recurringTaskId}:
     get:
       operationId: getRecurringTask

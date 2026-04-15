@@ -135,6 +135,9 @@ builder.Services.AddTransient<IRequestHandler<FreezeStreakCommand, Result<Player
 // Daily brief query handler (stateless — recomputed on each call).
 builder.Services.AddTransient<IRequestHandler<GetDailyBriefQuery, Result<DailyBriefReadModel>>, GetDailyBriefQueryHandler>();
 
+// Estimation calibration query handler (stateless — recomputed from task history).
+builder.Services.AddTransient<IRequestHandler<GetEstimationBiasQuery, Result<EstimationCalibrationReadModel>>, GetEstimationBiasQueryHandler>();
+
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.XpAwardHandler>();
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskStatusChangedEvent>,

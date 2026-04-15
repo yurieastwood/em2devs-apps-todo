@@ -281,7 +281,16 @@
 							>
 							<span class="brief-badge brief-badge-priority">{task.priority}</span>
 							{#if task.estimatedMinutes !== null}
-								<span class="brief-item-minutes">{task.estimatedMinutes}m</span>
+								{#if task.calibratedMinutes !== null && task.calibratedMinutes !== task.estimatedMinutes}
+									<span
+										class="brief-item-minutes"
+										data-testid="brief-item-calibrated"
+										title="Based on your past estimates, this may take ~{task.calibratedMinutes}m"
+										>{task.estimatedMinutes}m (calibrated {task.calibratedMinutes}m)</span
+									>
+								{:else}
+									<span class="brief-item-minutes">{task.estimatedMinutes}m</span>
+								{/if}
 							{/if}
 						</li>
 					{/each}

@@ -9,6 +9,7 @@ export interface DailyBriefTask {
 	difficulty: TaskDifficulty;
 	priority: TaskPriority;
 	estimatedMinutes: number | null;
+	calibratedMinutes: number | null;
 	scheduledDate: string | null;
 }
 

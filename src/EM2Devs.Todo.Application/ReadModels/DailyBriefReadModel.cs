@@ -28,4 +28,5 @@ public sealed record DailyBriefTaskReadModel(
     string Difficulty,
     string Priority,
     int? EstimatedMinutes,
+    int? CalibratedMinutes,
     DateOnly? ScheduledDate);

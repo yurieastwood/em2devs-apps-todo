@@ -20,6 +20,7 @@ describe('getDailyBrief', () => {
 					difficulty: 'Normal',
 					priority: 'Medium',
 					estimatedMinutes: 30,
+					calibratedMinutes: 42,
 					scheduledDate: '2026-04-12'
 				},
 				{
@@ -28,6 +29,7 @@ describe('getDailyBrief', () => {
 					difficulty: 'Easy',
 					priority: 'High',
 					estimatedMinutes: 10,
+					calibratedMinutes: 14,
 					scheduledDate: '2026-04-11'
 				}
 			],
@@ -39,6 +41,7 @@ describe('getDailyBrief', () => {
 					difficulty: 'Easy',
 					priority: 'High',
 					estimatedMinutes: 10,
+					calibratedMinutes: 14,
 					scheduledDate: '2026-04-11'
 				}
 			],

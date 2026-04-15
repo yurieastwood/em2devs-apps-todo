@@ -7,7 +7,10 @@ using EM2Devs.Todo.Domain.ValueObjects;
 
 namespace EM2Devs.Todo.Application.Commands;
 
-public sealed record CreateTaskCommand(string Title) : IRequest<Result<TodoTask>>;
+public sealed record CreateTaskCommand(
+    string Title,
+    DateOnly? ScheduledDate = null,
+    IReadOnlyList<string>? Tags = null) : IRequest<Result<TodoTask>>;
 
 public sealed class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand, Result<TodoTask>>
 {
@@ -34,7 +37,24 @@ public sealed class CreateTaskCommandHandler : IRequestHandler<CreateTaskCommand
             return new ValidationError(ex.Message);
         }
 
-        TodoTask task = TodoTask.Create(_currentUser.UserId, title);
+        TodoTask task;
+        try
+        {
+            task = TodoTask.Create(_currentUser.UserId, title, scheduledDate: request.ScheduledDate);
+
+            if (request.Tags is not null)
+            {
+                foreach (string rawTag in request.Tags)
+                {
+                    task.AddTag(Tag.From(rawTag));
+                }
+            }
+        }
+        catch (DomainException ex)
+        {
+            return new ValidationError(ex.Message);
+        }
+
         await _repository.SaveAsync(task, ct).ConfigureAwait(false);
         return task;
     }

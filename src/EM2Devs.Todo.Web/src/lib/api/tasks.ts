@@ -17,6 +17,13 @@ export interface Task {
 	scheduledDate: string | null;
 	actualMinutes?: number | null;
 	variancePercent?: number | null;
+	tags: string[];
+}
+
+export interface CreateTaskInput {
+	title: string;
+	scheduledDate?: string;
+	tags?: string[];
 }
 
 export interface UpdateTaskFields {
@@ -101,13 +108,28 @@ export async function getTask(
 export async function createTask(
 	fetch: typeof globalThis.fetch,
 	baseUrl: string,
-	title: string
+	input: string | CreateTaskInput
 ): Promise<Task> {
 	const url = new URL('/api/tasks', baseUrl);
+	const body = typeof input === 'string' ? { title: input } : input;
 	const response = await fetch(url, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ title })
+		body: JSON.stringify(body)
+	});
+	return handleResponse<Task>(response);
+}
+
+export async function quickAddTask(
+	fetch: typeof globalThis.fetch,
+	baseUrl: string,
+	input: string
+): Promise<Task> {
+	const url = new URL('/api/tasks/quick-add', baseUrl);
+	const response = await fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ input })
 	});
 	return handleResponse<Task>(response);
 }

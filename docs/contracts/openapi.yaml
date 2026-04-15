@@ -194,6 +194,7 @@ paths:
                       dueDate: null
                       completedAt: null
                       scheduledDate: null
+                      tags: []
                 today:
                   summary: Today view — due today
                   value:
@@ -207,6 +208,8 @@ paths:
                       dueDate: null
                       completedAt: null
                       scheduledDate: "2026-04-12"
+                      tags:
+                        - work
         "400":
           description: Invalid status or view value, or both supplied simultaneously
           content:
@@ -250,6 +253,43 @@ paths:
                 taskId: $response.body#/id
         "400":
           description: Validation error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblemDetails"
+  /api/tasks/quick-add:
+    post:
+      operationId: quickAddTask
+      summary: Create a task from a single quick-add string
+      description: |
+        Parses the input string for inline directives (`#tag`, `!priority`, `^date`) and
+        creates a task with the resulting title, tags, priority and scheduled date.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuickAddTaskRequest"
+            examples:
+              basic:
+                summary: Title only
+                value:
+                  input: "write blog post"
+              full:
+                summary: Full quick-add syntax
+                value:
+                  input: "buy milk #groceries !High ^tomorrow"
+      responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "400":
+          description: Validation error (empty input, too long, or unparseable directives)
           content:
             application/problem+json:
               schema:
@@ -384,6 +424,7 @@ paths:
                 estimatedMinutes: 30
                 actualMinutes: 45
                 variancePercent: 50
+                tags: []
         "400":
           description: Validation error (actualMinutes out of range)
           content:
@@ -1220,6 +1261,34 @@ components:
           minLength: 1
           maxLength: 200
           pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
+        scheduledDate:
+          type: string
+          format: date
+          nullable: true
+          description: Calendar day the task is scheduled for (used by Today/Upcoming views).
+        tags:
+          type: array
+          nullable: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+          description: Optional tags to attach to the task. Tags are normalised (lowercased, trimmed).
+    QuickAddTaskRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - input
+      properties:
+        input:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: |
+            Raw quick-add string. Directives: `#tag` adds a tag, `!priority` sets priority
+            (Low/Medium/High/Critical), `^date` sets the scheduled date (natural language
+            like `tomorrow`, a weekday name, or `April 15`). The rest becomes the title.
+            Example: `buy milk #groceries !High ^tomorrow`.
     UpdateTaskRequest:
       type: object
       additionalProperties: false
@@ -1287,6 +1356,7 @@ components:
         - status
         - difficulty
         - priority
+        - tags
       properties:
         id:
           type: string
@@ -1347,6 +1417,14 @@ components:
           type: integer
           nullable: true
           description: Rounded percentage variance of actual vs estimated time (e.g. 50 means 50% over estimate).
+        tags:
+          type: array
+          items:
+            type: string
+          description: |
+            Normalised tags attached to the task. Currently in-memory per request only —
+            tag persistence is planned for a future slice, so subsequent reads may return
+            an empty array.
     RecordActualTimeRequest:
       type: object
       additionalProperties: false

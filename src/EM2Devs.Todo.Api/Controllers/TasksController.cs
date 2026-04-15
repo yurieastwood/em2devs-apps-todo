@@ -45,7 +45,19 @@ public sealed class TasksController : ControllerBase
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        Result<TodoTask> result = await _mediator.Send(new CreateTaskCommand(request.Title), ct).ConfigureAwait(false);
+        Result<TodoTask> result = await _mediator.Send(
+            new CreateTaskCommand(request.Title, request.ScheduledDate, request.Tags),
+            ct).ConfigureAwait(false);
+        return result.ToHttpResult(task =>
+            CreatedAtAction(nameof(GetTask), new { taskId = task.Id.Value }, MapToResponse(task)));
+    }
+
+    [HttpPost("quick-add")]
+    public async Task<IActionResult> QuickAddTask([FromBody] QuickAddTaskRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        Result<TodoTask> result = await _mediator.Send(new QuickAddTaskCommand(request.Input), ct).ConfigureAwait(false);
         return result.ToHttpResult(task =>
             CreatedAtAction(nameof(GetTask), new { taskId = task.Id.Value }, MapToResponse(task)));
     }
@@ -117,10 +129,15 @@ public sealed class TasksController : ControllerBase
             task.Difficulty.ToString(), task.Priority.ToString(), task.EstimatedTime?.Minutes,
             task.DueDate, task.CompletedAt, task.ScheduledDate,
             task.ActualTimeRecord?.Actual.Minutes,
-            task.ActualTimeRecord is null ? null : (int)Math.Round(task.ActualTimeRecord.VariancePercent));
+            task.ActualTimeRecord is null ? null : (int)Math.Round(task.ActualTimeRecord.VariancePercent),
+            task.Tags.Select(t => t.Value).ToArray());
 }
 
-public sealed record CreateTaskRequest(string Title);
+public sealed record CreateTaskRequest(
+    string Title,
+    DateOnly? ScheduledDate = null,
+    string[]? Tags = null);
+public sealed record QuickAddTaskRequest(string Input);
 public sealed record UpdateTaskRequest(
     string? Title = null,
     string? Description = null,
@@ -137,4 +154,5 @@ public sealed record TaskResponse(
     string Difficulty, string Priority, int? EstimatedMinutes,
     DateTimeOffset? DueDate, DateTimeOffset? CompletedAt,
     DateOnly? ScheduledDate,
-    int? ActualMinutes, int? VariancePercent);
+    int? ActualMinutes, int? VariancePercent,
+    string[] Tags);

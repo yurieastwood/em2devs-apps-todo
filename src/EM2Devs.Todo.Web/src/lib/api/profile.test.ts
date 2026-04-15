@@ -63,7 +63,12 @@ describe('getProfile', () => {
 				finalXp: 41
 			},
 			xpHistory: [
-				{ date: '2026-04-10', xpEarned: 40, source: 'task-completed', cumulativeTotal: 140 },
+				{
+					date: '2026-04-10',
+					xpEarned: 40,
+					source: 'task-completed',
+					cumulativeTotal: 140
+				},
 				{ date: '2026-04-12', xpEarned: 40, source: 'task-completed', cumulativeTotal: 180 }
 			],
 			titles: {

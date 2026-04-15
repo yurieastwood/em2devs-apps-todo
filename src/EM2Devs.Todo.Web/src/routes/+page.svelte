@@ -122,6 +122,10 @@
 	});
 
 	let newTitle = $state('');
+	let newScheduledDate = $state('');
+	let newTags = $state('');
+	let quickAddInput = $state('');
+	let quickAddMode = $state(false);
 	let creating = $state(false);
 	let actionInFlight = $state<string | null>(null);
 	let notification = $state<string | null>(null);
@@ -161,8 +165,15 @@
 	});
 
 	let createError = $derived(
-		form?.action === 'create' && form?.error ? String(form.error) : null
+		(form?.action === 'create' || form?.action === 'quickAdd') && form?.error
+			? String(form.error)
+			: null
 	);
+
+	function formatScheduledLabel(iso: string): string {
+		const d = parseDateOnly(iso);
+		return `${WEEKDAY_FORMATTER.format(d)}, ${DATE_FORMATTER.format(d)}`;
+	}
 	let actionError = $derived(
 		(form?.action === 'updateStatus' ||
 			form?.action === 'delete' ||
@@ -223,38 +234,127 @@
 		</div>
 	{/if}
 
-	<form
-		method="POST"
-		action="?/create"
-		use:enhance={() => {
-			creating = true;
-			return async ({ update, result }) => {
-				try {
-					await update();
-				} finally {
-					creating = false;
-					if (result.type === 'success') newTitle = '';
-				}
-			};
-		}}
-		class="create-form"
-	>
-		<input
-			type="text"
-			name="title"
-			bind:value={newTitle}
-			placeholder="What needs to be done?"
-			disabled={creating}
-			maxlength={200}
-			data-testid="task-title-input"
-		/>
-		<button type="submit" disabled={creating || !newTitle.trim()} data-testid="add-task-button">
-			{creating ? 'Adding...' : 'Add Task'}
+	<div class="create-mode-toggle" data-testid="create-mode-toggle">
+		<button
+			type="button"
+			class="toggle-btn"
+			class:active={!quickAddMode}
+			onclick={() => (quickAddMode = false)}
+			data-testid="toggle-structured"
+		>
+			Structured
 		</button>
-		{#if createError}
-			<p class="form-error" role="alert" data-testid="create-error">{createError}</p>
-		{/if}
-	</form>
+		<button
+			type="button"
+			class="toggle-btn"
+			class:active={quickAddMode}
+			onclick={() => (quickAddMode = true)}
+			data-testid="toggle-quick-add"
+		>
+			Quick-add
+		</button>
+	</div>
+
+	{#if !quickAddMode}
+		<form
+			method="POST"
+			action="?/create"
+			use:enhance={() => {
+				creating = true;
+				return async ({ update, result }) => {
+					try {
+						await update();
+					} finally {
+						creating = false;
+						if (result.type === 'success') {
+							newTitle = '';
+							newScheduledDate = '';
+							newTags = '';
+						}
+					}
+				};
+			}}
+			class="create-form"
+		>
+			<input
+				type="text"
+				name="title"
+				bind:value={newTitle}
+				placeholder="What needs to be done?"
+				disabled={creating}
+				maxlength={200}
+				data-testid="task-title-input"
+			/>
+			<input
+				type="date"
+				name="scheduledDate"
+				bind:value={newScheduledDate}
+				disabled={creating}
+				data-testid="task-scheduled-date-input"
+				aria-label="Scheduled date"
+			/>
+			<input
+				type="text"
+				name="tags"
+				bind:value={newTags}
+				placeholder="tags (comma-separated)"
+				disabled={creating}
+				maxlength={500}
+				data-testid="task-tags-input"
+			/>
+			<button
+				type="submit"
+				disabled={creating || !newTitle.trim()}
+				data-testid="add-task-button"
+			>
+				{creating ? 'Adding...' : 'Add Task'}
+			</button>
+			{#if createError}
+				<p class="form-error" role="alert" data-testid="create-error">{createError}</p>
+			{/if}
+		</form>
+	{:else}
+		<form
+			method="POST"
+			action="?/quickAdd"
+			use:enhance={() => {
+				creating = true;
+				return async ({ update, result }) => {
+					try {
+						await update();
+					} finally {
+						creating = false;
+						if (result.type === 'success') quickAddInput = '';
+					}
+				};
+			}}
+			class="create-form quick-add-form"
+		>
+			<input
+				type="text"
+				name="input"
+				bind:value={quickAddInput}
+				placeholder="try: buy milk #groceries !High ^tomorrow"
+				disabled={creating}
+				maxlength={500}
+				data-testid="quick-add-input"
+			/>
+			<button
+				type="submit"
+				disabled={creating || !quickAddInput.trim()}
+				data-testid="quick-add-button"
+			>
+				{creating ? 'Adding...' : 'Add'}
+			</button>
+			<p class="quick-add-hint">
+				Use <code>#tag</code>, <code>!priority</code> (Low/Medium/High/Critical), and
+				<code>^date</code> (tomorrow, Monday, April 15).
+			</p>
+			{#if createError}
+				<p class="form-error" role="alert" data-testid="create-error">{createError}</p>
+			{/if}
+		</form>
+	{/if}
 
 	{#if tasks.length > 0}
 		<div class="list-controls">
@@ -282,14 +382,28 @@
 	{#snippet taskItem(task: Task)}
 		<li class="task-item" data-status={task.status} data-testid="task-item">
 			<div class="task-info">
-				<a
-					class="task-title-link"
-					class:done={task.status === 'Done'}
-					href={resolve(`/tasks/${task.id}`)}
-					data-testid="task-title"
-				>
-					{task.title}
-				</a>
+				<div class="task-main">
+					<a
+						class="task-title-link"
+						class:done={task.status === 'Done'}
+						href={resolve(`/tasks/${task.id}`)}
+						data-testid="task-title"
+					>
+						{task.title}
+					</a>
+					{#if task.tags && task.tags.length > 0}
+						<span class="task-tags" data-testid="task-tags">
+							{#each task.tags as tag (tag)}
+								<span class="tag-chip" data-testid="task-tag-chip">#{tag}</span>
+							{/each}
+						</span>
+					{/if}
+					{#if task.scheduledDate}
+						<span class="task-scheduled" data-testid="task-scheduled">
+							scheduled for {formatScheduledLabel(task.scheduledDate)}
+						</span>
+					{/if}
+				</div>
 				<span class="task-status" data-status={task.status} data-testid="task-status"
 					>{task.status}</span
 				>
@@ -814,5 +928,79 @@
 
 	.btn-skip:hover {
 		color: #374151;
+	}
+
+	.create-mode-toggle {
+		display: flex;
+		gap: 0.25rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.toggle-btn {
+		padding: 0.25rem 0.75rem;
+		background: none;
+		border: 1px solid #d1d5db;
+		border-radius: 0.25rem;
+		cursor: pointer;
+		font-size: 0.8rem;
+		color: #6b7280;
+	}
+
+	.toggle-btn.active {
+		background: #2563eb;
+		color: white;
+		border-color: #2563eb;
+	}
+
+	.create-form input[type='date'] {
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #d1d5db;
+		border-radius: 0.25rem;
+		font-size: 1rem;
+	}
+
+	.quick-add-hint {
+		width: 100%;
+		margin: 0.25rem 0 0;
+		color: #6b7280;
+		font-size: 0.8rem;
+	}
+
+	.quick-add-hint code {
+		background: #f3f4f6;
+		padding: 0 0.25rem;
+		border-radius: 0.2rem;
+		font-size: 0.75rem;
+	}
+
+	.task-main {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.35rem 0.5rem;
+		min-width: 0;
+		flex: 1;
+	}
+
+	.task-tags {
+		display: inline-flex;
+		flex-wrap: wrap;
+		gap: 0.25rem;
+	}
+
+	.tag-chip {
+		display: inline-block;
+		padding: 0.1rem 0.45rem;
+		background: #eef2ff;
+		color: #4338ca;
+		border-radius: 999px;
+		font-size: 0.7rem;
+		font-weight: 500;
+	}
+
+	.task-scheduled {
+		font-size: 0.75rem;
+		color: #6b7280;
+		font-style: italic;
 	}
 </style>

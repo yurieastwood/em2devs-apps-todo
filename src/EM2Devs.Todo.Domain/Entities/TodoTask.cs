@@ -87,9 +87,10 @@ public sealed class TodoTask
 
     public static TodoTask Create(Guid userId, TaskTitle title, TaskDifficulty difficulty = TaskDifficulty.Normal,
         DateTimeOffset? dueDate = null, TaskPriority priority = TaskPriority.Medium,
-        DateTimeOffset? createdAt = null)
+        DateTimeOffset? createdAt = null, DateOnly? scheduledDate = null)
     {
-        return new TodoTask(TaskId.New(), userId, title, difficulty, dueDate, priority, createdAt: createdAt);
+        return new TodoTask(TaskId.New(), userId, title, difficulty, dueDate, priority,
+            createdAt: createdAt, scheduledDate: scheduledDate);
     }
 
     public static TodoTask CreateFromRecurring(Guid userId, TaskTitle title, RecurringTaskId sourceId, DateOnly scheduledDate,

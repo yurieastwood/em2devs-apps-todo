@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
 	import type { ActionData, PageData } from './$types';
@@ -18,12 +19,15 @@
 		return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
 	}
 
-	let title = $state(task.title);
-	let description = $state(task.description ?? '');
-	let difficulty = $state(task.difficulty);
-	let priority = $state(task.priority);
-	let estimatedMinutes = $state(task.estimatedMinutes?.toString() ?? '');
-	let dueDateLocal = $state(toLocalDateTimeString(task.dueDate));
+	// Seed local edit state from the initial loaded task (server load or form action result).
+	// We intentionally untrack the derived `task` here so these `$state` values become
+	// independently editable inputs and Svelte doesn't warn about capturing only the initial value.
+	let title = $state(untrack(() => task.title));
+	let description = $state(untrack(() => task.description ?? ''));
+	let difficulty = $state(untrack(() => task.difficulty));
+	let priority = $state(untrack(() => task.priority));
+	let estimatedMinutes = $state(untrack(() => task.estimatedMinutes?.toString() ?? ''));
+	let dueDateLocal = $state(untrack(() => toLocalDateTimeString(task.dueDate)));
 
 	let saving = $state(false);
 	let deleting = $state(false);

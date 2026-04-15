@@ -10,6 +10,7 @@ public sealed class TodoDbContext : DbContext
     public DbSet<PlayerProfile> PlayerProfiles => Set<PlayerProfile>();
     public DbSet<StreakSnapshot> StreakSnapshots => Set<StreakSnapshot>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)
     {

@@ -252,11 +252,7 @@ paths:
               parameters:
                 taskId: $response.body#/id
         "400":
-          description: Validation error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
+          $ref: "#/components/responses/BadRequest"
   /api/tasks/quick-add:
     post:
       operationId: quickAddTask
@@ -334,11 +330,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TaskResponse"
         "400":
-          description: Validation error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
+          $ref: "#/components/responses/BadRequest"
         "404":
           description: Task not found
     delete:
@@ -1122,6 +1114,110 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProfileResponse"
+  /api/notifications:
+    get:
+      operationId: listNotifications
+      summary: List in-app notifications for the current user
+      description: |
+        Returns the authenticated user's notifications, newest-first. Dismissed
+        notifications are always excluded. When `includeRead=true` is supplied,
+        notifications already marked as read are included as well; otherwise
+        only unread notifications are returned.
+      parameters:
+        - name: includeRead
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "200":
+          description: Notifications list (possibly empty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NotificationResponse"
+              examples:
+                default:
+                  value:
+                    - id: "11111111-1111-1111-1111-111111111111"
+                      type: AchievementAlert
+                      message: "Level up! You reached level 2."
+                      createdAt: "2026-04-12T12:00:00Z"
+                      status: Unread
+                      readAt: null
+  /api/notifications/{notificationId}/read:
+    post:
+      operationId: markNotificationRead
+      summary: Mark a notification as read
+      parameters:
+        - $ref: "#/components/parameters/notificationId"
+      responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Notification not found for the current user
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Notification cannot transition to read (e.g. already dismissed)
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "200":
+          description: Updated notification with Status=Read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationResponse"
+              examples:
+                default:
+                  value:
+                    id: "11111111-1111-1111-1111-111111111111"
+                    type: AchievementAlert
+                    message: "Level up! You reached level 2."
+                    createdAt: "2026-04-12T12:00:00Z"
+                    status: Read
+                    readAt: "2026-04-12T12:05:00Z"
+  /api/notifications/{notificationId}/dismiss:
+    post:
+      operationId: dismissNotification
+      summary: Dismiss a notification (soft delete)
+      parameters:
+        - $ref: "#/components/parameters/notificationId"
+      responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Notification not found for the current user
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "200":
+          description: Updated notification with Status=Dismissed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationResponse"
+              examples:
+                default:
+                  value:
+                    id: "11111111-1111-1111-1111-111111111111"
+                    type: AchievementAlert
+                    message: "Level up! You reached level 2."
+                    createdAt: "2026-04-12T12:00:00Z"
+                    status: Dismissed
+                    readAt: null
 components:
   responses:
     Unauthorized:
@@ -1158,6 +1254,13 @@ components:
         format: uuid
     recurringTaskId:
       name: recurringTaskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    notificationId:
+      name: notificationId
       in: path
       required: true
       schema:
@@ -2023,3 +2126,46 @@ components:
         finalXp:
           type: integer
           minimum: 1
+    NotificationResponse:
+      type: object
+      required:
+        - id
+        - type
+        - message
+        - createdAt
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - TaskReminder
+            - AchievementAlert
+            - DailyBriefReady
+            - WeeklyReviewPrompt
+            - CapacityWarning
+        message:
+          type: string
+          maxLength: 500
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - Unread
+            - Read
+            - Dismissed
+        readAt:
+          type: string
+          format: date-time
+          nullable: true
+      example:
+        id: "11111111-1111-1111-1111-111111111111"
+        type: AchievementAlert
+        message: "Level up! You reached level 2."
+        createdAt: "2026-04-12T12:00:00Z"
+        status: Unread
+        readAt: null

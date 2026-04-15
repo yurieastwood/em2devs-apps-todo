@@ -1,16 +1,28 @@
 import { fail } from '@sveltejs/kit';
 import { freezeStreak, getProfile } from '$lib/api/profile';
+import { dismiss, listNotifications, markRead, type Notification } from '$lib/api/notifications';
 import { getBaseUrl } from '$lib/server/config';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ fetch }) => {
+	const baseUrl = getBaseUrl();
+	let profile = null;
+	let error: string | null = null;
 	try {
-		const profile = await getProfile(fetch, getBaseUrl());
-		return { profile, error: null };
+		profile = await getProfile(fetch, baseUrl);
 	} catch (e) {
-		const message = e instanceof Error ? e.message : 'An unexpected error occurred';
-		return { profile: null, error: message };
+		error = e instanceof Error ? e.message : 'An unexpected error occurred';
 	}
+
+	let notifications: Notification[];
+	try {
+		notifications = await listNotifications(fetch, baseUrl, { includeRead: true });
+	} catch {
+		// Non-fatal: dashboard still renders if the notifications endpoint fails.
+		notifications = [];
+	}
+
+	return { profile, error, notifications };
 };
 
 export const actions: Actions = {
@@ -26,6 +38,34 @@ export const actions: Actions = {
 		} catch (e) {
 			const message = e instanceof Error ? e.message : 'Could not freeze streak';
 			return fail(409, { freezeError: message });
+		}
+	},
+	markNotificationRead: async ({ request, fetch }) => {
+		const form = await request.formData();
+		const id = form.get('id');
+		if (typeof id !== 'string' || id.length === 0) {
+			return fail(400, { notificationError: 'Missing notification id' });
+		}
+		try {
+			await markRead(fetch, getBaseUrl(), id);
+			return { ok: true };
+		} catch (e) {
+			const message = e instanceof Error ? e.message : 'Could not mark as read';
+			return fail(500, { notificationError: message });
+		}
+	},
+	dismissNotification: async ({ request, fetch }) => {
+		const form = await request.formData();
+		const id = form.get('id');
+		if (typeof id !== 'string' || id.length === 0) {
+			return fail(400, { notificationError: 'Missing notification id' });
+		}
+		try {
+			await dismiss(fetch, getBaseUrl(), id);
+			return { ok: true };
+		} catch (e) {
+			const message = e instanceof Error ? e.message : 'Could not dismiss';
+			return fail(500, { notificationError: message });
 		}
 	}
 };

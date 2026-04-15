@@ -1,4 +1,5 @@
 using Shouldly;
+using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.Exceptions;
 using EM2Devs.Todo.Domain.ValueObjects;
@@ -141,5 +142,108 @@ public sealed class NotificationTests
         var ex = Should.Throw<DomainException>(() =>
             Notification.Create(NotificationType.AchievementAlert, "Test", -1));
         ex.Message.ShouldContain("must be positive");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_UserIdIsEmpty_ForUserNotification()
+    {
+        // Given / When / Then
+        var ex = Should.Throw<DomainException>(() =>
+            Notification.CreateForUser(Guid.Empty, NotificationType.AchievementAlert, "Level up"));
+        ex.Message.ShouldContain("UserId");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_PersistUserId_When_CreatedForUser()
+    {
+        // Given
+        Guid userId = Guid.NewGuid();
+
+        // When
+        Notification notification = Notification.CreateForUser(
+            userId, NotificationType.AchievementAlert, "Level up!");
+
+        // Then
+        notification.UserId.ShouldBe(userId);
+        notification.Status.ShouldBe(NotificationStatus.Unread);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_TransitionStatusAndSetReadAt_When_MarkedAsRead()
+    {
+        // Given
+        Notification notification = Notification.CreateForUser(
+            Guid.NewGuid(), NotificationType.AchievementAlert, "test");
+
+        // When
+        notification.MarkAsRead();
+
+        // Then
+        notification.Status.ShouldBe(NotificationStatus.Read);
+        notification.ReadAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_MarkingDismissedNotificationAsRead()
+    {
+        // Given
+        Notification notification = Notification.CreateForUser(
+            Guid.NewGuid(), NotificationType.AchievementAlert, "test");
+        notification.Dismiss();
+
+        // When / Then
+        Should.Throw<DomainException>(() => notification.MarkAsRead());
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_StayEmpty_When_UsingTransientCreate()
+    {
+        Notification notification = Notification.Create(NotificationType.TaskReminder, "msg");
+        notification.UserId.ShouldBe(Guid.Empty);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_CreateForUserCalledWithInvalidMessage()
+    {
+        // Validates ValidateInputs is actually called from CreateForUser —
+        // removing the call would allow empty messages through.
+        Guid userId = Guid.NewGuid();
+        Should.Throw<Exceptions.DomainException>(() =>
+            Notification.CreateForUser(userId, NotificationType.AchievementAlert, ""));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_With_ExactMessage_When_MarkAsReadOnDismissed()
+    {
+        // Pins the exact error message so the string mutator can't replace it.
+        Notification notification = Notification.CreateForUser(
+            Guid.NewGuid(), NotificationType.AchievementAlert, "earned a title");
+        notification.Dismiss();
+
+        var ex = Should.Throw<Exceptions.DomainException>(() => notification.MarkAsRead());
+        ex.Message.ShouldBe("Cannot mark a dismissed notification as read.");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_RemainRead_When_MarkAsReadCalledTwice()
+    {
+        // Covers the early-return path when already Read — ReadAt should not change.
+        Notification notification = Notification.CreateForUser(
+            Guid.NewGuid(), NotificationType.AchievementAlert, "levelled up");
+        notification.MarkAsRead();
+        DateTimeOffset firstReadAt = notification.ReadAt!.Value;
+
+        notification.MarkAsRead();
+
+        notification.Status.ShouldBe(NotificationStatus.Read);
+        notification.ReadAt.ShouldBe(firstReadAt);
     }
 }

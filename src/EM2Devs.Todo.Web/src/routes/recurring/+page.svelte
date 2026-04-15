@@ -43,6 +43,7 @@
 			};
 		}}
 		class="create-form"
+		data-testid="recurring-create-form"
 	>
 		<input
 			type="text"
@@ -51,13 +52,23 @@
 			placeholder="Task title"
 			disabled={creating}
 			maxlength={200}
+			data-testid="recurring-title-input"
 		/>
-		<select name="pattern" bind:value={newPattern} disabled={creating}>
+		<select
+			name="pattern"
+			bind:value={newPattern}
+			disabled={creating}
+			data-testid="recurring-pattern-select"
+		>
 			<option value="Daily">Daily</option>
 			<option value="Weekly">Weekly</option>
 			<option value="Monthly">Monthly</option>
 		</select>
-		<button type="submit" disabled={creating || !newTitle.trim()}>
+		<button
+			type="submit"
+			disabled={creating || !newTitle.trim()}
+			data-testid="recurring-create-button"
+		>
 			{creating ? 'Creating...' : 'Create'}
 		</button>
 	</form>
@@ -67,12 +78,14 @@
 	{:else if recurringTasks.length === 0}
 		<p class="empty">No recurring tasks yet.</p>
 	{:else}
-		<ul class="task-list">
+		<ul class="task-list" data-testid="recurring-list">
 			{#each recurringTasks as task (task.id)}
-				<li class="task-item" class:paused={!task.isActive}>
+				<li class="task-item" class:paused={!task.isActive} data-testid="recurring-item">
 					<div class="task-info">
-						<span class="task-title">{task.title}</span>
-						<span class="task-pattern">{task.pattern}</span>
+						<span class="task-title" data-testid="recurring-title">{task.title}</span>
+						<span class="task-pattern" data-testid="recurring-pattern"
+							>{task.pattern}</span
+						>
 						<span class="task-status-badge" class:active={task.isActive}>
 							{task.isActive ? 'Active' : 'Paused'}
 						</span>

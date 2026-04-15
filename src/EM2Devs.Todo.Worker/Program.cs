@@ -1,4 +1,5 @@
 using EM2Devs.Todo.Application.Ports;
+using EM2Devs.Todo.Infrastructure.Notifications;
 using EM2Devs.Todo.Infrastructure.Persistence;
 using EM2Devs.Todo.ServiceDefaults;
 using EM2Devs.Todo.Worker.Jobs;
@@ -21,6 +22,10 @@ builder.Services.AddScoped<IRecurringTaskRepository, PostgresRecurringTaskReposi
 builder.Services.AddScoped<IPlayerProfileRepository, PostgresPlayerProfileRepository>();
 builder.Services.AddScoped<IStreakSnapshotRepository, PostgresStreakSnapshotRepository>();
 builder.Services.AddScoped<INotificationRepository, PostgresNotificationRepository>();
+
+// Worker has no SignalR hub — the app's notification handler still wires an
+// INotificationPublisher, so provide a null-object implementation here.
+builder.Services.AddSingleton<INotificationPublisher, NoOpNotificationPublisher>();
 
 // Singleton cache shared across scoped repo instances for the "last XP breakdown" UI hint.
 builder.Services.AddSingleton<ILastXpBreakdownCache, LastXpBreakdownCache>();

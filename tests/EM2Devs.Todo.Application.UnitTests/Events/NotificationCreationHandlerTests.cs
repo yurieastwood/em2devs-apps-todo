@@ -12,12 +12,38 @@ namespace EM2Devs.Todo.Application.UnitTests.Events;
 public sealed class NotificationCreationHandlerTests
 {
     private readonly INotificationRepository _repository = Substitute.For<INotificationRepository>();
+    private readonly INotificationPublisher _publisher = Substitute.For<INotificationPublisher>();
     private readonly FakeCurrentUser _currentUser = new(TestUserId);
     private readonly NotificationCreationHandler _handler;
 
     public NotificationCreationHandlerTests()
     {
-        _handler = new NotificationCreationHandler(_currentUser, _repository);
+        _handler = new NotificationCreationHandler(_currentUser, _repository, _publisher);
+    }
+
+    [Fact]
+    [Trait("Category", "Application")]
+    public async Task Should_PushViaPublisher_After_Persisting()
+    {
+        await _handler.Handle(new LevelUpEvent(1, 2), CancellationToken.None);
+
+        await _publisher.Received(1).PublishAsync(
+            TestUserId,
+            Arg.Is<Notification>(n =>
+                n.UserId == TestUserId
+                && n.Type == NotificationType.AchievementAlert),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    [Trait("Category", "Application")]
+    public async Task Should_NotPublish_When_CurrentUserIsAnonymous()
+    {
+        NotificationCreationHandler handler = new(new AnonymousCurrentUser(), _repository, _publisher);
+
+        await handler.Handle(new LevelUpEvent(1, 2), CancellationToken.None);
+
+        await _publisher.DidNotReceiveWithAnyArgs().PublishAsync(default, default!, default);
     }
 
     [Fact]
@@ -68,7 +94,7 @@ public sealed class NotificationCreationHandlerTests
     [Trait("Category", "Application")]
     public async Task Should_Skip_When_CurrentUserIsAnonymous()
     {
-        NotificationCreationHandler handler = new(new AnonymousCurrentUser(), _repository);
+        NotificationCreationHandler handler = new(new AnonymousCurrentUser(), _repository, _publisher);
 
         await handler.Handle(new LevelUpEvent(1, 2), CancellationToken.None);
 

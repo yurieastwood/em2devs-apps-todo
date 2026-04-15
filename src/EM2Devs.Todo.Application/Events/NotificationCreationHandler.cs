@@ -21,11 +21,16 @@ public sealed class NotificationCreationHandler :
 
     private readonly ICurrentUser _currentUser;
     private readonly INotificationRepository _repository;
+    private readonly INotificationPublisher _publisher;
 
-    public NotificationCreationHandler(ICurrentUser currentUser, INotificationRepository repository)
+    public NotificationCreationHandler(
+        ICurrentUser currentUser,
+        INotificationRepository repository,
+        INotificationPublisher publisher)
     {
         _currentUser = currentUser;
         _repository = repository;
+        _publisher = publisher;
     }
 
     public Task Handle(LevelUpEvent notification, CancellationToken ct)
@@ -49,11 +54,11 @@ public sealed class NotificationCreationHandler :
         return CreateAsync(message, ct);
     }
 
-    private Task CreateAsync(string message, CancellationToken ct)
+    private async Task CreateAsync(string message, CancellationToken ct)
     {
         if (!_currentUser.IsAuthenticated || _currentUser.UserId == Guid.Empty)
         {
-            return Task.CompletedTask;
+            return;
         }
 
         Notification entity = Notification.CreateForUser(
@@ -61,6 +66,7 @@ public sealed class NotificationCreationHandler :
             NotificationType.AchievementAlert,
             message,
             AchievementAutoDismissSeconds);
-        return _repository.AddAsync(entity, ct);
+        await _repository.AddAsync(entity, ct).ConfigureAwait(false);
+        await _publisher.PublishAsync(_currentUser.UserId, entity, ct).ConfigureAwait(false);
     }
 }

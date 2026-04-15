@@ -78,6 +78,11 @@ else
 builder.Services.AddSingleton<IQuestRepository, InMemoryQuestRepository>();
 builder.Services.AddSingleton<IEpicRepository, InMemoryEpicRepository>();
 
+// Weekly review reflections: in-memory only for this slice. Persistence is keyed by
+// (UserId, WeekOf) — the singleton store survives across scoped repositories.
+builder.Services.AddSingleton<InMemoryWeeklyReflectionStore>();
+builder.Services.AddScoped<IWeeklyReflectionRepository, InMemoryWeeklyReflectionRepository>();
+
 // JWT-backed ICurrentUser reads HttpContext.User claims on each request.
 builder.Services.AddScoped<ICurrentUser, JwtCurrentUser>();
 
@@ -133,6 +138,10 @@ builder.Services.AddTransient<IRequestHandler<FreezeStreakCommand, Result<Player
 
 // Daily brief query handler (stateless — recomputed on each call).
 builder.Services.AddTransient<IRequestHandler<GetDailyBriefQuery, Result<DailyBriefReadModel>>, GetDailyBriefQueryHandler>();
+
+// Weekly review handlers.
+builder.Services.AddTransient<IRequestHandler<GetWeeklyReviewQuery, Result<WeeklyReviewReadModel>>, GetWeeklyReviewQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<SaveWeeklyReviewCommand, Result<WeeklyReflectionReadModel>>, SaveWeeklyReviewCommandHandler>();
 
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.XpAwardHandler>();

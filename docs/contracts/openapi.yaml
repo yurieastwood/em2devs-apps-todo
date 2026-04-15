@@ -1091,6 +1091,59 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DailyBriefResponse"
+  /api/weekly-review:
+    get:
+      operationId: getWeeklyReview
+      summary: Get the weekly review read model for the authenticated user
+      description: |
+        Returns the weekly review recap for the authenticated user: tasks
+        completed, XP earned, streak at the start vs end of the week, notable
+        events, and any previously-saved reflection. The review week is
+        anchored on a Sunday; pass `?weekOf=YYYY-MM-DD` for a specific Sunday,
+        otherwise the current week's Sunday is used.
+      parameters:
+        - name: weekOf
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: The Sunday anchoring the review week. Defaults to the current week's Sunday.
+      responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "200":
+          description: Weekly review read model for the current or specified week.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeeklyReviewResponse"
+    post:
+      operationId: saveWeeklyReview
+      summary: Save the user's reflection for the current or specified week
+      description: |
+        Persists (insert or replace) the user's free-text reflection for the
+        given review week. When `weekOf` is omitted the current week's Sunday
+        is used. Returns the saved reflection payload.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveWeeklyReviewRequest"
+      responses:
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "200":
+          description: The saved reflection.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeeklyReflectionResponse"
   /api/profile/streak/freeze:
     post:
       operationId: freezeStreak
@@ -2296,3 +2349,109 @@ components:
             estimatedMinutes: 10
             scheduledDate: "2026-04-11"
         status: "Available"
+    WeeklyReviewResponse:
+      type: object
+      description: Weekly review recap for the authenticated user.
+      required:
+        - weekOf
+        - tasksCompleted
+        - xpEarned
+        - streakStart
+        - streakEnd
+        - notableEvents
+      properties:
+        weekOf:
+          type: string
+          format: date
+          description: The Sunday anchoring the review week.
+        tasksCompleted:
+          type: integer
+          minimum: 0
+        xpEarned:
+          type: integer
+          minimum: 0
+        streakStart:
+          type: integer
+          minimum: 0
+          description: Approximate streak count at the start of the week.
+        streakEnd:
+          type: integer
+          minimum: 0
+          description: Current streak count at the end of the week.
+        notableEvents:
+          type: array
+          items:
+            type: string
+        reflection:
+          type: object
+          nullable: true
+          allOf:
+            - $ref: "#/components/schemas/WeeklyReflectionResponse"
+          description: The previously-saved reflection for this week, if any.
+      example:
+        weekOf: "2026-04-12"
+        tasksCompleted: 7
+        xpEarned: 420
+        streakStart: 4
+        streakEnd: 11
+        notableEvents:
+          - "Completed 7 task(s) this week"
+          - "+50 XP (TaskCompletion) on 2026-04-13"
+        reflection:
+          whatWentWell: "Shipped the weekly review slice end-to-end"
+          whatDragged: "Too many context switches"
+          adjustment: "Block a 2-hour deep-work window every morning"
+          savedAt: "2026-04-15T20:00:00Z"
+    SaveWeeklyReviewRequest:
+      type: object
+      description: User-authored reflection to save for a review week.
+      required:
+        - whatWentWell
+        - whatDragged
+        - adjustment
+      properties:
+        whatWentWell:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        whatDragged:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        adjustment:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        weekOf:
+          type: string
+          format: date
+          nullable: true
+          description: The Sunday anchoring the review week. Defaults to the current week's Sunday.
+      example:
+        whatWentWell: "Shipped the weekly review slice end-to-end"
+        whatDragged: "Too many context switches"
+        adjustment: "Block a 2-hour deep-work window every morning"
+        weekOf: "2026-04-12"
+    WeeklyReflectionResponse:
+      type: object
+      description: A saved reflection for one review week.
+      required:
+        - whatWentWell
+        - whatDragged
+        - adjustment
+        - savedAt
+      properties:
+        whatWentWell:
+          type: string
+        whatDragged:
+          type: string
+        adjustment:
+          type: string
+        savedAt:
+          type: string
+          format: date-time
+      example:
+        whatWentWell: "Shipped the weekly review slice end-to-end"
+        whatDragged: "Too many context switches"
+        adjustment: "Block a 2-hour deep-work window every morning"
+        savedAt: "2026-04-15T20:00:00Z"

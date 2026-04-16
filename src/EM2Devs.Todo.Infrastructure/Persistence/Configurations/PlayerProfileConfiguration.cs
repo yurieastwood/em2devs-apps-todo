@@ -73,12 +73,7 @@ public sealed class PlayerProfileConfiguration : IEntityTypeConfiguration<Player
         });
 
         builder.Ignore(p => p.CurrentFocusMode);
-
-        builder.Property(p => p.TimeZoneId)
-            .HasColumnName("time_zone_id")
-            .HasMaxLength(50)
-            .HasDefaultValue("UTC")
-            .IsRequired();
+        builder.Ignore(p => p.TimeZoneId);
 
         builder.Property(p => p.LongestStreak)
             .HasColumnName("longest_streak")

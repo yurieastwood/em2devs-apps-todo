@@ -100,7 +100,7 @@ Feature: Time Estimation Learning
 
   Rule: Users can view their estimation accuracy trends
 
-    @todo
+    @done
     Scenario: View estimation accuracy dashboard
       When I navigate to my estimation insights
       Then I should see my overall estimation accuracy percentage

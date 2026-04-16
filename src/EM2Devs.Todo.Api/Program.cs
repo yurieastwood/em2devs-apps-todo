@@ -142,6 +142,7 @@ builder.Services.AddTransient<IRequestHandler<GetDailyBriefQuery, Result<DailyBr
 
 // Estimation calibration query handler (stateless — recomputed from task history).
 builder.Services.AddTransient<IRequestHandler<GetEstimationBiasQuery, Result<EstimationCalibrationReadModel>>, GetEstimationBiasQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<GetEstimationDashboardQuery, Result<EstimationDashboardReadModel>>, GetEstimationDashboardQueryHandler>();
 
 // Weekly review handlers.
 builder.Services.AddTransient<IRequestHandler<GetWeeklyReviewQuery, Result<WeeklyReviewReadModel>>, GetWeeklyReviewQueryHandler>();

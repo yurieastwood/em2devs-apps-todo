@@ -54,6 +54,17 @@ public sealed class ProfileController : ControllerBase
             error => Problem(error.Message, statusCode: 500));
     }
 
+    [HttpGet("estimation-accuracy")]
+    public async Task<IActionResult> GetEstimationAccuracy(CancellationToken ct)
+    {
+        Result<EstimationDashboardReadModel> result =
+            await _mediator.Send(new GetEstimationDashboardQuery(), ct).ConfigureAwait(false);
+
+        return result.Match<IActionResult>(
+            dashboard => Ok(dashboard),
+            error => Problem(error.Message, statusCode: 500));
+    }
+
     /// <summary>
     /// Activates a streak freeze for the authenticated user. Returns the updated
     /// profile with the active freeze populated, or 409 if a freeze is already active.

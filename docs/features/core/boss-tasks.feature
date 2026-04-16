@@ -96,7 +96,7 @@ Feature: Boss Tasks
       Then I should be offered the option to convert it to a shared quest
       And I should be able to assign it to a guild member
 
-    @done
+    @todo
     Scenario: Trigger focus mode for a Boss Task
       Given I have a Boss Task "Write Q3 strategy document"
       When I choose to enter Focus Mode for the Boss Task

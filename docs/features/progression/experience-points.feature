@@ -74,7 +74,7 @@ Feature: Experience Points
       And each component should display its calculated value
       And the total should equal the sum of all components
 
-    @done
+    @todo
     Scenario: View cumulative XP on profile
       When I view my profile
       Then I should see my total lifetime XP
@@ -82,7 +82,7 @@ Feature: Experience Points
       And I should see the XP required for the next level
       And I should see a progress bar toward the next level
 
-    @done
+    @todo
     Scenario: View XP history over time
       When I navigate to my XP history
       Then I should see a chart showing XP earned per day over the last 30 days
@@ -105,7 +105,7 @@ Feature: Experience Points
       Then the XP awarded should be less than the first trivial task
       And the diminishing rate should be visible in the XP breakdown
 
-    @done
+    @todo
     Scenario: Difficulty rating auto-adjusts for repeated identical tasks
       Given I have a recurring task "Check email" rated as "Normal"
       And I have consistently completed it in under 2 minutes

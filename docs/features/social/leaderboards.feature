@@ -11,14 +11,14 @@ Feature: Leaderboards
 
   Rule: Leaderboards compare users within similar cohorts only
 
-    @done
+    @todo
     Scenario: View my leaderboard cohort
       Given I am level 15
       When I view the leaderboard
       Then I should be placed in a cohort of users within 10 levels of my current level
       And I should see my rank within this cohort
 
-    @done
+    @todo
     Scenario: Leaderboard ranks by weekly XP
       Given I am in a leaderboard cohort
       When I view the weekly leaderboard
@@ -26,28 +26,28 @@ Feature: Leaderboards
       And I should see the top 10 users in my cohort
       And I should see my own rank even if outside the top 10
 
-    @done
+    @todo
     Scenario: Leaderboard resets weekly
       Given it is the start of a new week
       When I view the leaderboard
       Then all weekly XP totals should be reset to zero
       And last week's final standings should be viewable in history
 
-    @done
+    @todo
     Scenario: Cohort assignment when levelling up mid-week
       Given I am level 19 and at the top of my cohort
       When I level up to 20 during the current week
       Then I should remain in my current cohort until the weekly reset
       And my new cohort should take effect at the start of the next week
 
-    @done
+    @todo
     Scenario: Weekly leaderboard resets at a consistent time
       Given it is the start of a new week
       When the weekly leaderboard resets
       Then the reset should occur at Monday 00:00 UTC
       And all users should see the new week begin at the same moment regardless of timezone
 
-    @done
+    @todo
     Scenario: Level-mismatched users never appear together
       Given I am level 12
       And there is a user at level 45 who earned 500 XP this week
@@ -56,7 +56,7 @@ Feature: Leaderboards
 
   Rule: Multiple leaderboard types cater to different motivations
 
-    @done
+    @todo
     Scenario Outline: View a leaderboard by type
       When I select the "<leaderboard>" leaderboard
       Then I should see cohort members ranked by <ranking_metric>
@@ -67,7 +67,7 @@ Feature: Leaderboards
         | Longest Streak | current active streak length   |
         | Quest Closer   | quests completed this season   |
 
-    @done
+    @todo
     Scenario: View guild leaderboard
       Given I am a member of a guild
       When I select the "Guild" leaderboard
@@ -76,7 +76,7 @@ Feature: Leaderboards
 
   Rule: Users control their leaderboard visibility
 
-    @done
+    @todo
     Scenario: Opt out of leaderboards
       When I navigate to my privacy settings
       And I disable leaderboard participation
@@ -84,7 +84,7 @@ Feature: Leaderboards
       And I should still be able to view leaderboards as a spectator
       And I should see a placeholder for my rank position
 
-    @done
+    @todo
     Scenario: Anonymous leaderboard participation
       When I enable anonymous leaderboard mode
       Then my profile should appear on leaderboards as "Anonymous Questor"

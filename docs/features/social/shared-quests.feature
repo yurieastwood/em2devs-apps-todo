@@ -10,7 +10,7 @@ Feature: Shared Quests
 
   Rule: Shared quests allow multiple contributors toward a common outcome
 
-    @done
+    @todo
     Scenario: Create a shared quest and invite participants
       When I create a shared quest with the following details:
         | Field       | Value                            |
@@ -22,7 +22,7 @@ Feature: Shared Quests
       And "Jordan" and "Alex" should receive invitations
       And the quest should appear in all participants' quest lists once accepted
 
-    @done
+    @todo
     Scenario: Add tasks to a shared quest
       Given I am a participant in the shared quest "Plan summer road trip"
       When I add a task "Book accommodation" and assign it to "Jordan"
@@ -30,14 +30,14 @@ Feature: Shared Quests
       Then both tasks should appear on the shared quest
       And each participant should see their own assigned tasks highlighted
 
-    @done
+    @todo
     Scenario: Any participant can add tasks
       Given "Jordan" is a participant in the shared quest "Plan summer road trip"
       When "Jordan" adds a task "Research restaurants" and assigns it to "Alex"
       Then the task should appear on the shared quest board
       And "Alex" should be notified of the new assignment
 
-    @done
+    @todo
     Scenario: View shared quest progress
       Given the shared quest "Plan summer road trip" has 6 tasks across 3 participants
       And 3 tasks are completed
@@ -46,7 +46,7 @@ Feature: Shared Quests
       And they should see a breakdown of each participant's contributions
       And they should see which tasks are completed, in progress, and pending
 
-    @done
+    @todo
     Scenario: Shared quest has a maximum participant limit
       Given I have created a shared quest "Plan summer road trip"
       And the quest already has 10 participants
@@ -54,7 +54,7 @@ Feature: Shared Quests
       Then "Sam" should not be added
       And I should see a message that the quest has reached its maximum of 10 participants
 
-    @done
+    @todo
     Scenario: Quest creator removes a participant
       Given I created the shared quest "Plan summer road trip"
       And "Alex" is a participant with 2 assigned tasks
@@ -64,7 +64,7 @@ Feature: Shared Quests
       And their assigned tasks should become unassigned
       And "Alex" should retain XP for tasks they already completed
 
-    @done
+    @todo
     Scenario: All participants leave a shared quest
       Given the shared quest "Plan summer road trip" has 3 participants
       And I am the quest creator
@@ -73,7 +73,7 @@ Feature: Shared Quests
       And the quest should continue as a personal quest
       And I should be able to invite new participants
 
-    @done
+    @todo
     Scenario: Quest creator has management privileges
       Given I created the shared quest "Plan summer road trip"
       Then I should be able to remove participants
@@ -83,7 +83,7 @@ Feature: Shared Quests
 
   Rule: All participants benefit when a shared quest is completed
 
-    @done
+    @todo
     Scenario: Shared quest completed
       Given the shared quest "Plan summer road trip" has 6 tasks
       And 5 tasks are completed by various participants
@@ -92,7 +92,7 @@ Feature: Shared Quests
       And all participants should receive shared quest completion bonus XP
       And all participants should see the completion on their journey timeline
 
-    @done
+    @todo
     Scenario: Participant leaves a shared quest
       Given I am a participant in "Plan summer road trip"
       And I have 2 tasks assigned to me

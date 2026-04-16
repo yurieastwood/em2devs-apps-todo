@@ -41,6 +41,7 @@ public sealed class EstimationBiasEndpointTests : IDisposable
         string json = await response.Content.ReadAsStringAsync();
         json.ShouldContain("\"perCategory\"");
         json.ShouldContain("\"accuracyTrend\"");
+        json.ShouldContain("\"improvementMessage\"");
     }
 
     [Fact]

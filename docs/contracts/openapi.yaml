@@ -2102,6 +2102,10 @@ components:
             type: number
             format: double
           description: Time-ordered accuracy snapshots for trend display.
+        improvementMessage:
+          type: string
+          nullable: true
+          description: Celebration message when recent accuracy exceeds early accuracy.
     FreezeStreakRequest:
       type: object
       additionalProperties: false

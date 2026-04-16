@@ -107,7 +107,7 @@ Feature: Time Estimation Learning
       And I should see estimation bias broken down by task category
       And I should see a trend line showing accuracy improvement over time
 
-    @todo
+    @done
     Scenario: Estimation accuracy improves over time
       Given I have been using corrected estimates for 8 weeks
       When I view my estimation accuracy trend

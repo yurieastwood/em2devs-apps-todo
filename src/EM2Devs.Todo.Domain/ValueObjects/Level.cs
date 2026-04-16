@@ -117,6 +117,17 @@ public sealed record Level
         return XpForNextLevel(Value) - CurrentXp.Value;
     }
 
+    public int XpProgressPercent()
+    {
+        if (Value >= MaxLevel)
+        {
+            return 100;
+        }
+
+        int totalForLevel = XpForNextLevel(Value);
+        return totalForLevel == 0 ? 0 : (int)(CurrentXp.Value * 100.0 / totalForLevel);
+    }
+
     /// <summary>
     /// Returns the cumulative XP required to reach the given level from level 1.
     /// Matches the logarithmic curve from levelling.feature:

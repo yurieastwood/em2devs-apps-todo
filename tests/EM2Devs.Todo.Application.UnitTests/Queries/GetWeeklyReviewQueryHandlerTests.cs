@@ -29,7 +29,7 @@ public sealed class GetWeeklyReviewQueryHandlerTests
             _taskRepository, _profileRepository, _reflectionRepository, _timeProvider);
         _profileRepository.GetProfileAsync(Arg.Any<CancellationToken>())
             .Returns(new PlayerProfileReadModel(
-                TotalXp: 0, Level: 1, XpToNextLevel: 50, CurrentStreak: 5, LongestStreak: 10));
+                TotalXp: 0, Level: 1, XpToNextLevel: 50, XpProgressPercent: 0, CurrentStreak: 5, LongestStreak: 10));
         _reflectionRepository.GetAsync(Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
             .Returns((WeeklyReflectionReadModel?)null);
         _taskRepository.GetAllAsync(Arg.Any<CancellationToken>())
@@ -81,7 +81,7 @@ public sealed class GetWeeklyReviewQueryHandlerTests
     {
         _profileRepository.GetProfileAsync(Arg.Any<CancellationToken>())
             .Returns(new PlayerProfileReadModel(
-                TotalXp: 500, Level: 2, XpToNextLevel: 50, CurrentStreak: 7, LongestStreak: 10,
+                TotalXp: 500, Level: 2, XpToNextLevel: 50, XpProgressPercent: 66, CurrentStreak: 7, LongestStreak: 10,
                 XpHistory: new List<XpHistoryEntryReadModel>
                 {
                     new(new DateOnly(2026, 4, 13), 100, "TaskCompletion", 100),

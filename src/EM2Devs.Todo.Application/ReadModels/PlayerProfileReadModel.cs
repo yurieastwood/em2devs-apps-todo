@@ -11,6 +11,7 @@ public sealed record PlayerProfileReadModel(
     int TotalXp,
     int Level,
     int XpToNextLevel,
+    int XpProgressPercent,
     int CurrentStreak,
     int LongestStreak,
     XpBreakdownReadModel? LastXpBreakdown = null,

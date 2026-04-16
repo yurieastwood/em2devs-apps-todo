@@ -53,6 +53,21 @@ public sealed class ProfileControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Should_ReturnXpProgressPercentField_When_ProfileRequested()
+    {
+        HttpResponseMessage response = await _client.GetAsync("/api/profile");
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        string json = await response.Content.ReadAsStringAsync();
+        json.ShouldContain("\"xpProgressPercent\"");
+
+        var profile = await response.Content.ReadFromJsonAsync<ProfileResponse>();
+        profile.ShouldNotBeNull();
+        profile.XpProgressPercent.ShouldBeGreaterThanOrEqualTo(0);
+        profile.XpProgressPercent.ShouldBeLessThanOrEqualTo(100);
+    }
+
+    [Fact]
     public async Task Should_ReturnJsonContentType_When_ProfileRequested()
     {
         // Given / When
@@ -62,10 +77,13 @@ public sealed class ProfileControllerTests : IDisposable
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/json");
     }
 
+    private sealed record TaskDto(Guid Id, string Title, string Status);
+
     private sealed record ProfileResponse(
         int TotalXp,
         int Level,
         int XpToNextLevel,
+        int XpProgressPercent,
         int CurrentStreak,
         int LongestStreak,
         IReadOnlyList<XpHistoryEntryResponse> XpHistory,

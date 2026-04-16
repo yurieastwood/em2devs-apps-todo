@@ -27,7 +27,7 @@ public sealed class GetDailyBriefQueryTests
         _handler = new GetDailyBriefQueryHandler(_taskRepository, _profileRepository, _currentUser, _timeProvider);
         _profileRepository.GetProfileAsync(Arg.Any<CancellationToken>())
             .Returns(new PlayerProfileReadModel(
-                TotalXp: 0, Level: 1, XpToNextLevel: 50, CurrentStreak: 4, LongestStreak: 10));
+                TotalXp: 0, Level: 1, XpToNextLevel: 50, XpProgressPercent: 0, CurrentStreak: 4, LongestStreak: 10));
     }
 
     private sealed class FixedTimeProvider(DateTimeOffset fixedNow) : TimeProvider

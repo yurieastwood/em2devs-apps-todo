@@ -1909,6 +1909,7 @@ components:
         - totalXp
         - level
         - xpToNextLevel
+        - xpProgressPercent
         - currentStreak
         - longestStreak
         - xpHistory
@@ -1924,6 +1925,11 @@ components:
         xpToNextLevel:
           type: integer
           minimum: 0
+        xpProgressPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Percentage progress toward the next level (0–100).
         currentStreak:
           type: integer
           minimum: 0
@@ -1957,6 +1963,7 @@ components:
         totalXp: 120
         level: 2
         xpToNextLevel: 30
+        xpProgressPercent: 60
         currentStreak: 3
         longestStreak: 5
         xpHistory:

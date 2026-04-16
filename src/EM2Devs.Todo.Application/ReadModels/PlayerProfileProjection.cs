@@ -32,6 +32,7 @@ public static class PlayerProfileProjection
             TotalXp: profile.Level.CurrentXp.Value,
             Level: profile.Level.Value,
             XpToNextLevel: profile.Level.XpToNextLevel(),
+            XpProgressPercent: profile.Level.XpProgressPercent(),
             CurrentStreak: profile.Streak.CurrentDays,
             LongestStreak: profile.LongestStreak,
             LastXpBreakdown: lastBreakdown,

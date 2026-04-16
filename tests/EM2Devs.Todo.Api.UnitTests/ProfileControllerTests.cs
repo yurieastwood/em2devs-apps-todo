@@ -68,6 +68,20 @@ public sealed class ProfileControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Should_ReturnXpAggregateFields_When_ProfileRequested()
+    {
+        HttpResponseMessage response = await _client.GetAsync("/api/profile");
+        string json = await response.Content.ReadAsStringAsync();
+        json.ShouldContain("\"xpThisWeek\"");
+        json.ShouldContain("\"xpThisSeason\"");
+
+        var profile = await response.Content.ReadFromJsonAsync<ProfileResponse>();
+        profile.ShouldNotBeNull();
+        profile.XpThisWeek.ShouldBeGreaterThanOrEqualTo(0);
+        profile.XpThisSeason.ShouldBeGreaterThanOrEqualTo(0);
+    }
+
+    [Fact]
     public async Task Should_ReturnJsonContentType_When_ProfileRequested()
     {
         // Given / When
@@ -84,6 +98,8 @@ public sealed class ProfileControllerTests : IDisposable
         int Level,
         int XpToNextLevel,
         int XpProgressPercent,
+        int XpThisWeek,
+        int XpThisSeason,
         int CurrentStreak,
         int LongestStreak,
         IReadOnlyList<XpHistoryEntryResponse> XpHistory,

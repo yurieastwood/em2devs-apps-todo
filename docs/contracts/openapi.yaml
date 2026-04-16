@@ -1910,6 +1910,8 @@ components:
         - level
         - xpToNextLevel
         - xpProgressPercent
+        - xpThisWeek
+        - xpThisSeason
         - currentStreak
         - longestStreak
         - xpHistory
@@ -1930,6 +1932,14 @@ components:
           minimum: 0
           maximum: 100
           description: Percentage progress toward the next level (0–100).
+        xpThisWeek:
+          type: integer
+          minimum: 0
+          description: Total XP earned during the current week (Monday–Sunday).
+        xpThisSeason:
+          type: integer
+          minimum: 0
+          description: Total XP earned during the current quarterly season.
         currentStreak:
           type: integer
           minimum: 0
@@ -1964,6 +1974,8 @@ components:
         level: 2
         xpToNextLevel: 30
         xpProgressPercent: 60
+        xpThisWeek: 80
+        xpThisSeason: 120
         currentStreak: 3
         longestStreak: 5
         xpHistory:

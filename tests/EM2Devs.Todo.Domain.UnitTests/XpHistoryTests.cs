@@ -408,4 +408,18 @@ public sealed class XpHistoryTests
         // Then
         total.Value.ShouldBe(50);
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnSeasonTotal_When_EntriesSpanQuarter()
+    {
+        var history = XpHistory.Empty()
+            .RecordXpEarning(new DateOnly(2026, 4, 1), new ExperiencePoints(30), "task")
+            .RecordXpEarning(new DateOnly(2026, 5, 15), new ExperiencePoints(50), "task")
+            .RecordXpEarning(new DateOnly(2026, 3, 31), new ExperiencePoints(99), "task");
+
+        var total = history.GetSeasonTotal(new DateOnly(2026, 4, 16));
+
+        total.Value.ShouldBe(80);
+    }
 }

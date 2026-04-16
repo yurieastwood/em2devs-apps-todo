@@ -26,6 +26,17 @@ const string CorsPolicyName = "Frontend";
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AllowResponseHeaderCompression = true;
+    options.ConfigureEndpointDefaults(listen => listen.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2);
+    options.AddServerHeader = false;
+});
+builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+{
+    options.RequestHeaderEncodingSelector = _ => System.Text.Encoding.Latin1;
+});
+
 builder.AddServiceDefaults();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

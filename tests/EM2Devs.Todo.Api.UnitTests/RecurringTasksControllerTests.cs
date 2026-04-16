@@ -349,6 +349,22 @@ public sealed class RecurringTasksControllerTests : IDisposable
         body.ShouldContain("Invalid scheduledDate format. Expected: yyyy-MM-dd");
     }
 
+    [Fact]
+    public async Task Should_ReturnProblemDetails_When_ScheduledDateIsGarbage()
+    {
+        HttpResponseMessage createResponse = await _client.PostAsJsonAsync("/api/recurring-tasks",
+            new { title = "Garbage date test", pattern = "Daily" });
+        RecurringTaskDto? created = await createResponse.Content.ReadFromJsonAsync<RecurringTaskDto>();
+
+        HttpResponseMessage response = await _client.PostAsync(
+            $"/api/recurring-tasks/{created!.Id}/generate?scheduledDate=%F3%B8%91%98%1F%C3%92", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
+        string body = await response.Content.ReadAsStringAsync();
+        body.ShouldNotBeNullOrEmpty();
+    }
+
     private sealed record RecurringTaskDto(Guid Id, string Title, string Pattern, bool IsActive);
     private sealed record TaskInstanceDto(
         Guid Id, string Title, string? Description, string Status, string Difficulty,

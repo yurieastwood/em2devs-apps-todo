@@ -272,6 +272,7 @@ if (!string.IsNullOrEmpty(connectionString) && isNonProduction && autoMigrateReq
 }
 
 app.UseExceptionHandler();
+app.UseStatusCodePages();
 app.MapDefaultEndpoints();
 if (allowedOrigins.Length > 0)
 {

@@ -41,10 +41,17 @@ public sealed class StartFocusModeCommandHandler
             return new ValidationError("Focus mode is only available for Boss Tasks.");
         }
 
-        await _profileRepository.StartFocusModeAsync(
-            new TaskId(request.TaskId), _timeProvider.GetUtcNow(), ct).ConfigureAwait(false);
+        try
+        {
+            await _profileRepository.StartFocusModeAsync(
+                new TaskId(request.TaskId), _timeProvider.GetUtcNow(), ct).ConfigureAwait(false);
 
-        return true;
+            return true;
+        }
+        catch (Domain.Exceptions.DomainException ex)
+        {
+            return new ConflictError(ex.Message);
+        }
     }
 }
 
@@ -70,9 +77,16 @@ public sealed class EndFocusModeCommandHandler
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        FocusMode ended = await _profileRepository
-            .EndFocusModeAsync(_timeProvider.GetUtcNow(), ct).ConfigureAwait(false);
+        try
+        {
+            FocusMode ended = await _profileRepository
+                .EndFocusModeAsync(_timeProvider.GetUtcNow(), ct).ConfigureAwait(false);
 
-        return new FocusModeResult(ended.TaskId.Value, (int)ended.Duration.TotalMinutes);
+            return new FocusModeResult(ended.TaskId.Value, (int)ended.Duration.TotalMinutes);
+        }
+        catch (Domain.Exceptions.DomainException ex)
+        {
+            return new ConflictError(ex.Message);
+        }
     }
 }

@@ -466,6 +466,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+        "409":
+          description: Focus mode already active
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
   /api/tasks/focus-mode/end:
     post:
       operationId: endFocusMode
@@ -487,7 +493,7 @@ paths:
                   durationMinutes:
                     type: integer
                     minimum: 0
-        "400":
+        "409":
           description: No active focus mode
           content:
             application/problem+json:

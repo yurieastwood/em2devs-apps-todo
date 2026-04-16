@@ -123,4 +123,15 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
             return Task.FromResult(ended);
         }
     }
+
+    public Task DiscoverSkillTreeAsync(SkillTreeType type, CancellationToken ct = default)
+    {
+        lock (_lock)
+        {
+            PlayerProfile profile = GetOrCreate();
+            profile.DiscoverSkillTree(type);
+        }
+
+        return Task.CompletedTask;
+    }
 }

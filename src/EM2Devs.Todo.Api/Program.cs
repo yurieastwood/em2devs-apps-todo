@@ -175,6 +175,10 @@ builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Even
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
     EM2Devs.Todo.Application.Events.QuestCompletionXpHandler>();
 
+// Skill tree discovery: evaluate tag-based thresholds after each task completion.
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
+    EM2Devs.Todo.Application.Events.SkillTreeDiscoveryHandler>();
+
 // Surface achievement-style events in the in-app notifications inbox.
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.LevelUpEvent>,
     EM2Devs.Todo.Application.Events.NotificationCreationHandler>();

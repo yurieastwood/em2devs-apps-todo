@@ -46,10 +46,7 @@ public sealed class ProfileControllerTests : IDisposable
         profile.Titles!.Earned.ShouldBeEmpty();
         profile.Titles.Active.ShouldBeNull();
         profile.Titles.Progress.ShouldBeEmpty();
-        profile.SkillTrees.ShouldNotBeNull();
-        // All seven skill tree types appear as locked entries by default.
-        profile.SkillTrees.Count.ShouldBe(7);
-        profile.SkillTrees.ShouldAllBe(t => t.Tier == null && !string.IsNullOrEmpty(t.UnlockHint));
+        profile.SkillTrees.ShouldBeNull();
     }
 
     [Fact]

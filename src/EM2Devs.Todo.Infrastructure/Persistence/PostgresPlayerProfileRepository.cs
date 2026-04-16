@@ -87,6 +87,13 @@ public sealed class PostgresPlayerProfileRepository : IPlayerProfileRepository
         return ended;
     }
 
+    public async Task DiscoverSkillTreeAsync(SkillTreeType type, CancellationToken ct = default)
+    {
+        PlayerProfile profile = await GetOrCreateForCurrentUserAsync(ct).ConfigureAwait(false);
+        profile.DiscoverSkillTree(type);
+        await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
+
     private async Task<PlayerProfile> GetOrCreateForCurrentUserAsync(CancellationToken ct)
     {
         Guid userId = _currentUser.UserId;

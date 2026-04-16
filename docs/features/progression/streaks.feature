@@ -118,7 +118,7 @@ Feature: Streaks and Grace Days
 
   Rule: Streak day boundaries are determined by the user's configured timezone
 
-    @todo
+    @done
     Scenario: Streak day boundary respects user timezone
       Given my timezone is set to "Australia/Sydney" (UTC+11)
       And my current streak is 5 days

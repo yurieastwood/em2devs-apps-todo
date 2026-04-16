@@ -27,6 +27,7 @@ public sealed class PlayerProfile
     public int LongestStreak { get; private set; }
     public TitleInventory TitleInventory { get; private set; }
     public XpHistory XpHistory { get; private set; }
+    public string TimeZoneId { get; private set; } = "UTC";
 
     private readonly List<SkillTree> _skillTrees = [];
 

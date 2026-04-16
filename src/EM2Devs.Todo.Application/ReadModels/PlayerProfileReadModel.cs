@@ -14,6 +14,7 @@ public sealed record PlayerProfileReadModel(
     int XpProgressPercent,
     int CurrentStreak,
     int LongestStreak,
+    string TimeZoneId = "UTC",
     XpBreakdownReadModel? LastXpBreakdown = null,
     IReadOnlyList<XpHistoryEntryReadModel>? XpHistory = null,
     TitlesReadModel? Titles = null,

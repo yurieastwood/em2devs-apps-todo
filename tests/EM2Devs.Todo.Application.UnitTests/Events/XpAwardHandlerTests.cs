@@ -81,7 +81,8 @@ public sealed class XpAwardHandlerTests
         // Given — profile starts at level 1, levels up after XP
         _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
             .Returns(
-                new PlayerProfileReadModel(40, 1, 10, 80, 0, 0),  // before award
+                new PlayerProfileReadModel(40, 1, 10, 80, 0, 0),  // timezone read
+                new PlayerProfileReadModel(40, 1, 10, 80, 0, 0),  // before award (streak read)
                 new PlayerProfileReadModel(70, 2, 30, 0, 0, 0));  // after award (leveled up)
 
         TaskCompletedEvent evt = new(
@@ -117,6 +118,52 @@ public sealed class XpAwardHandlerTests
         // Then
         await _mediator.DidNotReceive().Publish(
             Arg.Any<LevelUpEvent>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    [Trait("Category", "Application")]
+    public async Task Should_UseUserTimezone_When_RecordingStreakCompletion()
+    {
+        _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
+            .Returns(new PlayerProfileReadModel(0, 1, 50, 0, 0, 0, TimeZoneId: "Australia/Sydney"));
+
+        var completedAtUtc = new DateTimeOffset(2026, 4, 15, 12, 30, 0, TimeSpan.Zero);
+        var expectedLocalDate = new DateOnly(2026, 4, 15);
+
+        TaskCompletedEvent evt = new(
+            new TaskId(Guid.NewGuid()),
+            new TaskTitle("Timezone test"),
+            TaskDifficulty.Normal,
+            CompletedAt: completedAtUtc);
+
+        await _handler.Handle(evt, CancellationToken.None);
+
+        await _profileRepo.Received(1).RecordCompletionAsync(
+            Arg.Is<DateOnly>(d => d == expectedLocalDate),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    [Trait("Category", "Application")]
+    public async Task Should_UseDifferentDate_When_UtcAndLocalDatesDiffer()
+    {
+        _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
+            .Returns(new PlayerProfileReadModel(0, 1, 50, 0, 0, 0, TimeZoneId: "Australia/Sydney"));
+
+        var completedAtUtc = new DateTimeOffset(2026, 4, 15, 22, 0, 0, TimeSpan.Zero);
+        var expectedLocalDate = new DateOnly(2026, 4, 16);
+
+        TaskCompletedEvent evt = new(
+            new TaskId(Guid.NewGuid()),
+            new TaskTitle("Cross-day test"),
+            TaskDifficulty.Normal,
+            CompletedAt: completedAtUtc);
+
+        await _handler.Handle(evt, CancellationToken.None);
+
+        await _profileRepo.Received(1).RecordCompletionAsync(
+            Arg.Is<DateOnly>(d => d == expectedLocalDate),
             Arg.Any<CancellationToken>());
     }
 }

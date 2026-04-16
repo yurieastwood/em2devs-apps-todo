@@ -35,6 +35,7 @@ public static class PlayerProfileProjection
             XpProgressPercent: profile.Level.XpProgressPercent(),
             CurrentStreak: profile.Streak.CurrentDays,
             LongestStreak: profile.LongestStreak,
+            TimeZoneId: profile.TimeZoneId,
             LastXpBreakdown: lastBreakdown,
             XpHistory: xpHistory,
             Titles: ProjectTitles(profile.TitleInventory),

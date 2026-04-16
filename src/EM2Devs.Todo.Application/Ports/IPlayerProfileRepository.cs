@@ -17,4 +17,5 @@ public interface IPlayerProfileRepository
     Task FreezeStreakAsync(DateOnly today, int days, CancellationToken ct = default);
     Task StartFocusModeAsync(TaskId taskId, DateTimeOffset startedAt, CancellationToken ct = default);
     Task<FocusMode> EndFocusModeAsync(DateTimeOffset endedAt, CancellationToken ct = default);
+    Task DiscoverSkillTreeAsync(SkillTreeType type, CancellationToken ct = default);
 }

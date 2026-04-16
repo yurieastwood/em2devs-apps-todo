@@ -102,7 +102,7 @@ public sealed class ProfileController : ControllerBase
                 t.Progress.Select(p => new TitleProgressResponse(p.Type, p.ProgressPercentage, p.RemainingDescription)).ToList())
             : new TitlesResponse([], null, []);
 
-        IReadOnlyList<SkillTreeResponse> skillTrees = (profile.SkillTrees ?? [])
+        IReadOnlyList<SkillTreeResponse>? skillTrees = profile.SkillTrees?
             .Select(s => new SkillTreeResponse(
                 s.Type,
                 s.Tier,
@@ -197,5 +197,5 @@ public sealed record ProfileResponse(
     XpBreakdownResponse? LastXpBreakdown,
     IReadOnlyList<XpHistoryEntryResponse> XpHistory,
     TitlesResponse Titles,
-    IReadOnlyList<SkillTreeResponse> SkillTrees,
+    IReadOnlyList<SkillTreeResponse>? SkillTrees,
     StreakFreezeResponse? StreakFreeze);

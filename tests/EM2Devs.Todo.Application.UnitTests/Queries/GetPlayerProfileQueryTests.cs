@@ -49,10 +49,10 @@ public sealed class GetPlayerProfileQueryTests
     [Fact]
     public async Task Should_SurfaceSkillTreeProgressAndPerks_When_TreeAdvancedToTierTwo()
     {
-        // Given
+        // Given — level up to 3 so skill trees are visible
         PlayerProfile profile = PlayerProfile.NewProfile(TestData.TestUserId);
+        profile.AwardXp(new ExperiencePoints(200));
         profile.DiscoverSkillTree(SkillTreeType.Scholar);
-        // Advance Scholar to tier 2 by completing the required 30 tasks.
         for (int i = 0; i < 30; i++)
         {
             profile.RecordSkillTreeProgress(SkillTreeType.Scholar);

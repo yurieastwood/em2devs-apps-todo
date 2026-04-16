@@ -49,7 +49,7 @@ public static class PlayerProfileProjection
             LastXpBreakdown: lastBreakdown,
             XpHistory: xpHistory,
             Titles: ProjectTitles(profile.TitleInventory),
-            SkillTrees: ProjectSkillTrees(profile.SkillTrees),
+            SkillTrees: profile.Level.Value >= 3 ? ProjectSkillTrees(profile.SkillTrees) : null,
             StreakFreeze: freeze);
     }
 

@@ -2010,7 +2010,6 @@ components:
         - longestStreak
         - xpHistory
         - titles
-        - skillTrees
       properties:
         totalXp:
           type: integer
@@ -2054,7 +2053,8 @@ components:
           $ref: "#/components/schemas/ProfileTitles"
         skillTrees:
           type: array
-          description: All seven skill trees; locked entries include an unlockHint, unlocked entries include tier progress and perks.
+          nullable: true
+          description: Skill trees catalog. Null when user is below level 3; otherwise all seven trees with locked/unlocked state.
           items:
             $ref: "#/components/schemas/SkillTreeDto"
         streakFreeze:

@@ -1656,6 +1656,20 @@ components:
             Normalised tags attached to the task. Currently in-memory per request only —
             tag persistence is planned for a future slice, so subsequent reads may return
             an empty array.
+        difficultySuggestion:
+          type: string
+          nullable: true
+          enum:
+            - Trivial
+            - Easy
+            - Normal
+            - Hard
+            - Epic
+          description: Suggested difficulty adjustment based on actual time vs estimate.
+        difficultySuggestionReason:
+          type: string
+          nullable: true
+          description: Explanation of why the difficulty adjustment is recommended.
     RecordActualTimeRequest:
       type: object
       additionalProperties: false

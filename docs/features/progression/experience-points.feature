@@ -105,7 +105,7 @@ Feature: Experience Points
       Then the XP awarded should be less than the first trivial task
       And the diminishing rate should be visible in the XP breakdown
 
-    @todo
+    @done
     Scenario: Difficulty rating auto-adjusts for repeated identical tasks
       Given I have a recurring task "Check email" rated as "Normal"
       And I have consistently completed it in under 2 minutes

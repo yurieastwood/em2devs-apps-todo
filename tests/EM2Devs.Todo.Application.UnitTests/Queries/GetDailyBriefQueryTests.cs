@@ -20,11 +20,14 @@ public sealed class GetDailyBriefQueryTests
     private readonly IPlayerProfileRepository _profileRepository = Substitute.For<IPlayerProfileRepository>();
     private readonly ICurrentUser _currentUser = new FakeCurrentUser(TestUserId);
     private readonly TimeProvider _timeProvider = new FixedTimeProvider(_fixedNow);
+    private readonly ICalendarService _calendarService = Substitute.For<ICalendarService>();
     private readonly GetDailyBriefQueryHandler _handler;
 
     public GetDailyBriefQueryTests()
     {
-        _handler = new GetDailyBriefQueryHandler(_taskRepository, _profileRepository, _currentUser, _timeProvider);
+        _calendarService.GetTodayBlocksAsync(Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<CalendarBlock>());
+        _handler = new GetDailyBriefQueryHandler(_taskRepository, _profileRepository, _currentUser, _timeProvider, _calendarService);
         _profileRepository.GetProfileAsync(Arg.Any<CancellationToken>())
             .Returns(new PlayerProfileReadModel(
                 TotalXp: 0, Level: 1, XpToNextLevel: 50, XpProgressPercent: 0, CurrentStreak: 4, LongestStreak: 10));
@@ -191,6 +194,36 @@ public sealed class GetDailyBriefQueryTests
         brief.CorePlanCount.ShouldBe(3);
         brief.IfTimeAllowsCount.ShouldBeGreaterThanOrEqualTo(7);
         brief.ExceedsCapacity.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_ReduceCapacity_When_CalendarBlocksPresent()
+    {
+        var tasks = new List<TodoTask>();
+        for (int i = 0; i < 8; i++)
+        {
+            tasks.Add(ScheduledOn($"Task {i + 1}", Today));
+        }
+
+        DateOnly twoWeeksAgo = Today.AddDays(-14);
+        DateOnly oneWeekAgo = Today.AddDays(-7);
+        for (int i = 0; i < 6; i++)
+        {
+            tasks.Add(CompletedOn($"Past A{i}", twoWeeksAgo));
+            tasks.Add(CompletedOn($"Past B{i}", oneWeekAgo));
+        }
+
+        _calendarService.GetTodayBlocksAsync(Today, Arg.Any<CancellationToken>())
+            .Returns(new[] { new CalendarBlock(new TimeOnly(10, 0), new TimeOnly(12, 0)) });
+
+        Seed(tasks.ToArray());
+
+        Result<DailyBriefReadModel> result = await _handler.Handle(new GetDailyBriefQuery(), default);
+
+        DailyBriefReadModel brief = result.Match(b => b, _ => throw new Xunit.Sdk.XunitException("expected success"));
+        brief.CalendarBlockMinutes.ShouldBe(120);
+        brief.DailyCapacity.ShouldNotBeNull();
+        brief.DailyCapacity!.Value.ShouldBeLessThan(6);
     }
 
     [Fact]

@@ -137,6 +137,9 @@ builder.Services.AddTransient<IRequestHandler<LoginCommand, Result<LoginResult>>
 builder.Services.AddTransient<IRequestHandler<GetPlayerProfileQuery, Result<PlayerProfileReadModel>>, GetPlayerProfileQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<FreezeStreakCommand, Result<PlayerProfileReadModel>>, FreezeStreakCommandHandler>();
 
+// Calendar service (null implementation — swap for real integration when available).
+builder.Services.AddSingleton<ICalendarService, EM2Devs.Todo.Infrastructure.Calendar.NullCalendarService>();
+
 // Daily brief query handler (stateless — recomputed on each call).
 builder.Services.AddTransient<IRequestHandler<GetDailyBriefQuery, Result<DailyBriefReadModel>>, GetDailyBriefQueryHandler>();
 

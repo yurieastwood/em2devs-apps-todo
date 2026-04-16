@@ -21,7 +21,7 @@ Feature: Smart Daily Brief
       And the sequence should account for my energy patterns
       And the sequence should account for task deadlines and priorities
 
-    @todo @premium
+    @done @premium
     Scenario: Daily brief factors in calendar blocks
       Given I have a premium subscription with calendar integration
       And I have a 2-hour meeting block from 10 AM to 12 PM

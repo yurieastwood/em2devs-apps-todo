@@ -18,7 +18,8 @@ public sealed record DailyBriefReadModel(
     IReadOnlyList<DailyBriefTaskReadModel> Overdue,
     string Status,
     int? DailyCapacity = null,
-    bool ExceedsCapacity = false);
+    bool ExceedsCapacity = false,
+    int CalendarBlockMinutes = 0);
 
 /// <summary>
 /// Projection of a single task inside a daily brief — the minimum shape needed

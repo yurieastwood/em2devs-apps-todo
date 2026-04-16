@@ -28,17 +28,20 @@ public sealed class GetDailyBriefQueryHandler
     private readonly IPlayerProfileRepository _profileRepository;
     private readonly ICurrentUser _currentUser;
     private readonly TimeProvider _timeProvider;
+    private readonly ICalendarService _calendarService;
 
     public GetDailyBriefQueryHandler(
         ITaskRepository taskRepository,
         IPlayerProfileRepository profileRepository,
         ICurrentUser currentUser,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        ICalendarService calendarService)
     {
         _taskRepository = taskRepository;
         _profileRepository = profileRepository;
         _currentUser = currentUser;
         _timeProvider = timeProvider;
+        _calendarService = calendarService;
     }
 
     public async Task<Result<DailyBriefReadModel>> Handle(GetDailyBriefQuery request, CancellationToken ct)
@@ -58,6 +61,17 @@ public sealed class GetDailyBriefQueryHandler
             .FirstOrDefault(g => g.Tasks.Count > 0)?.Tasks ?? [];
 
         int? dailyCapacity = ComputeCapacity(tasks, today);
+
+        IReadOnlyList<CalendarBlock> calendarBlocks = await _calendarService
+            .GetTodayBlocksAsync(today, ct).ConfigureAwait(false);
+        int calendarBlockMinutes = calendarBlocks.Sum(b => b.DurationMinutes);
+
+        if (calendarBlockMinutes > 0 && dailyCapacity.HasValue)
+        {
+            int minutesPerTask = 30;
+            int blockedSlots = calendarBlockMinutes / minutesPerTask;
+            dailyCapacity = Math.Max(1, dailyCapacity.Value - blockedSlots);
+        }
 
         List<TodoTask> corePlan;
         List<TodoTask> ifTimeAllows;
@@ -104,7 +118,8 @@ public sealed class GetDailyBriefQueryHandler
             overdue.Select(t => MapTask(t, calibration)).ToList(),
             status,
             dailyCapacity,
-            exceedsCapacity);
+            exceedsCapacity,
+            calendarBlockMinutes);
 
         return brief;
     }

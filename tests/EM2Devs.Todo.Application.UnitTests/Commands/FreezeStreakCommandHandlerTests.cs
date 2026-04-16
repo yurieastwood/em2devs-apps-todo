@@ -40,6 +40,7 @@ public sealed class FreezeStreakCommandHandlerTests
             TotalXp: 0,
             Level: 1,
             XpToNextLevel: 50,
+            XpProgressPercent: 0,
             CurrentStreak: 0,
             LongestStreak: 0,
             StreakFreeze: new StreakFreezeReadModel(

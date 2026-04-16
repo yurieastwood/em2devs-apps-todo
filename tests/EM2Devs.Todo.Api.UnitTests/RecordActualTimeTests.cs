@@ -111,4 +111,26 @@ public sealed class RecordActualTimeTests : IDisposable
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
+
+    [Fact]
+    public async Task Should_ReturnDifficultySuggestion_When_ActualTimeFarFromEstimate()
+    {
+        Guid id = await CreateDoneTaskWithEstimate(60);
+
+        HttpResponseMessage response = await _client.PatchAsJsonAsync(
+            $"/api/tasks/{id}/actual-time",
+            new { actualMinutes = 10 });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        string json = await response.Content.ReadAsStringAsync();
+        json.ShouldContain("difficultySuggestion");
+        json.ShouldContain("difficultySuggestionReason");
+
+        var task = await response.Content.ReadFromJsonAsync<TaskWithSuggestion>();
+        task!.DifficultySuggestion.ShouldNotBeNull();
+        task.DifficultySuggestionReason.ShouldNotBeNull();
+    }
+
+    private sealed record TaskWithSuggestion(
+        Guid Id, string? DifficultySuggestion, string? DifficultySuggestionReason);
 }

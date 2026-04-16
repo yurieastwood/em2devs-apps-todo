@@ -27,6 +27,8 @@ public sealed class PlayerProfile
     public int LongestStreak { get; private set; }
     public TitleInventory TitleInventory { get; private set; }
     public XpHistory XpHistory { get; private set; }
+    public string TimeZoneId { get; private set; } = "UTC";
+    public FocusMode? CurrentFocusMode { get; private set; }
 
     private readonly List<SkillTree> _skillTrees = [];
 
@@ -116,6 +118,28 @@ public sealed class PlayerProfile
     public void ProcessDayEnd(DateOnly evaluationDate)
     {
         Streak = Streak.ProcessDayEnd(evaluationDate);
+    }
+
+    public void StartFocusMode(TaskId taskId, DateTimeOffset startedAt)
+    {
+        ArgumentNullException.ThrowIfNull(taskId);
+        if (CurrentFocusMode is { IsActive: true })
+        {
+            throw new DomainException("Focus mode is already active.");
+        }
+
+        CurrentFocusMode = FocusMode.Start(taskId, startedAt);
+    }
+
+    public FocusMode EndFocusMode(DateTimeOffset endedAt)
+    {
+        if (CurrentFocusMode is not { IsActive: true })
+        {
+            throw new DomainException("No active focus mode to end.");
+        }
+
+        CurrentFocusMode = CurrentFocusMode.End(endedAt);
+        return CurrentFocusMode;
     }
 
     /// <summary>

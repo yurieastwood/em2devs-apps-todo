@@ -102,4 +102,25 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 
         return Task.CompletedTask;
     }
+
+    public Task StartFocusModeAsync(TaskId taskId, DateTimeOffset startedAt, CancellationToken ct = default)
+    {
+        lock (_lock)
+        {
+            PlayerProfile profile = GetOrCreate();
+            profile.StartFocusMode(taskId, startedAt);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public Task<FocusMode> EndFocusModeAsync(DateTimeOffset endedAt, CancellationToken ct = default)
+    {
+        lock (_lock)
+        {
+            PlayerProfile profile = GetOrCreate();
+            FocusMode ended = profile.EndFocusMode(endedAt);
+            return Task.FromResult(ended);
+        }
+    }
 }

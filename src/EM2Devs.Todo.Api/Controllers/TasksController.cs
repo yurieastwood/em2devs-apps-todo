@@ -7,6 +7,7 @@ using EM2Devs.Todo.Application.Mediator;
 using EM2Devs.Todo.Application.Queries;
 using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
+using EM2Devs.Todo.Domain.ValueObjects;
 
 namespace EM2Devs.Todo.Api.Controllers;
 
@@ -124,13 +125,38 @@ public sealed class TasksController : ControllerBase
         return result.ToHttpResult(task => Ok(MapToResponse(task)));
     }
 
-    private static TaskResponse MapToResponse(TodoTask task) =>
-        new(task.Id.Value, task.Title.Value, task.Description, task.Status.ToString(),
+    [HttpPost("{taskId:guid}/focus-mode/start")]
+    public async Task<IActionResult> StartFocusMode(Guid taskId, CancellationToken ct)
+    {
+        Result<bool> result = await _mediator
+            .Send(new StartFocusModeCommand(taskId), ct).ConfigureAwait(false);
+        return result.ToHttpResult(_ => Ok(new { started = true }));
+    }
+
+    [HttpPost("focus-mode/end")]
+    public async Task<IActionResult> EndFocusMode(CancellationToken ct)
+    {
+        Result<FocusModeResult> result = await _mediator
+            .Send(new EndFocusModeCommand(), ct).ConfigureAwait(false);
+        return result.ToHttpResult(r => Ok(new { taskId = r.TaskId, durationMinutes = r.DurationMinutes }));
+    }
+
+    private static TaskResponse MapToResponse(TodoTask task)
+    {
+        DifficultyAdjustSuggestion? suggestion = task.ActualTimeRecord is not null && task.EstimatedTime is not null
+            ? DifficultyAdjustSuggestion.Evaluate(task.Difficulty, task.EstimatedTime, task.ActualTimeRecord.Actual)
+            : null;
+
+        return new TaskResponse(
+            task.Id.Value, task.Title.Value, task.Description, task.Status.ToString(),
             task.Difficulty.ToString(), task.Priority.ToString(), task.EstimatedTime?.Minutes,
             task.DueDate, task.CompletedAt, task.ScheduledDate,
             task.ActualTimeRecord?.Actual.Minutes,
             task.ActualTimeRecord is null ? null : (int)Math.Round(task.ActualTimeRecord.VariancePercent),
-            task.Tags.Select(t => t.Value).ToArray());
+            task.Tags.Select(t => t.Value).ToArray(),
+            suggestion?.SuggestedDifficulty.ToString(),
+            suggestion?.Reason);
+    }
 }
 
 public sealed record CreateTaskRequest(
@@ -155,4 +181,6 @@ public sealed record TaskResponse(
     DateTimeOffset? DueDate, DateTimeOffset? CompletedAt,
     DateOnly? ScheduledDate,
     int? ActualMinutes, int? VariancePercent,
-    string[] Tags);
+    string[] Tags,
+    string? DifficultySuggestion = null,
+    string? DifficultySuggestionReason = null);

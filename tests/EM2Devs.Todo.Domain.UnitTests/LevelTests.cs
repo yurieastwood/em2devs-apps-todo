@@ -398,4 +398,28 @@ public sealed class LevelTests
         level.Value.ShouldBe(7);
         level.CurrentXp.Value.ShouldBe(0);
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnZeroPercent_When_NoXpEarned()
+    {
+        var level = Level.StartingLevel();
+        level.XpProgressPercent().ShouldBe(0);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnCorrectPercent_When_PartialXpEarned()
+    {
+        var level = new Level(1, new ExperiencePoints(25));
+        level.XpProgressPercent().ShouldBe(50);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Return100Percent_When_AtMaxLevel()
+    {
+        var level = new Level(Level.MaxLevel, new ExperiencePoints(999));
+        level.XpProgressPercent().ShouldBe(100);
+    }
 }

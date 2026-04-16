@@ -77,4 +77,21 @@ public sealed record XpHistory
 
         return new ExperiencePoints(total);
     }
+
+    public ExperiencePoints GetSeasonTotal(DateOnly today)
+    {
+        int quarterStart = ((today.Month - 1) / 3) * 3 + 1;
+        DateOnly seasonStart = new(today.Year, quarterStart, 1);
+        DateOnly seasonEnd = seasonStart.AddMonths(3);
+        int total = 0;
+        foreach (XpHistoryEntry entry in _entries)
+        {
+            if (entry.Date >= seasonStart && entry.Date < seasonEnd)
+            {
+                total += entry.XpEarned.Value;
+            }
+        }
+
+        return new ExperiencePoints(total);
+    }
 }

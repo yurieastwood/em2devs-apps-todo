@@ -20,14 +20,17 @@ public sealed class GetDailyBriefQueryTests
     private readonly IPlayerProfileRepository _profileRepository = Substitute.For<IPlayerProfileRepository>();
     private readonly ICurrentUser _currentUser = new FakeCurrentUser(TestUserId);
     private readonly TimeProvider _timeProvider = new FixedTimeProvider(_fixedNow);
+    private readonly ICalendarService _calendarService = Substitute.For<ICalendarService>();
     private readonly GetDailyBriefQueryHandler _handler;
 
     public GetDailyBriefQueryTests()
     {
-        _handler = new GetDailyBriefQueryHandler(_taskRepository, _profileRepository, _currentUser, _timeProvider);
+        _calendarService.GetTodayBlocksAsync(Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(Array.Empty<CalendarBlock>());
+        _handler = new GetDailyBriefQueryHandler(_taskRepository, _profileRepository, _currentUser, _timeProvider, _calendarService);
         _profileRepository.GetProfileAsync(Arg.Any<CancellationToken>())
             .Returns(new PlayerProfileReadModel(
-                TotalXp: 0, Level: 1, XpToNextLevel: 50, CurrentStreak: 4, LongestStreak: 10));
+                TotalXp: 0, Level: 1, XpToNextLevel: 50, XpProgressPercent: 0, CurrentStreak: 4, LongestStreak: 10));
     }
 
     private sealed class FixedTimeProvider(DateTimeOffset fixedNow) : TimeProvider
@@ -160,6 +163,90 @@ public sealed class GetDailyBriefQueryTests
     private static TodoTask WithEstimate(TodoTask task, int minutes)
     {
         task.UpdateEstimatedTime(TimeEstimate.FromMinutes(minutes));
+        return task;
+    }
+
+    [Fact]
+    public async Task Should_SplitCorePlanByCapacity_When_TasksExceedCapacity()
+    {
+        var tasks = new List<TodoTask>();
+        for (int i = 0; i < 10; i++)
+        {
+            tasks.Add(ScheduledOn($"Task {i + 1}", Today));
+        }
+
+        // Seed completed tasks on previous same-day-of-week dates to establish capacity of ~3 per day
+        DateOnly twoWeeksAgo = Today.AddDays(-14);
+        DateOnly oneWeekAgo = Today.AddDays(-7);
+        for (int i = 0; i < 3; i++)
+        {
+            tasks.Add(CompletedOn($"Past A{i}", twoWeeksAgo));
+            tasks.Add(CompletedOn($"Past B{i}", oneWeekAgo));
+        }
+
+        Seed(tasks.ToArray());
+
+        Result<DailyBriefReadModel> result = await _handler.Handle(new GetDailyBriefQuery(), default);
+
+        DailyBriefReadModel brief = result.Match(b => b, _ => throw new Xunit.Sdk.XunitException("expected success"));
+        brief.DailyCapacity.ShouldNotBeNull();
+        brief.DailyCapacity.ShouldBe(3);
+        brief.CorePlanCount.ShouldBe(3);
+        brief.IfTimeAllowsCount.ShouldBeGreaterThanOrEqualTo(7);
+        brief.ExceedsCapacity.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_ReduceCapacity_When_CalendarBlocksPresent()
+    {
+        var tasks = new List<TodoTask>();
+        for (int i = 0; i < 8; i++)
+        {
+            tasks.Add(ScheduledOn($"Task {i + 1}", Today));
+        }
+
+        DateOnly twoWeeksAgo = Today.AddDays(-14);
+        DateOnly oneWeekAgo = Today.AddDays(-7);
+        for (int i = 0; i < 6; i++)
+        {
+            tasks.Add(CompletedOn($"Past A{i}", twoWeeksAgo));
+            tasks.Add(CompletedOn($"Past B{i}", oneWeekAgo));
+        }
+
+        _calendarService.GetTodayBlocksAsync(Today, Arg.Any<CancellationToken>())
+            .Returns(new[] { new CalendarBlock(new TimeOnly(10, 0), new TimeOnly(12, 0)) });
+
+        Seed(tasks.ToArray());
+
+        Result<DailyBriefReadModel> result = await _handler.Handle(new GetDailyBriefQuery(), default);
+
+        DailyBriefReadModel brief = result.Match(b => b, _ => throw new Xunit.Sdk.XunitException("expected success"));
+        brief.CalendarBlockMinutes.ShouldBe(120);
+        brief.DailyCapacity.ShouldNotBeNull();
+        brief.DailyCapacity!.Value.ShouldBeLessThan(6);
+    }
+
+    [Fact]
+    public async Task Should_NotSplit_When_NoCapacityDataAvailable()
+    {
+        TodoTask today1 = ScheduledOn("Today A", Today);
+        TodoTask today2 = ScheduledOn("Today B", Today);
+        TodoTask today3 = ScheduledOn("Today C", Today);
+        Seed(today1, today2, today3);
+
+        Result<DailyBriefReadModel> result = await _handler.Handle(new GetDailyBriefQuery(), default);
+
+        DailyBriefReadModel brief = result.Match(b => b, _ => throw new Xunit.Sdk.XunitException("expected success"));
+        brief.DailyCapacity.ShouldBeNull();
+        brief.CorePlanCount.ShouldBe(3);
+        brief.ExceedsCapacity.ShouldBeFalse();
+    }
+
+    private static TodoTask CompletedOn(string title, DateOnly date)
+    {
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle(title), scheduledDate: date);
+        task.MoveToInProgress();
+        task.MarkAsDone();
         return task;
     }
 

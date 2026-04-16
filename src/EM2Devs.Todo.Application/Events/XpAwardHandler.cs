@@ -1,3 +1,4 @@
+using System.Globalization;
 using EM2Devs.Todo.Application.Mediator;
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.ReadModels;
@@ -33,10 +34,11 @@ public sealed class XpAwardHandler : INotificationHandler<TaskCompletedEvent>
         ArgumentNullException.ThrowIfNull(notification);
 
         DateTimeOffset completedAt = notification.CompletedAt ?? DateTimeOffset.UtcNow;
-        DateOnly completionDate = DateOnly.FromDateTime(completedAt.UtcDateTime);
 
-        // Record the streak completion FIRST, then re-read the profile so the
-        // multiplier sees the updated streak count.
+        PlayerProfileReadModel profileForTz = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);
+        TimeZoneInfo userTz = TimeZoneInfo.FindSystemTimeZoneById(profileForTz.TimeZoneId);
+        DateOnly completionDate = Streak.ToUserLocalDate(completedAt, userTz);
+
         await _profileRepository.RecordCompletionAsync(completionDate, ct).ConfigureAwait(false);
 
         PlayerProfileReadModel profile = await _profileRepository.GetProfileAsync(ct).ConfigureAwait(false);

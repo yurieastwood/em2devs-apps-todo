@@ -26,6 +26,17 @@ const string CorsPolicyName = "Frontend";
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AllowResponseHeaderCompression = true;
+    options.ConfigureEndpointDefaults(listen => listen.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2);
+    options.AddServerHeader = false;
+});
+builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+{
+    options.RequestHeaderEncodingSelector = _ => System.Text.Encoding.Latin1;
+});
+
 builder.AddServiceDefaults();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -133,15 +144,23 @@ builder.Services.AddTransient<IRequestHandler<ListRecurringTaskInstancesQuery, R
 builder.Services.AddTransient<IRequestHandler<RegisterUserCommand, Result<LoginResult>>, RegisterUserCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<LoginCommand, Result<LoginResult>>, LoginCommandHandler>();
 
+// Focus mode commands (Boss Task focus session).
+builder.Services.AddTransient<IRequestHandler<StartFocusModeCommand, Result<bool>>, StartFocusModeCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<EndFocusModeCommand, Result<FocusModeResult>>, EndFocusModeCommandHandler>();
+
 // Profile query handler (Phase 3 profile expansion).
 builder.Services.AddTransient<IRequestHandler<GetPlayerProfileQuery, Result<PlayerProfileReadModel>>, GetPlayerProfileQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<FreezeStreakCommand, Result<PlayerProfileReadModel>>, FreezeStreakCommandHandler>();
+
+// Calendar service (null implementation — swap for real integration when available).
+builder.Services.AddSingleton<ICalendarService, EM2Devs.Todo.Infrastructure.Calendar.NullCalendarService>();
 
 // Daily brief query handler (stateless — recomputed on each call).
 builder.Services.AddTransient<IRequestHandler<GetDailyBriefQuery, Result<DailyBriefReadModel>>, GetDailyBriefQueryHandler>();
 
 // Estimation calibration query handler (stateless — recomputed from task history).
 builder.Services.AddTransient<IRequestHandler<GetEstimationBiasQuery, Result<EstimationCalibrationReadModel>>, GetEstimationBiasQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<GetEstimationDashboardQuery, Result<EstimationDashboardReadModel>>, GetEstimationDashboardQueryHandler>();
 
 // Weekly review handlers.
 builder.Services.AddTransient<IRequestHandler<GetWeeklyReviewQuery, Result<WeeklyReviewReadModel>>, GetWeeklyReviewQueryHandler>();

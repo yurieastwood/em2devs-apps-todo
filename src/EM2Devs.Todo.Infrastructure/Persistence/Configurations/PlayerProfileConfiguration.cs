@@ -72,6 +72,14 @@ public sealed class PlayerProfileConfiguration : IEntityTypeConfiguration<Player
             streak.Ignore(s => s.IsFrozen);
         });
 
+        builder.Ignore(p => p.CurrentFocusMode);
+
+        builder.Property(p => p.TimeZoneId)
+            .HasColumnName("time_zone_id")
+            .HasMaxLength(50)
+            .HasDefaultValue("UTC")
+            .IsRequired();
+
         builder.Property(p => p.LongestStreak)
             .HasColumnName("longest_streak")
             .IsRequired();

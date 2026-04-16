@@ -33,6 +33,18 @@ public sealed class EstimationBiasEndpointTests : IDisposable
     }
 
     [Fact]
+    public async Task Should_ReturnDashboard_When_AuthenticatedUserRequestsAccuracy()
+    {
+        HttpResponseMessage response = await _authedClient.GetAsync("/api/profile/estimation-accuracy");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        string json = await response.Content.ReadAsStringAsync();
+        json.ShouldContain("\"perCategory\"");
+        json.ShouldContain("\"accuracyTrend\"");
+        json.ShouldContain("\"improvementMessage\"");
+    }
+
+    [Fact]
     public async Task Should_Return401_When_Unauthenticated()
     {
         HttpResponseMessage response = await _anonymousClient.GetAsync("/api/profile/estimation-bias");

@@ -38,7 +38,7 @@ public sealed class XpQuestAttributionHandlerTests
         quest.AddTask(task);
 
         _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
-            .Returns(new PlayerProfileReadModel(100, 2, 50, 3, 5));
+            .Returns(new PlayerProfileReadModel(100, 2, 50, 66, 3, 5));
 
         _questRepo.GetByTaskIdAsync(taskId, Arg.Any<CancellationToken>())
             .Returns(new List<Quest> { quest }.AsReadOnly());
@@ -64,7 +64,7 @@ public sealed class XpQuestAttributionHandlerTests
         TaskId taskId = new(Guid.NewGuid());
 
         _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
-            .Returns(new PlayerProfileReadModel(100, 2, 50, 3, 5));
+            .Returns(new PlayerProfileReadModel(100, 2, 50, 66, 3, 5));
 
         _questRepo.GetByTaskIdAsync(taskId, Arg.Any<CancellationToken>())
             .Returns(new List<Quest>().AsReadOnly());
@@ -94,7 +94,7 @@ public sealed class XpQuestAttributionHandlerTests
         quest2.AddTask(TodoTask.Create(TestUserId, new TaskTitle("Shared task"))); // Different instance but for testing
 
         _profileRepo.GetProfileAsync(Arg.Any<CancellationToken>())
-            .Returns(new PlayerProfileReadModel(100, 2, 50, 0, 0));
+            .Returns(new PlayerProfileReadModel(100, 2, 50, 66, 0, 0));
 
         _questRepo.GetByTaskIdAsync(taskId, Arg.Any<CancellationToken>())
             .Returns(new List<Quest> { quest1, quest2 }.AsReadOnly());

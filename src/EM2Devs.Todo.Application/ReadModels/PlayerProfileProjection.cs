@@ -15,9 +15,17 @@ public static class PlayerProfileProjection
 
     public static PlayerProfileReadModel Project(
         PlayerProfile profile,
-        XpBreakdownReadModel? lastBreakdown)
+        XpBreakdownReadModel? lastBreakdown,
+        DateOnly? today = null)
     {
         ArgumentNullException.ThrowIfNull(profile);
+
+        DateOnly effectiveToday = today ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        int daysSinceMonday = ((int)effectiveToday.DayOfWeek + 6) % 7;
+        DateOnly weekStart = effectiveToday.AddDays(-daysSinceMonday);
+
+        int xpThisWeek = profile.XpHistory.GetWeeklyTotal(weekStart).Value;
+        int xpThisSeason = profile.XpHistory.GetSeasonTotal(effectiveToday).Value;
 
         IReadOnlyList<XpHistoryEntryReadModel> xpHistory = ProjectXpHistory(profile.XpHistory);
 
@@ -32,8 +40,12 @@ public static class PlayerProfileProjection
             TotalXp: profile.Level.CurrentXp.Value,
             Level: profile.Level.Value,
             XpToNextLevel: profile.Level.XpToNextLevel(),
+            XpProgressPercent: profile.Level.XpProgressPercent(),
             CurrentStreak: profile.Streak.CurrentDays,
             LongestStreak: profile.LongestStreak,
+            XpThisWeek: xpThisWeek,
+            XpThisSeason: xpThisSeason,
+            TimeZoneId: profile.TimeZoneId,
             LastXpBreakdown: lastBreakdown,
             XpHistory: xpHistory,
             Titles: ProjectTitles(profile.TitleInventory),

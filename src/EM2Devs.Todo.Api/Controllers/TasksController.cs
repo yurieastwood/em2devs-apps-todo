@@ -125,6 +125,22 @@ public sealed class TasksController : ControllerBase
         return result.ToHttpResult(task => Ok(MapToResponse(task)));
     }
 
+    [HttpPost("{taskId:guid}/focus-mode/start")]
+    public async Task<IActionResult> StartFocusMode(Guid taskId, CancellationToken ct)
+    {
+        Result<bool> result = await _mediator
+            .Send(new StartFocusModeCommand(taskId), ct).ConfigureAwait(false);
+        return result.ToHttpResult(_ => Ok(new { started = true }));
+    }
+
+    [HttpPost("focus-mode/end")]
+    public async Task<IActionResult> EndFocusMode(CancellationToken ct)
+    {
+        Result<FocusModeResult> result = await _mediator
+            .Send(new EndFocusModeCommand(), ct).ConfigureAwait(false);
+        return result.ToHttpResult(r => Ok(new { taskId = r.TaskId, durationMinutes = r.DurationMinutes }));
+    }
+
     private static TaskResponse MapToResponse(TodoTask task)
     {
         DifficultyAdjustSuggestion? suggestion = task.ActualTimeRecord is not null && task.EstimatedTime is not null

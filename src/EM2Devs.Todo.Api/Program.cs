@@ -133,6 +133,10 @@ builder.Services.AddTransient<IRequestHandler<ListRecurringTaskInstancesQuery, R
 builder.Services.AddTransient<IRequestHandler<RegisterUserCommand, Result<LoginResult>>, RegisterUserCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<LoginCommand, Result<LoginResult>>, LoginCommandHandler>();
 
+// Focus mode commands (Boss Task focus session).
+builder.Services.AddTransient<IRequestHandler<StartFocusModeCommand, Result<bool>>, StartFocusModeCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<EndFocusModeCommand, Result<FocusModeResult>>, EndFocusModeCommandHandler>();
+
 // Profile query handler (Phase 3 profile expansion).
 builder.Services.AddTransient<IRequestHandler<GetPlayerProfileQuery, Result<PlayerProfileReadModel>>, GetPlayerProfileQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<FreezeStreakCommand, Result<PlayerProfileReadModel>>, FreezeStreakCommandHandler>();

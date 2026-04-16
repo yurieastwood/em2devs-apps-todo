@@ -435,6 +435,64 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetails"
+  /api/tasks/{taskId}/focus-mode/start:
+    post:
+      operationId: startFocusMode
+      summary: Start focus mode for a Boss Task
+      description: Begins a focus mode session for the specified Boss Task.
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "200":
+          description: Focus mode started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  started:
+                    type: boolean
+        "400":
+          description: Task is not a Boss Task
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+        "404":
+          description: Task not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+  /api/tasks/focus-mode/end:
+    post:
+      operationId: endFocusMode
+      summary: End the current focus mode session
+      description: Ends the active focus mode session and returns duration.
+      responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "200":
+          description: Focus mode ended
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  taskId:
+                    type: string
+                    format: uuid
+                  durationMinutes:
+                    type: integer
+                    minimum: 0
+        "400":
+          description: No active focus mode
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
   /api/tasks/{taskId}/reopen:
     patch:
       operationId: reopenTask

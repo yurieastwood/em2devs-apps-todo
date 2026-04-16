@@ -72,6 +72,21 @@ public sealed class PostgresPlayerProfileRepository : IPlayerProfileRepository
         await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 
+    public async Task StartFocusModeAsync(TaskId taskId, DateTimeOffset startedAt, CancellationToken ct = default)
+    {
+        PlayerProfile profile = await GetOrCreateForCurrentUserAsync(ct).ConfigureAwait(false);
+        profile.StartFocusMode(taskId, startedAt);
+        await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
+
+    public async Task<FocusMode> EndFocusModeAsync(DateTimeOffset endedAt, CancellationToken ct = default)
+    {
+        PlayerProfile profile = await GetOrCreateForCurrentUserAsync(ct).ConfigureAwait(false);
+        FocusMode ended = profile.EndFocusMode(endedAt);
+        await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
+        return ended;
+    }
+
     private async Task<PlayerProfile> GetOrCreateForCurrentUserAsync(CancellationToken ct)
     {
         Guid userId = _currentUser.UserId;

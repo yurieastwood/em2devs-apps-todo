@@ -619,4 +619,45 @@ public sealed class BossTaskCompletionTests
         task.Status.ShouldBe(TaskStatus.Deleted);
         task.CompletedAt.ShouldBeNull();
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_StartFocusMode_When_TaskIsBoss()
+    {
+        PlayerProfile profile = PlayerProfile.NewProfile(Guid.NewGuid());
+        TaskId taskId = TaskId.New();
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+
+        profile.StartFocusMode(taskId, now);
+
+        profile.CurrentFocusMode.ShouldNotBeNull();
+        profile.CurrentFocusMode.IsActive.ShouldBeTrue();
+        profile.CurrentFocusMode.TaskId.ShouldBe(taskId);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_EndFocusModeAndReturnDuration_When_Active()
+    {
+        PlayerProfile profile = PlayerProfile.NewProfile(Guid.NewGuid());
+        TaskId taskId = TaskId.New();
+        DateTimeOffset start = new(2026, 4, 16, 10, 0, 0, TimeSpan.Zero);
+
+        profile.StartFocusMode(taskId, start);
+        FocusMode ended = profile.EndFocusMode(start.AddMinutes(45));
+
+        ended.IsActive.ShouldBeFalse();
+        ended.Duration.TotalMinutes.ShouldBe(45);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_FocusModeAlreadyActive()
+    {
+        PlayerProfile profile = PlayerProfile.NewProfile(Guid.NewGuid());
+        profile.StartFocusMode(TaskId.New(), DateTimeOffset.UtcNow);
+
+        Should.Throw<DomainException>(() =>
+            profile.StartFocusMode(TaskId.New(), DateTimeOffset.UtcNow));
+    }
 }

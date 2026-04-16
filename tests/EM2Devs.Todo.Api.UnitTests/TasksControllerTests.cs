@@ -360,6 +360,18 @@ public sealed class TasksControllerTests : IDisposable
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
+    [Fact]
+    public async Task Should_RejectFocusMode_When_TaskIsNotBossTask()
+    {
+        var createResponse = await _client.PostAsJsonAsync("/api/tasks", new { title = "Not a boss task" });
+        var created = await createResponse.Content.ReadFromJsonAsync<TaskResponseDto>();
+
+        HttpResponseMessage response = await _client.PostAsync(
+            $"/api/tasks/{created!.Id}/focus-mode/start", null);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
     private sealed record TaskDetailDto(Guid Id, string Title, string Status, string Difficulty, string Priority, int? EstimatedMinutes);
 }
 

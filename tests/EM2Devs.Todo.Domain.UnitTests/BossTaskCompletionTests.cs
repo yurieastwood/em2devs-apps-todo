@@ -657,7 +657,17 @@ public sealed class BossTaskCompletionTests
         PlayerProfile profile = PlayerProfile.NewProfile(Guid.NewGuid());
         profile.StartFocusMode(TaskId.New(), DateTimeOffset.UtcNow);
 
-        Should.Throw<DomainException>(() =>
+        DomainException ex = Should.Throw<DomainException>(() =>
             profile.StartFocusMode(TaskId.New(), DateTimeOffset.UtcNow));
+        ex.Message.ShouldContain("already active");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNullException_When_TaskIdIsNull()
+    {
+        PlayerProfile profile = PlayerProfile.NewProfile(Guid.NewGuid());
+        Should.Throw<ArgumentNullException>(() =>
+            profile.StartFocusMode(null!, DateTimeOffset.UtcNow));
     }
 }

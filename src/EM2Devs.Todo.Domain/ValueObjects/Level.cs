@@ -125,7 +125,7 @@ public sealed record Level
         }
 
         int totalForLevel = XpForNextLevel(Value);
-        return totalForLevel == 0 ? 0 : (int)(CurrentXp.Value * 100.0 / totalForLevel);
+        return (int)(CurrentXp.Value * 100.0 / totalForLevel);
     }
 
     /// <summary>

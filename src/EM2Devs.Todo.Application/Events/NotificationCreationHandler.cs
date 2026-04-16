@@ -2,6 +2,7 @@ using EM2Devs.Todo.Application.Mediator;
 using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
+using EM2Devs.Todo.Domain.ValueObjects;
 
 namespace EM2Devs.Todo.Application.Events;
 
@@ -33,11 +34,27 @@ public sealed class NotificationCreationHandler :
         _publisher = publisher;
     }
 
-    public Task Handle(LevelUpEvent notification, CancellationToken ct)
+    public async Task Handle(LevelUpEvent notification, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(notification);
         string message = $"Level up! You reached level {notification.NewLevel}.";
-        return CreateAsync(message, ct);
+        await CreateAsync(message, ct).ConfigureAwait(false);
+
+        IReadOnlyList<UnlockableFeature> newFeatures =
+            FeatureUnlockRegistry.GetNewlyUnlockedFeatures(notification.NewLevel);
+        if (newFeatures.Count > 0)
+        {
+            string featureNames = string.Join(", ", newFeatures.Select(f => f.ToString()));
+            await CreateAsync($"New features unlocked: {featureNames}!", ct).ConfigureAwait(false);
+        }
+
+        LevelMilestone? milestone = LevelMilestone.ForLevel(notification.NewLevel);
+        if (milestone is not null)
+        {
+            await CreateAsync(
+                $"Level milestone reached: {milestone.Label}! You hit level {milestone.Level}.",
+                ct).ConfigureAwait(false);
+        }
     }
 
     public Task Handle(StreakMilestoneReachedEvent notification, CancellationToken ct)

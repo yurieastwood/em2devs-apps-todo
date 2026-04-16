@@ -163,6 +163,60 @@ public sealed class GetDailyBriefQueryTests
         return task;
     }
 
+    [Fact]
+    public async Task Should_SplitCorePlanByCapacity_When_TasksExceedCapacity()
+    {
+        var tasks = new List<TodoTask>();
+        for (int i = 0; i < 10; i++)
+        {
+            tasks.Add(ScheduledOn($"Task {i + 1}", Today));
+        }
+
+        // Seed completed tasks on previous same-day-of-week dates to establish capacity of ~3 per day
+        DateOnly twoWeeksAgo = Today.AddDays(-14);
+        DateOnly oneWeekAgo = Today.AddDays(-7);
+        for (int i = 0; i < 3; i++)
+        {
+            tasks.Add(CompletedOn($"Past A{i}", twoWeeksAgo));
+            tasks.Add(CompletedOn($"Past B{i}", oneWeekAgo));
+        }
+
+        Seed(tasks.ToArray());
+
+        Result<DailyBriefReadModel> result = await _handler.Handle(new GetDailyBriefQuery(), default);
+
+        DailyBriefReadModel brief = result.Match(b => b, _ => throw new Xunit.Sdk.XunitException("expected success"));
+        brief.DailyCapacity.ShouldNotBeNull();
+        brief.DailyCapacity.ShouldBe(3);
+        brief.CorePlanCount.ShouldBe(3);
+        brief.IfTimeAllowsCount.ShouldBeGreaterThanOrEqualTo(7);
+        brief.ExceedsCapacity.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Should_NotSplit_When_NoCapacityDataAvailable()
+    {
+        TodoTask today1 = ScheduledOn("Today A", Today);
+        TodoTask today2 = ScheduledOn("Today B", Today);
+        TodoTask today3 = ScheduledOn("Today C", Today);
+        Seed(today1, today2, today3);
+
+        Result<DailyBriefReadModel> result = await _handler.Handle(new GetDailyBriefQuery(), default);
+
+        DailyBriefReadModel brief = result.Match(b => b, _ => throw new Xunit.Sdk.XunitException("expected success"));
+        brief.DailyCapacity.ShouldBeNull();
+        brief.CorePlanCount.ShouldBe(3);
+        brief.ExceedsCapacity.ShouldBeFalse();
+    }
+
+    private static TodoTask CompletedOn(string title, DateOnly date)
+    {
+        TodoTask task = TodoTask.Create(TestUserId, new TaskTitle(title), scheduledDate: date);
+        task.MoveToInProgress();
+        task.MarkAsDone();
+        return task;
+    }
+
     private static TodoTask CompletedWithActual(int estimated, int actual)
     {
         TodoTask task = TodoTask.Create(TestUserId, new TaskTitle("history"));

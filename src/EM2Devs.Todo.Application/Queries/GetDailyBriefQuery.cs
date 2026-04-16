@@ -50,12 +50,29 @@ public sealed class GetDailyBriefQueryHandler
         IReadOnlyList<TodoTask> tasks = await _taskRepository.GetAllAsync(ct).ConfigureAwait(false);
 
         // "core plan" = today + overdue (ForToday). "overdue" is highlighted separately.
-        IReadOnlyList<TodoTask> corePlan = TaskViewFilter.ForToday(tasks, today);
-        List<TodoTask> overdue = corePlan.Where(t => t.ScheduledDate!.Value < today).ToList();
+        IReadOnlyList<TodoTask> allTodayTasks = TaskViewFilter.ForToday(tasks, today);
+        List<TodoTask> overdue = allTodayTasks.Where(t => t.ScheduledDate!.Value < today).ToList();
 
         // "if time allows" = first upcoming day that actually has tasks.
-        IReadOnlyList<TodoTask> ifTimeAllows = TaskViewFilter.ForUpcoming(tasks, today)
+        IReadOnlyList<TodoTask> upcomingTasks = TaskViewFilter.ForUpcoming(tasks, today)
             .FirstOrDefault(g => g.Tasks.Count > 0)?.Tasks ?? [];
+
+        int? dailyCapacity = ComputeCapacity(tasks, today);
+
+        List<TodoTask> corePlan;
+        List<TodoTask> ifTimeAllows;
+
+        if (dailyCapacity.HasValue && allTodayTasks.Count > dailyCapacity.Value)
+        {
+            var sorted = allTodayTasks.OrderByDescending(t => t.Priority).ToList();
+            corePlan = sorted.Take(dailyCapacity.Value).ToList();
+            ifTimeAllows = sorted.Skip(dailyCapacity.Value).Concat(upcomingTasks).ToList();
+        }
+        else
+        {
+            corePlan = allTodayTasks.ToList();
+            ifTimeAllows = upcomingTasks.ToList();
+        }
 
         // Compute per-user estimation calibration from historical (estimated, actual) pairs.
         // NotEnoughData yields a neutral 1.0 factor and null CalibratedMinutes (UI falls back
@@ -73,6 +90,8 @@ public sealed class GetDailyBriefQueryHandler
             ? StatusInsufficientTasks
             : StatusAvailable;
 
+        bool exceedsCapacity = dailyCapacity.HasValue && allTodayTasks.Count > dailyCapacity.Value;
+
         DailyBriefReadModel brief = new(
             today,
             greeting,
@@ -83,7 +102,9 @@ public sealed class GetDailyBriefQueryHandler
             corePlan.Select(t => MapTask(t, calibration)).ToList(),
             ifTimeAllows.Select(t => MapTask(t, calibration)).ToList(),
             overdue.Select(t => MapTask(t, calibration)).ToList(),
-            status);
+            status,
+            dailyCapacity,
+            exceedsCapacity);
 
         return brief;
     }
@@ -101,6 +122,23 @@ public sealed class GetDailyBriefQueryHandler
             estimated,
             calibrated,
             task.ScheduledDate);
+    }
+
+    private static int? ComputeCapacity(IReadOnlyList<TodoTask> tasks, DateOnly today)
+    {
+        var completedByDay = tasks
+            .Where(t => t.CompletedAt.HasValue && t.ScheduledDate.HasValue && t.ScheduledDate.Value < today)
+            .GroupBy(t => t.ScheduledDate!.Value)
+            .Where(g => g.Key.DayOfWeek == today.DayOfWeek)
+            .Select(g => g.Count())
+            .ToList();
+
+        if (completedByDay.Count < 2)
+        {
+            return null;
+        }
+
+        return (int)Math.Round(completedByDay.Average());
     }
 
     private static string GreetingFor(DateTimeOffset now)

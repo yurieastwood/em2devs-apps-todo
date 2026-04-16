@@ -47,7 +47,7 @@ Feature: Smart Daily Brief
       Then overdue tasks should appear at the top of the brief with a clear indicator
       And the brief should suggest addressing at least 1 overdue task first
 
-    @todo
+    @done
     Scenario: Daily brief respects capacity model
       Given my capacity model indicates I typically complete 6 tasks on this day of the week
       And I have 10 tasks due today

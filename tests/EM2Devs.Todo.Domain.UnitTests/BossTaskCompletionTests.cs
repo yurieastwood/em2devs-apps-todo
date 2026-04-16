@@ -670,4 +670,15 @@ public sealed class BossTaskCompletionTests
         Should.Throw<ArgumentNullException>(() =>
             profile.StartFocusMode(null!, DateTimeOffset.UtcNow));
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_EndingWithNoActiveSession()
+    {
+        PlayerProfile profile = PlayerProfile.NewProfile(Guid.NewGuid());
+
+        DomainException ex = Should.Throw<DomainException>(() =>
+            profile.EndFocusMode(DateTimeOffset.UtcNow));
+        ex.Message.ShouldContain("No active focus mode");
+    }
 }

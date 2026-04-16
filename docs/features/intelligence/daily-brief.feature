@@ -21,7 +21,7 @@ Feature: Smart Daily Brief
       And the sequence should account for my energy patterns
       And the sequence should account for task deadlines and priorities
 
-    @done @premium
+    @todo @premium
     Scenario: Daily brief factors in calendar blocks
       Given I have a premium subscription with calendar integration
       And I have a 2-hour meeting block from 10 AM to 12 PM
@@ -47,7 +47,7 @@ Feature: Smart Daily Brief
       Then overdue tasks should appear at the top of the brief with a clear indicator
       And the brief should suggest addressing at least 1 overdue task first
 
-    @done
+    @todo
     Scenario: Daily brief respects capacity model
       Given my capacity model indicates I typically complete 6 tasks on this day of the week
       And I have 10 tasks due today

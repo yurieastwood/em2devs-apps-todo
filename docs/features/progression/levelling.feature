@@ -9,14 +9,14 @@ Feature: Levelling System
 
   Rule: Levels require logarithmically scaling XP to prevent inflation
 
-    @done
+    @todo
     Scenario: New user starts at level 1
       Given I have just created my account
       Then my level should be 1
       And my XP should be 0
       And the XP required for level 2 should be displayed
 
-    @done
+    @todo
     Scenario: Level up when XP threshold is reached
       Given I am level 3 with 280 XP
       And the XP threshold for level 4 is 300
@@ -26,7 +26,7 @@ Feature: Levelling System
       And a level-up event should appear on my journey timeline
       And the excess 5 XP should carry over toward level 5
 
-    @done
+    @todo
     Scenario: XP requirements scale logarithmically
       Then the XP thresholds for levels should follow a logarithmic curve:
         | Level | Cumulative XP Required |
@@ -38,7 +38,7 @@ Feature: Levelling System
       And level 5 should be reachable by completing 10 Normal tasks per day for 5 days
       And level 50 should require at least 30 days of sustained high-difficulty completions
 
-    @done
+    @todo
     Scenario: Level up unlocks new features progressively
       Given I am level 2
       When I reach level 3
@@ -46,7 +46,7 @@ Feature: Levelling System
       And I should receive a tutorial prompt for the new feature
       And the feature should be accessible from that point forward
 
-    @done
+    @todo
     Scenario Outline: Progressive feature unlocks by level
       When I reach level <level>
       Then I should unlock "<feature>"
@@ -63,7 +63,7 @@ Feature: Levelling System
 
   Rule: Level information is visible and motivating
 
-    @done
+    @todo
     Scenario: View level progress on dashboard
       Given I am level 7 with 850 XP
       And the threshold for level 8 is 1,000 XP
@@ -72,14 +72,14 @@ Feature: Levelling System
       And I should see a progress bar showing 85% toward level 8
       And I should see "150 XP to next level"
 
-    @done
+    @todo
     Scenario: Level badge displayed on profile
       Given I am level 12
       When another user views my profile
       Then they should see my level badge showing "Level 12"
       And the badge style should reflect my level tier
 
-    @done
+    @todo
     Scenario: Level milestones are celebrated
       Given I am about to reach level 10
       When I earn enough XP to reach level 10
@@ -89,7 +89,7 @@ Feature: Levelling System
 
   Rule: There is a maximum level that gracefully handles continued progression
 
-    @done
+    @todo
     Scenario: User reaches maximum level
       Given I am at the maximum level
       When I earn additional XP
@@ -98,7 +98,7 @@ Feature: Levelling System
       And I should see a "Max Level" badge on my profile
       And I should still earn seasonal XP and rewards
 
-    @done
+    @todo
     Scenario: Existing users retain levels when XP thresholds are rebalanced
       Given I am level 15 with 3,500 XP
       And the XP thresholds have been rebalanced

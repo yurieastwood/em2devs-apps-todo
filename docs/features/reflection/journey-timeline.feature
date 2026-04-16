@@ -9,7 +9,7 @@ Feature: Journey Timeline
 
   Rule: Significant events are automatically added to the timeline
 
-    @done
+    @todo
     Scenario Outline: Event types appear on the timeline
       Given I have triggered a "<event_type>" event
       Then a "<event_type>" entry should appear on my journey timeline
@@ -32,7 +32,7 @@ Feature: Journey Timeline
         | Challenge won                 |
         | Weekly review streak milestone|
 
-    @done
+    @todo
     Scenario: Timeline displays events chronologically
       Given I have 20 events on my journey timeline
       When I view the timeline
@@ -40,14 +40,14 @@ Feature: Journey Timeline
       And each event should show its date and type
       And I should be able to scroll through my full history
 
-    @done
+    @todo
     Scenario: Timeline groups events by month
       Given I have events spanning 6 months
       When I view the timeline
       Then events should be grouped by month
       And each month should show a summary count of events
 
-    @done
+    @todo
     Scenario: Timeline displays year headers when events span multiple years
       Given I have events spanning from November 2025 to March 2026
       When I view the timeline
@@ -57,20 +57,20 @@ Feature: Journey Timeline
 
   Rule: Users can browse, filter, and annotate their timeline
 
-    @done
+    @todo
     Scenario: Filter timeline by event type
       Given I have a mix of level-up, quest, and title events
       When I filter the timeline by "Quest completed"
       Then I should only see quest completion events
 
-    @done
+    @todo
     Scenario: Add a personal note to a timeline event
       Given I have a "Quest completed" event for "Prepare conference talk"
       When I add a note "First ever conference talk - terrifying but worth it!"
       Then the note should be saved with the timeline event
       And the note should be visible when I view the event
 
-    @done
+    @todo
     Scenario: Personal notes persist when filtering by event type
       Given I have a "Quest completed" event with the note "My best quest yet!"
       And I have a "Level up" event with no note
@@ -78,7 +78,7 @@ Feature: Journey Timeline
       Then I should see the "Quest completed" event
       And the note "My best quest yet!" should be visible on the event
 
-    @done
+    @todo
     Scenario: View timeline event details
       Given I have a "Level up" event for reaching level 10
       When I tap on the event
@@ -88,14 +88,14 @@ Feature: Journey Timeline
 
   Rule: The timeline reinforces the user's sense of accumulated progress
 
-    @done
+    @todo
     Scenario: New user has an empty timeline with encouragement
       Given I am a new user with no timeline events
       When I view the timeline
       Then I should see an encouraging message about building my journey
       And I should see what kinds of events will appear
 
-    @done
+    @todo
     Scenario: Long-term user scrolling back through months of progress
       Given I have been using Waypoint for 8 months
       And I have 50+ timeline events
@@ -103,7 +103,7 @@ Feature: Journey Timeline
       Then I should be able to see the full arc of my productivity journey
       And visual density should increase as I became more active
 
-    @done
+    @todo
     Scenario: Timeline loads incrementally for users with many events
       Given I have more than 100 events on my journey timeline
       When I view the timeline
@@ -111,7 +111,7 @@ Feature: Journey Timeline
       And as I scroll down, the next batch of events should load incrementally
       And a loading indicator should appear while fetching more events
 
-    @done
+    @todo
     Scenario: Timeline events display in the user's local timezone
       Given I am in the "America/New_York" timezone
       And I have a "Level up" event that occurred at "2026-01-15T03:00:00Z"

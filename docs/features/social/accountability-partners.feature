@@ -10,34 +10,34 @@ Feature: Accountability Partners
 
   Rule: Users can pair with one accountability partner at a time
 
-    @done
+    @todo
     Scenario: Send an accountability partner request
       When I send an accountability partner request to user "Jordan"
       Then "Jordan" should receive a partner request notification
       And the request should be in a "Pending" state
 
-    @done
+    @todo
     Scenario: Accept a partner request
       Given I have a pending partner request from "Casey"
       When I accept the request
       Then "Casey" and I should be linked as accountability partners
       And we should both see each other's daily summary
 
-    @done
+    @todo
     Scenario: Decline a partner request
       Given I have a pending partner request from "Casey"
       When I decline the request
       Then the request should be removed
       And "Casey" should be notified that the request was declined
 
-    @done
+    @todo
     Scenario: Only one active partner at a time
       Given I already have an accountability partner "Jordan"
       When I attempt to send a partner request to "Alex"
       Then I should see a message that I already have an active partner
       And I should be offered the option to end my current partnership first
 
-    @done
+    @todo
     Scenario: End an accountability partnership
       Given I have an accountability partner "Jordan"
       When I choose to end the partnership
@@ -47,7 +47,7 @@ Feature: Accountability Partners
 
   Rule: Partners see daily summaries, not task-level detail
 
-    @done
+    @todo
     Scenario: View partner's daily summary
       Given I have an accountability partner "Jordan"
       When I view my partner's daily summary
@@ -56,7 +56,7 @@ Feature: Accountability Partners
       And I should see Jordan's active quest count
       And I should not see individual task titles or descriptions
 
-    @done
+    @todo
     Scenario: Partner sees my summary
       Given I have an accountability partner "Jordan"
       And I have completed 5 tasks today and my streak is at 12 days
@@ -64,21 +64,21 @@ Feature: Accountability Partners
       Then they should see "5 tasks completed today"
       And they should see "12-day streak"
 
-    @done
+    @todo
     Scenario: Send a check-in message to partner
       Given I have an accountability partner "Jordan"
       When I send a check-in message "Great streak, keep it going!"
       Then "Jordan" should receive the message in their partner view
       And the message should appear in our shared message history
 
-    @done
+    @todo
     Scenario: Partner check-in messages are limited scope
       Given I have an accountability partner "Jordan"
       When I view the messaging interface
       Then I should only be able to send encouragement messages up to 280 characters
       And the messaging should not function as a full chat system
 
-    @done
+    @todo
     Scenario: Partner account is deactivated
       Given I have an accountability partner "Jordan"
       When "Jordan" deactivates their account
@@ -86,14 +86,14 @@ Feature: Accountability Partners
       And I should be notified that my partner is no longer available
       And I should be able to send a new partner request to someone else
 
-    @done
+    @todo
     Scenario: Re-pair with a former partner
       Given I previously had a partnership with "Jordan" that was ended
       When I send a new accountability partner request to "Jordan"
       Then the request should be sent successfully
       And our previous shared history should remain separate from the new partnership
 
-    @done
+    @todo
     Scenario: Existing partnership persists regardless of level changes
       Given I have an accountability partner "Jordan"
       And I was level 7 when the partnership was formed

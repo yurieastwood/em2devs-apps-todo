@@ -10,7 +10,7 @@ Feature: Skill Trees
 
   Rule: Skill trees are discovered and unlocked through natural behaviour patterns
 
-    @done
+    @todo
     Scenario Outline: Skill tree unlocked by behaviour pattern
       Given I have consistently completed tasks tagged or categorised as "<category>"
       And I have completed at least <threshold> such tasks
@@ -34,7 +34,7 @@ Feature: Skill Trees
         | organising       | 15        | Steward         |
         | side-project     | 10        | Builder         |
 
-    @done
+    @todo
     Scenario: View available and locked skill trees
       When I navigate to the skill tree view
       Then I should see my unlocked skill trees with progress
@@ -43,7 +43,7 @@ Feature: Skill Trees
 
   Rule: Skill trees are hidden until the user reaches the required level
 
-    @done
+    @todo
     Scenario: User does not see skill trees before level 3
       Given I am an authenticated user
       And I am at level 2
@@ -53,7 +53,7 @@ Feature: Skill Trees
 
   Rule: Each skill tree has multiple tiers that unlock through sustained behaviour
 
-    @done
+    @todo
     Scenario: Progress within a skill tree
       Given I have unlocked the "Builder" skill tree at tier 1
       And the "Builder" tree requires 30 side-project tasks for tier 2
@@ -63,7 +63,7 @@ Feature: Skill Trees
       And I should receive a tier-up bonus XP award
       And I should unlock the tier 2 perks
 
-    @done
+    @todo
     Scenario: View skill tree details
       Given I have the "Scholar" skill tree at tier 2
       When I view the "Scholar" skill tree details
@@ -72,7 +72,7 @@ Feature: Skill Trees
       And I should see personalised study tips based on my patterns
       And I should see a history of qualifying task completions
 
-    @done
+    @todo
     Scenario: Multiple skill trees can be active simultaneously
       Given I have unlocked the "Creator" and "Builder" skill trees
       When I complete a task tagged "creative" and "side-project"
@@ -81,19 +81,19 @@ Feature: Skill Trees
 
   Rule: Skill tree tiers unlock personalised tips, workflows, and cosmetics
 
-    @done
+    @todo
     Scenario: Tier 1 perk unlocks personalised tips
       Given I have just unlocked the "Guardian" skill tree at tier 1
       Then I should receive a set of health and fitness productivity tips
       And the tips should be accessible from my skill tree view
 
-    @done
+    @todo
     Scenario: Tier 2 perk unlocks suggested workflows
       Given I have reached tier 2 of the "Architect" skill tree
       Then I should receive suggested quest templates for work projects
       And the templates should be usable when creating new quests
 
-    @done
+    @todo
     Scenario: Tier 3 perk unlocks cosmetic rewards
       Given I have reached tier 3 of the "Creator" skill tree
       Then I should unlock a unique profile badge for the "Creator" tree
@@ -102,7 +102,7 @@ Feature: Skill Trees
 
   Rule: Skill tree progress is permanent and does not decay on inactivity
 
-    @done
+    @todo
     Scenario: Skill tree progress retained after inactivity
       Given I have the "Builder" skill tree at tier 2
       And I have not completed any side-project tasks in 60 days

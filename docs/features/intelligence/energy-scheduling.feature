@@ -9,7 +9,7 @@ Feature: Energy-Aware Scheduling
 
   Rule: Users can report or have their energy level inferred
 
-    @done
+    @todo
     Scenario: Manually set energy level at start of session
       When I open Waypoint for my first session of the day
       Then I should see an optional energy check-in prompt
@@ -17,7 +17,7 @@ Feature: Energy-Aware Scheduling
       Then my current energy should be recorded as "High"
       And my task suggestions should prioritise difficult tasks
 
-    @done
+    @todo
     Scenario: Skip energy check-in with sufficient history
       Given I have at least 14 days of task completion data
       When I open Waypoint for my first session of the day
@@ -25,7 +25,7 @@ Feature: Energy-Aware Scheduling
       Then the system should infer my energy from historical patterns
       And the prompt should not appear again until the next session
 
-    @done
+    @todo
     Scenario: Skip energy check-in on day 1 with no historical data
       Given I have no task completion history
       When I open Waypoint for my first session of the day
@@ -34,7 +34,7 @@ Feature: Energy-Aware Scheduling
       And tasks should be shown in standard priority order
       And the prompt should not appear again until the next session
 
-    @done
+    @todo
     Scenario Outline: Energy level affects task surfacing
       Given my current energy level is "<energy>"
       When I view my Today tasks
@@ -46,7 +46,7 @@ Feature: Energy-Aware Scheduling
         | Medium  | Normal difficulty tasks                |
         | Low     | Easy, routine, and administrative tasks |
 
-    @done
+    @todo
     Scenario: New user with insufficient data for pattern inference
       Given I have fewer than 14 days of task completion data
       When I dismiss the energy check-in prompt
@@ -54,7 +54,7 @@ Feature: Energy-Aware Scheduling
       And the system should default my energy level to "Medium"
       And tasks should be shown in standard priority order
 
-    @done
+    @todo
     Scenario: System infers energy from time-of-day patterns
       Given I have at least 14 days of task completion data
       And the system has detected that I complete hard tasks most often between 9 AM and 12 PM
@@ -66,7 +66,7 @@ Feature: Energy-Aware Scheduling
 
   Rule: The system learns individual energy patterns over time
 
-    @done
+    @todo
     Scenario: Energy pattern detected across weeks
       Given I have consistently reported "High" energy on weekday mornings
       And I have consistently reported "Low" energy on Friday afternoons
@@ -74,7 +74,7 @@ Feature: Energy-Aware Scheduling
       Then it should build a weekly energy profile for me
       And the profile should be visible in my productivity insights
 
-    @done
+    @todo
     Scenario: Energy inference improves with data
       Given I have provided energy check-ins for 14 days
       When I skip a check-in on a typical Wednesday morning
@@ -86,7 +86,7 @@ Feature: Energy-Aware Scheduling
 
   Rule: Task recommendations adapt to energy levels throughout the day
 
-    @done
+    @todo
     Scenario: Mid-day energy shift recommendation
       Given my energy was "High" this morning
       And it is now 2 PM
@@ -95,7 +95,7 @@ Feature: Energy-Aware Scheduling
       Then the system should suggest switching to easier tasks
       And a gentle prompt should say something like "Energy usually dips around now — lighter tasks might be a good fit"
 
-    @done
+    @todo
     Scenario: Mid-day re-check-in after rapid energy fluctuation
       Given my energy was "High" this morning at 9 AM
       And it is now 11 AM
@@ -104,7 +104,7 @@ Feature: Energy-Aware Scheduling
       And my task suggestions should immediately reprioritise to show easier tasks first
       And the system should record the rapid fluctuation for future pattern analysis
 
-    @done
+    @todo
     Scenario: Energy-aware reordering does not hide tasks
       Given my energy level is "Low"
       When I view my Today tasks

@@ -11,7 +11,7 @@ Feature: Capacity Modelling
 
   Rule: The system builds a personal capacity model from historical data
 
-    @todo
+    @done
     Scenario: Capacity model established from history
       Given I have completed tasks for 30 days
       And my average daily completion is 6 tasks on weekdays
@@ -20,21 +20,21 @@ Feature: Capacity Modelling
       Then my weekday capacity should be approximately 6 tasks
       And my weekend capacity should be approximately 3 tasks
 
-    @todo
+    @done
     Scenario: Capacity model accounts for task difficulty weighting
       Given my capacity model shows I complete approximately 6 "Normal" tasks per day
       When I have 4 "Hard" tasks and 2 "Normal" tasks scheduled today
       Then the system should calculate this as exceeding my typical capacity
       Because hard tasks consume 2 capacity units while normal tasks consume 1
 
-    @todo
+    @done
     Scenario: Tasks with no difficulty assigned default to Normal
       Given my capacity model shows I complete approximately 6 "Normal" tasks per day
       When I create a task without specifying a difficulty level
       Then the task should default to "Normal" difficulty
       And it should count as 1 capacity unit in my daily plan
 
-    @todo
+    @done
     Scenario: Capacity model updates gradually as behaviour changes
       Given my historical weekday capacity is 6 tasks
       And over the last 3 weeks I have consistently completed 8 tasks on weekdays
@@ -42,7 +42,7 @@ Feature: Capacity Modelling
       Then my weekday capacity should adjust upward gradually based on actual completion patterns
       And the adjustment should not exceed 1 task per recalibration cycle
 
-    @todo
+    @done
     Scenario: Weekend capacity may differ from weekday capacity
       Given I have completed tasks for 30 days
       And my average daily completion is 6 tasks on weekdays
@@ -55,7 +55,7 @@ Feature: Capacity Modelling
 
   Rule: Users are warned when scheduled tasks exceed their realistic capacity
 
-    @todo
+    @done
     Scenario: Overcommitment warning on daily view
       Given my weekday capacity is 6 tasks
       And I have 10 tasks scheduled for today
@@ -63,7 +63,7 @@ Feature: Capacity Modelling
       Then I should see a capacity warning indicator
       And the warning should state something like "You typically complete 6 tasks on Wednesdays. You have 10 scheduled. Consider reprioritising."
 
-    @todo
+    @done
     Scenario: Overcommitment warning when adding tasks
       Given my weekday capacity is 6 tasks
       And I already have 6 tasks scheduled for tomorrow
@@ -71,7 +71,7 @@ Feature: Capacity Modelling
       Then I should see a gentle warning that tomorrow exceeds my typical capacity
       And I should still be able to add the task
 
-    @todo
+    @done
     Scenario: No warning when within capacity
       Given my weekday capacity is 6 tasks
       And I have 4 tasks scheduled for today

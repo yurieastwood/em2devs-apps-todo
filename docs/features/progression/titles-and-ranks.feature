@@ -10,7 +10,7 @@ Feature: Titles and Ranks
 
   Rule: Titles are earned through sustained behaviour, not one-off achievements
 
-    @todo
+    @done
     Scenario Outline: Earn a title through sustained behaviour
       Given I have met the sustained requirement for the title "<title>"
       When I check my title progress
@@ -30,7 +30,7 @@ Feature: Titles and Ranks
         | Consistent Planner | Completed 12+ weekly reviews                                 |
         | Team Anchor        | Contributed to guild quests every week for 8+ weeks           |
 
-    @todo
+    @done
     Scenario: Title requires sustained behaviour, not bursts
       Given I completed 50 tasks before 9 AM
       But they were all completed within a single week
@@ -38,7 +38,7 @@ Feature: Titles and Ranks
       Then I should not be awarded the title "Early Bird"
       And the system should show progress toward the sustained requirement
 
-    @todo
+    @done
     Scenario: Title progress is visible before earning
       Given I am working toward the "Streak Master" title
       And I need a 30-day streak and I am currently at 18 days
@@ -48,14 +48,14 @@ Feature: Titles and Ranks
 
   Rule: Users choose which title to display and titles are publicly visible
 
-    @todo
+    @done
     Scenario: Select an active title
       Given I have earned the titles "Early Bird" and "Boss Slayer"
       When I select "Boss Slayer" as my active title
       Then "Boss Slayer" should appear next to my name on my profile
       And "Boss Slayer" should appear on leaderboards and guild views
 
-    @todo
+    @done
     Scenario: View all earned titles
       Given I have earned 5 titles
       When I navigate to my titles collection
@@ -63,7 +63,7 @@ Feature: Titles and Ranks
       And I should see locked titles with their requirements
       And I should be able to select any earned title as active
 
-    @todo
+    @done
     Scenario: Title visible on profile to other users
       Given I have "Morning Architect" as my active title
       When another user views my profile
@@ -77,7 +77,7 @@ Feature: Titles and Ranks
 
   Rule: Titles are permanently earned and never revoked
 
-    @todo
+    @done
     Scenario: Title retained after behaviour change
       Given I earned the title "Early Bird" through consistent morning completions
       And I have not completed a task before 9 AM in the last 3 weeks
@@ -85,7 +85,7 @@ Feature: Titles and Ranks
       Then "Early Bird" should still be in my earned titles
       And it should remain selectable as my active title
 
-    @todo
+    @done
     Scenario: Active title displayed when user holds many titles
       Given I have earned 8 titles
       And I have selected "Boss Slayer" as my active title

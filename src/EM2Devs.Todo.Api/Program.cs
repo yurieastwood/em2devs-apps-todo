@@ -175,6 +175,21 @@ builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Even
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
     EM2Devs.Todo.Application.Events.QuestCompletionXpHandler>();
 
+// Timeline: in-memory store for journey timeline events.
+builder.Services.AddSingleton<InMemoryTimelineStore>();
+builder.Services.AddScoped<ITimelineRepository, InMemoryTimelineRepository>();
+
+// Timeline query handler.
+builder.Services.AddTransient<IRequestHandler<GetTimelineQuery, Result<TimelineReadModel>>, GetTimelineQueryHandler>();
+
+// Timeline event creation: populate timeline on level-up, streak milestone, quest completion.
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.LevelUpEvent>,
+    EM2Devs.Todo.Application.Events.TimelineRecordingHandler>();
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.StreakMilestoneReachedEvent>,
+    EM2Devs.Todo.Application.Events.TimelineRecordingHandler>();
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
+    EM2Devs.Todo.Application.Events.TimelineRecordingHandler>();
+
 // Skill tree discovery: evaluate tag-based thresholds after each task completion.
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
     EM2Devs.Todo.Application.Events.SkillTreeDiscoveryHandler>();
@@ -271,6 +286,7 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddControllers(options =>
     {
         options.ModelBinderProviders.Insert(0, new DateOnlyModelBinderProvider());
+        options.Filters.Add<EM2Devs.Todo.Api.Middleware.RejectUnknownQueryParametersFilter>();
     })
     .AddJsonOptions(options =>
     {

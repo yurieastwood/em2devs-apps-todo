@@ -1,221 +1,218 @@
-openapi: "3.0.3"
+openapi: 3.0.3
 info:
   title: Waypoint API
   description: Waypoint — gamified todo app API for demonstrating agentic development guardrails.
-  version: "1.0.0"
+  version: 1.0.0
 security:
-  - bearerAuth: []
+- bearerAuth: []
 paths:
-  # ── Auth ──────────────────────────────────────────
   /api/auth/register:
     post:
       operationId: register
       summary: Register a new user account
       description: Create a user with email, password, and display name. Returns a bearer token on success.
-      tags: [Auth]
+      tags:
+      - Auth
       security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RegisterRequest"
+              $ref: '#/components/schemas/RegisterRequest'
             example:
-              email: "new-user@waypoint.dev"
-              password: "hunter2hunter2"
-              displayName: "New User"
+              email: new-user@waypoint.dev
+              password: hunter2hunter2
+              displayName: New User
       responses:
-        "200":
+        '200':
           description: Registration successful
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
+                $ref: '#/components/schemas/AuthResponse'
               example:
-                token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEifQ.signature"
-                userId: "00000000-0000-0000-0000-000000000001"
-                displayName: "New User"
-                expiresAt: "2026-04-12T20:00:00Z"
-        "400":
+                token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEifQ.signature
+                userId: 00000000-0000-0000-0000-000000000001
+                displayName: New User
+                expiresAt: '2026-04-12T20:00:00Z'
+        '400':
           description: Validation error
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
-        "409":
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '409':
           description: Email already registered
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
   /api/auth/login:
     post:
       operationId: login
       summary: Authenticate with email and password
-      description: "Returns a short-lived bearer token. Clients attach the token to subsequent requests via the `Authorization: Bearer <token>` header."
-      tags: [Auth]
+      description: 'Returns a short-lived bearer token. Clients attach the token to subsequent requests via the `Authorization:
+        Bearer <token>` header.'
+      tags:
+      - Auth
       security: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/LoginRequest"
+              $ref: '#/components/schemas/LoginRequest'
             example:
-              email: "demo@waypoint.dev"
-              password: "demo1234"
+              email: demo@waypoint.dev
+              password: demo1234
       responses:
-        "200":
+        '200':
           description: Login successful
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
+                $ref: '#/components/schemas/AuthResponse'
               example:
-                token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEifQ.signature"
-                userId: "00000000-0000-0000-0000-000000000001"
-                displayName: "Demo User"
-                expiresAt: "2026-04-12T20:00:00Z"
-        "400":
+                token: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIwMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEifQ.signature
+                userId: 00000000-0000-0000-0000-000000000001
+                displayName: Demo User
+                expiresAt: '2026-04-12T20:00:00Z'
+        '400':
           description: Validation error
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
-        "401":
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '401':
           description: Invalid email or password
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
   /api/auth/logout:
     post:
       operationId: logout
       summary: Client-side logout
       description: No-op for stateless JWT auth; the client should discard its token after calling this endpoint.
-      tags: [Auth]
+      tags:
+      - Auth
       security: []
       responses:
-        "204":
+        '204':
           description: Logout acknowledged
+        '400': &id001
+          $ref: '#/components/responses/BadRequest'
   /api/auth/me:
     get:
       operationId: getMe
       summary: Get current authenticated user
       description: Returns the user identity derived from the bearer token claims.
-      tags: [Auth]
+      tags:
+      - Auth
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Current user info
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MeResponse"
+                $ref: '#/components/schemas/MeResponse'
               example:
-                userId: "00000000-0000-0000-0000-000000000001"
-                displayName: "Demo User"
-                email: "demo@waypoint.dev"
-  # ── Tasks ─────────────────────────────────────────
+                userId: 00000000-0000-0000-0000-000000000001
+                displayName: Demo User
+                email: demo@waypoint.dev
   /api/tasks:
     get:
       operationId: listTasks
       summary: List tasks, optionally filtered by status or a named view
-      description: |
-        Returns all tasks belonging to the authenticated user. The `status` and `view` query
-        parameters are mutually exclusive — supplying both returns a 400 Validation error.
-
-        The `view` parameter selects a named bucket with domain-defined semantics:
-          - `inbox`: open tasks with no assigned quest
-          - `today`: open tasks scheduled for today or earlier (overdue)
-          - `upcoming`: open tasks scheduled within the next 14 days
-          - `completed`: tasks with status `Done`, most recently completed first
+      description: "Returns all tasks belonging to the authenticated user. The `status` and `view` query\nparameters are mutually\
+        \ exclusive — supplying both returns a 400 Validation error.\n\nThe `view` parameter selects a named bucket with domain-defined\
+        \ semantics:\n  - `inbox`: open tasks with no assigned quest\n  - `today`: open tasks scheduled for today or earlier\
+        \ (overdue)\n  - `upcoming`: open tasks scheduled within the next 14 days\n  - `completed`: tasks with status `Done`,\
+        \ most recently completed first\n"
       parameters:
-        - name: status
-          in: query
-          required: false
-          description: Filter tasks by status. Mutually exclusive with `view`.
-          schema:
-            type: string
-            enum:
-              - Todo
-              - InProgress
-              - Done
-              - Skipped
-        - name: view
-          in: query
-          required: false
-          description: Named view bucket. Mutually exclusive with `status`.
-          schema:
-            type: string
-            enum:
-              - inbox
-              - today
-              - upcoming
-              - completed
-          examples:
-            inbox:
-              value: inbox
-              summary: Open tasks with no quest assignment
-            today:
-              value: today
-              summary: Tasks due today or overdue
-            upcoming:
-              value: upcoming
-              summary: Tasks scheduled in the next 14 days
-            completed:
-              value: completed
-              summary: Tasks that have been marked done
+      - name: status
+        in: query
+        required: false
+        description: Filter tasks by status. Mutually exclusive with `view`.
+        schema:
+          type: string
+          enum:
+          - Todo
+          - InProgress
+          - Done
+          - Skipped
+      - name: view
+        in: query
+        required: false
+        description: Named view bucket. Mutually exclusive with `status`.
+        schema:
+          type: string
+          enum:
+          - inbox
+          - today
+          - upcoming
+          - completed
+        examples:
+          inbox:
+            value: inbox
+            summary: Open tasks with no quest assignment
+          today:
+            value: today
+            summary: Tasks due today or overdue
+          upcoming:
+            value: upcoming
+            summary: Tasks scheduled in the next 14 days
+          completed:
+            value: completed
+            summary: Tasks that have been marked done
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: A list of tasks
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/TaskResponse"
+                  $ref: '#/components/schemas/TaskResponse'
               examples:
                 inbox:
                   summary: Inbox view — a single unassigned task
                   value:
-                    - id: "11111111-1111-1111-1111-111111111111"
-                      title: "Call dentist"
-                      description: null
-                      status: Todo
-                      difficulty: Normal
-                      priority: Medium
-                      estimatedMinutes: null
-                      dueDate: null
-                      completedAt: null
-                      scheduledDate: null
-                      tags: []
+                  - id: 11111111-1111-1111-1111-111111111111
+                    title: Call dentist
+                    description: null
+                    status: Todo
+                    difficulty: Normal
+                    priority: Medium
+                    estimatedMinutes: null
+                    dueDate: null
+                    completedAt: null
+                    scheduledDate: null
+                    tags: []
                 today:
                   summary: Today view — due today
                   value:
-                    - id: "22222222-2222-2222-2222-222222222222"
-                      title: "Finish report"
-                      description: null
-                      status: Todo
-                      difficulty: Normal
-                      priority: High
-                      estimatedMinutes: 60
-                      dueDate: null
-                      completedAt: null
-                      scheduledDate: "2026-04-12"
-                      tags:
-                        - work
-        "400":
-          description: Invalid status or view value, or both supplied simultaneously
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                  - id: 22222222-2222-2222-2222-222222222222
+                    title: Finish report
+                    description: null
+                    status: Todo
+                    difficulty: Normal
+                    priority: High
+                    estimatedMinutes: 60
+                    dueDate: null
+                    completedAt: null
+                    scheduledDate: '2026-04-12'
+                    tags:
+                    - work
+        '400':
+          $ref: '#/components/responses/BadRequest'
     post:
       operationId: createTask
       summary: Create a new task
@@ -224,16 +221,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateTaskRequest"
+              $ref: '#/components/schemas/CreateTaskRequest'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "201":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '201':
           description: Task created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TaskResponse"
+                $ref: '#/components/schemas/TaskResponse'
           links:
             GetTask:
               operationId: getTask
@@ -251,201 +248,205 @@ paths:
               operationId: updateTaskStatus
               parameters:
                 taskId: $response.body#/id
-        "400":
-          $ref: "#/components/responses/BadRequest"
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/tasks/quick-add:
     post:
       operationId: quickAddTask
       summary: Create a task from a single quick-add string
-      description: |
-        Parses the input string for inline directives (`#tag`, `!priority`, `^date`) and
+      description: 'Parses the input string for inline directives (`#tag`, `!priority`, `^date`) and
+
         creates a task with the resulting title, tags, priority and scheduled date.
+
+        '
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/QuickAddTaskRequest"
+              $ref: '#/components/schemas/QuickAddTaskRequest'
             examples:
               basic:
                 summary: Title only
                 value:
-                  input: "write blog post"
+                  input: write blog post
               full:
                 summary: Full quick-add syntax
                 value:
-                  input: "buy milk #groceries !High ^tomorrow"
+                  input: 'buy milk #groceries !High ^tomorrow'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "201":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '201':
           description: Task created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TaskResponse"
-        "400":
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
           description: Validation error (empty input, too long, or unparseable directives)
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
+                $ref: '#/components/schemas/ValidationProblemDetails'
   /api/tasks/{taskId}:
     get:
       operationId: getTask
       summary: Get a task by ID
       parameters:
-        - $ref: "#/components/parameters/taskId"
+      - $ref: '#/components/parameters/taskId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: The task
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TaskResponse"
-        "404":
+                $ref: '#/components/schemas/TaskResponse'
+        '404':
           description: Task not found
     patch:
       operationId: updateTask
       summary: Update a task's fields
       parameters:
-        - $ref: "#/components/parameters/taskId"
+      - $ref: '#/components/parameters/taskId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateTaskRequest"
+              $ref: '#/components/schemas/UpdateTaskRequest'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Task updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TaskResponse"
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "404":
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
           description: Task not found
     delete:
       operationId: deleteTask
       summary: Delete a task by ID
       parameters:
-        - $ref: "#/components/parameters/taskId"
+      - $ref: '#/components/parameters/taskId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "204":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '204':
           description: Task deleted
-        "404":
+        '404':
           description: Task not found
   /api/tasks/{taskId}/status:
     patch:
       operationId: updateTaskStatus
       summary: Update a task's status
       parameters:
-        - $ref: "#/components/parameters/taskId"
+      - $ref: '#/components/parameters/taskId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateTaskStatusRequest"
+              $ref: '#/components/schemas/UpdateTaskStatusRequest'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Task status updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TaskResponse"
-        "400":
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
           description: Invalid status value
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
-        "404":
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '404':
           description: Task not found
-        "409":
+        '409':
           description: Status transition conflict
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
   /api/tasks/{taskId}/actual-time:
     patch:
       operationId: recordActualTime
       summary: Record actual time spent on a completed task
-      description: Records how long the task actually took, compared against the estimate. Returns the updated task with variance data.
-      tags: [Tasks]
+      description: Records how long the task actually took, compared against the estimate. Returns the updated task with variance
+        data.
+      tags:
+      - Tasks
       parameters:
-        - $ref: "#/components/parameters/taskId"
+      - $ref: '#/components/parameters/taskId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RecordActualTimeRequest"
+              $ref: '#/components/schemas/RecordActualTimeRequest'
             example:
               actualMinutes: 45
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Actual time recorded
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TaskResponse"
+                $ref: '#/components/schemas/TaskResponse'
               example:
-                id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-                title: "Write tests"
-                status: "Done"
-                difficulty: "Normal"
-                priority: "Medium"
+                id: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+                title: Write tests
+                status: Done
+                difficulty: Normal
+                priority: Medium
                 estimatedMinutes: 30
                 actualMinutes: 45
                 variancePercent: 50
                 tags: []
-        "400":
+        '400':
           description: Validation error (actualMinutes out of range)
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
-        "404":
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '404':
           description: Task not found
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "409":
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
           description: Task is not completed or has no estimate
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
   /api/tasks/{taskId}/focus-mode/start:
     post:
       operationId: startFocusMode
       summary: Start focus mode for a Boss Task
       description: Begins a focus mode session for the specified Boss Task.
       parameters:
-        - $ref: "#/components/parameters/taskId"
+      - $ref: '#/components/parameters/taskId'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Focus mode started
           content:
             application/json:
@@ -454,33 +455,33 @@ paths:
                 properties:
                   started:
                     type: boolean
-        "400":
+        '400':
           description: Task is not a Boss Task
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "404":
+                $ref: '#/components/schemas/ProblemDetails'
+        '404':
           description: Task not found
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "409":
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
           description: Focus mode already active
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
   /api/tasks/focus-mode/end:
     post:
       operationId: endFocusMode
       summary: End the current focus mode session
       description: Ends the active focus mode session and returns duration.
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Focus mode ended
           content:
             application/json:
@@ -493,55 +494,55 @@ paths:
                   durationMinutes:
                     type: integer
                     minimum: 0
-        "409":
+        '409':
           description: No active focus mode
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
+        '400': *id001
   /api/tasks/{taskId}/reopen:
     patch:
       operationId: reopenTask
       summary: Re-open a completed task
       parameters:
-        - $ref: "#/components/parameters/taskId"
+      - $ref: '#/components/parameters/taskId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Task re-opened
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TaskResponse"
-        "404":
+                $ref: '#/components/schemas/TaskResponse'
+        '404':
           description: Task not found
-        "409":
+        '409':
           description: Task is not completed
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
-  # ── Quests ────────────────────────────────────────
+                $ref: '#/components/schemas/ProblemDetails'
   /api/quests:
     get:
       operationId: listQuests
       summary: List all quests
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: A list of quests
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/QuestResponse"
+                  $ref: '#/components/schemas/QuestResponse'
     post:
       operationId: createQuest
       summary: Create a new quest
@@ -550,16 +551,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateQuestRequest"
+              $ref: '#/components/schemas/CreateQuestRequest'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "201":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '201':
           description: Quest created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/QuestResponse"
+                $ref: '#/components/schemas/QuestResponse'
           links:
             GetQuest:
               operationId: getQuest
@@ -573,139 +574,138 @@ paths:
               operationId: completeQuest
               parameters:
                 questId: $response.body#/id
-        "400":
-          $ref: "#/components/responses/BadRequest"
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/quests/{questId}:
     get:
       operationId: getQuest
       summary: Get a quest by ID
       parameters:
-        - $ref: "#/components/parameters/questId"
+      - $ref: '#/components/parameters/questId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: The quest
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/QuestResponse"
-        "404":
+                $ref: '#/components/schemas/QuestResponse'
+        '404':
           description: Quest not found
     delete:
       operationId: deleteQuest
       summary: Delete a quest
       parameters:
-        - $ref: "#/components/parameters/questId"
+      - $ref: '#/components/parameters/questId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "204":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '204':
           description: Quest deleted
-        "404":
+        '404':
           description: Quest not found
   /api/quests/{questId}/tasks:
     post:
       operationId: addTaskToQuest
       summary: Add an existing task to a quest
       parameters:
-        - $ref: "#/components/parameters/questId"
+      - $ref: '#/components/parameters/questId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AddTaskToQuestRequest"
+              $ref: '#/components/schemas/AddTaskToQuestRequest'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Task added to quest
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/QuestResponse"
-        "400":
+                $ref: '#/components/schemas/QuestResponse'
+        '400':
           description: Invalid request body
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
-        "404":
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '404':
           description: Quest or task not found
-        "409":
+        '409':
           description: Task already assigned to quest
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
   /api/quests/{questId}/tasks/{taskId}:
     delete:
       operationId: removeTaskFromQuest
       summary: Remove a task from a quest
       parameters:
-        - $ref: "#/components/parameters/questId"
-        - $ref: "#/components/parameters/taskId"
+      - $ref: '#/components/parameters/questId'
+      - $ref: '#/components/parameters/taskId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Task removed from quest
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/QuestResponse"
-        "404":
+                $ref: '#/components/schemas/QuestResponse'
+        '404':
           description: Quest or task not found
   /api/quests/{questId}/complete:
     post:
       operationId: completeQuest
       summary: Mark a quest as complete
       parameters:
-        - $ref: "#/components/parameters/questId"
+      - $ref: '#/components/parameters/questId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Quest completed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/QuestResponse"
-        "404":
+                $ref: '#/components/schemas/QuestResponse'
+        '404':
           description: Quest not found
-        "409":
+        '409':
           description: Quest cannot be completed
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
-  # ── Epics ─────────────────────────────────────────
+                $ref: '#/components/schemas/ProblemDetails'
   /api/epics:
     get:
       operationId: listEpics
       summary: List all epics
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: A list of epics
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/EpicResponse"
+                  $ref: '#/components/schemas/EpicResponse'
     post:
       operationId: createEpic
       summary: Create a new epic
@@ -714,16 +714,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateEpicRequest"
+              $ref: '#/components/schemas/CreateEpicRequest'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "201":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '201':
           description: Epic created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EpicResponse"
+                $ref: '#/components/schemas/EpicResponse'
           links:
             GetEpic:
               operationId: getEpic
@@ -737,139 +737,138 @@ paths:
               operationId: completeEpic
               parameters:
                 epicId: $response.body#/id
-        "400":
-          $ref: "#/components/responses/BadRequest"
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/epics/{epicId}:
     get:
       operationId: getEpic
       summary: Get an epic by ID
       parameters:
-        - $ref: "#/components/parameters/epicId"
+      - $ref: '#/components/parameters/epicId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: The epic
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EpicResponse"
-        "404":
+                $ref: '#/components/schemas/EpicResponse'
+        '404':
           description: Epic not found
     delete:
       operationId: deleteEpic
       summary: Delete an epic
       parameters:
-        - $ref: "#/components/parameters/epicId"
+      - $ref: '#/components/parameters/epicId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "204":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '204':
           description: Epic deleted
-        "404":
+        '404':
           description: Epic not found
   /api/epics/{epicId}/quests:
     post:
       operationId: assignQuestToEpic
       summary: Assign a quest to an epic
       parameters:
-        - $ref: "#/components/parameters/epicId"
+      - $ref: '#/components/parameters/epicId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/AssignQuestRequest"
+              $ref: '#/components/schemas/AssignQuestRequest'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Quest assigned to epic
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EpicResponse"
-        "400":
+                $ref: '#/components/schemas/EpicResponse'
+        '400':
           description: Invalid request body
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
-        "404":
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '404':
           description: Epic or quest not found
-        "409":
+        '409':
           description: Quest already assigned to epic
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
   /api/epics/{epicId}/quests/{questId}:
     delete:
       operationId: removeQuestFromEpic
       summary: Remove a quest from an epic
       parameters:
-        - $ref: "#/components/parameters/epicId"
-        - $ref: "#/components/parameters/questId"
+      - $ref: '#/components/parameters/epicId'
+      - $ref: '#/components/parameters/questId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Quest removed from epic
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EpicResponse"
-        "404":
+                $ref: '#/components/schemas/EpicResponse'
+        '404':
           description: Epic or quest not found
   /api/epics/{epicId}/complete:
     post:
       operationId: completeEpic
       summary: Mark an epic as complete
       parameters:
-        - $ref: "#/components/parameters/epicId"
+      - $ref: '#/components/parameters/epicId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Epic completed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EpicResponse"
-        "404":
+                $ref: '#/components/schemas/EpicResponse'
+        '404':
           description: Epic not found
-        "409":
+        '409':
           description: Epic cannot be completed
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
-  # ── Recurring Tasks ───────────────────────────────
+                $ref: '#/components/schemas/ProblemDetails'
   /api/recurring-tasks:
     get:
       operationId: listRecurringTasks
       summary: List all recurring tasks
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: A list of recurring tasks
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/RecurringTaskResponse"
+                  $ref: '#/components/schemas/RecurringTaskResponse'
     post:
       operationId: createRecurringTask
       summary: Create a new recurring task
@@ -878,16 +877,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateRecurringTaskRequest"
+              $ref: '#/components/schemas/CreateRecurringTaskRequest'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "201":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '201':
           description: Recurring task created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RecurringTaskResponse"
+                $ref: '#/components/schemas/RecurringTaskResponse'
           links:
             GetRecurringTask:
               operationId: getRecurringTask
@@ -913,478 +912,557 @@ paths:
               operationId: listRecurringTaskInstances
               parameters:
                 recurringTaskId: $response.body#/id
-        "400":
-          $ref: "#/components/responses/BadRequest"
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/recurring-tasks/{recurringTaskId}:
     get:
       operationId: getRecurringTask
       summary: Get a recurring task by ID
       parameters:
-        - $ref: "#/components/parameters/recurringTaskId"
+      - $ref: '#/components/parameters/recurringTaskId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: The recurring task
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RecurringTaskResponse"
-        "404":
+                $ref: '#/components/schemas/RecurringTaskResponse'
+        '404':
           description: Recurring task not found
     put:
       operationId: updateRecurringTask
       summary: Update a recurring task template
       parameters:
-        - $ref: "#/components/parameters/recurringTaskId"
+      - $ref: '#/components/parameters/recurringTaskId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateRecurringTaskRequest"
+              $ref: '#/components/schemas/UpdateRecurringTaskRequest'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Recurring task updated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RecurringTaskResponse"
-        "400":
+                $ref: '#/components/schemas/RecurringTaskResponse'
+        '400':
           description: Validation error
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
-        "404":
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '404':
           description: Recurring task not found
-        "409":
+        '409':
           description: Conflict
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
     delete:
       operationId: deleteRecurringTask
       summary: Delete a recurring task
       parameters:
-        - $ref: "#/components/parameters/recurringTaskId"
+      - $ref: '#/components/parameters/recurringTaskId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "204":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '204':
           description: Recurring task deleted
-        "404":
+        '404':
           description: Recurring task not found
   /api/recurring-tasks/{recurringTaskId}/pause:
     patch:
       operationId: pauseRecurringTask
       summary: Pause a recurring task
       parameters:
-        - $ref: "#/components/parameters/recurringTaskId"
+      - $ref: '#/components/parameters/recurringTaskId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Recurring task paused
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RecurringTaskResponse"
-        "404":
+                $ref: '#/components/schemas/RecurringTaskResponse'
+        '404':
           description: Recurring task not found
-        "409":
+        '409':
           description: Already paused
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
   /api/recurring-tasks/{recurringTaskId}/resume:
     patch:
       operationId: resumeRecurringTask
       summary: Resume a paused recurring task
       parameters:
-        - $ref: "#/components/parameters/recurringTaskId"
+      - $ref: '#/components/parameters/recurringTaskId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Recurring task resumed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RecurringTaskResponse"
-        "404":
+                $ref: '#/components/schemas/RecurringTaskResponse'
+        '404':
           description: Recurring task not found
-        "409":
+        '409':
           description: Already active
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
   /api/recurring-tasks/{recurringTaskId}/generate:
     post:
       operationId: generateRecurringTaskInstance
       summary: Generate a new task instance from recurring template
       parameters:
-        - $ref: "#/components/parameters/recurringTaskId"
-        - name: scheduledDate
-          in: query
-          required: false
-          schema:
-            type: string
-            format: date
+      - $ref: '#/components/parameters/recurringTaskId'
+      - name: scheduledDate
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Instance generated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TaskInstanceResponse"
-        "400":
+                $ref: '#/components/schemas/TaskInstanceResponse'
+        '400':
           description: Invalid scheduled date
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ValidationProblemDetails"
-        "404":
+                $ref: '#/components/schemas/ValidationProblemDetails'
+        '404':
           description: Recurring task not found
-        "409":
+        '409':
           description: Recurring task is paused
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: '#/components/schemas/ProblemDetails'
   /api/recurring-tasks/{recurringTaskId}/instances:
     get:
       operationId: listRecurringTaskInstances
       summary: List generated instances of a recurring task
       parameters:
-        - $ref: "#/components/parameters/recurringTaskId"
+      - $ref: '#/components/parameters/recurringTaskId'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: List of task instances
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/TaskInstanceResponse"
-        "404":
+                  $ref: '#/components/schemas/TaskInstanceResponse'
+        '404':
           description: Recurring task not found
   /api/recurring-tasks/{recurringTaskId}/instances/{instanceId}/skip:
     patch:
       operationId: skipRecurringTaskInstance
       summary: Skip a recurring task instance
       parameters:
-        - $ref: "#/components/parameters/recurringTaskId"
-        - name: instanceId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
+      - $ref: '#/components/parameters/recurringTaskId'
+      - name: instanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Instance skipped
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TaskInstanceResponse"
-        "404":
+                $ref: '#/components/schemas/TaskInstanceResponse'
+        '404':
           description: Instance not found or does not belong to recurring task
-        "409":
+        '409':
           description: Instance cannot be skipped
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
-  # ── Profile ───────────────────────────────────────
+                $ref: '#/components/schemas/ProblemDetails'
   /api/profile:
     get:
       operationId: getProfile
       summary: Get player progression profile
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Player progression profile
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProfileResponse"
+                $ref: '#/components/schemas/ProfileResponse'
   /api/daily-brief:
     get:
       operationId: getDailyBrief
       summary: Get today's daily brief for the authenticated user
-      description: |
-        Returns a stateless projection of the authenticated user's "today's brief"
+      description: 'Returns a stateless projection of the authenticated user''s "today''s brief"
+
         — a prioritised core plan (tasks due today plus overdue), an optional
+
         "if time allows" list (the next upcoming day that has tasks), and the
+
         overdue tasks highlighted separately. Nothing is persisted; every call
+
         recomputes from current data. When there are fewer than two core-plan
+
         tasks, `status` is `InsufficientTasks` and lists may be empty.
+
+        '
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Today's daily brief for the authenticated user.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DailyBriefResponse"
+                $ref: '#/components/schemas/DailyBriefResponse'
+        '400': *id001
   /api/profile/estimation-bias:
     get:
       operationId: getEstimationBias
       summary: Get the authenticated user's estimation calibration
-      description: |
-        Returns the user's learned estimation bias — the median of
+      description: 'Returns the user''s learned estimation bias — the median of
+
         `actual / estimated` across all completed tasks where an actual time
+
         was reported. `biasFactor > 1.0` means the user typically
+
         underestimates; `< 1.0` means they typically overestimate. When fewer
+
         than three samples exist, `calibrationState` is `NotEnoughData` and
+
         the factor is neutral (1.0). Stateless — recomputed on each call.
+
+        '
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Current estimation calibration for the authenticated user.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EstimationBiasResponse"
+                $ref: '#/components/schemas/EstimationBiasResponse'
+        '400': *id001
   /api/profile/estimation-accuracy:
     get:
       operationId: getEstimationAccuracy
       summary: Get estimation accuracy dashboard
-      description: |
-        Returns overall estimation accuracy percentage, per-category breakdown,
+      description: 'Returns overall estimation accuracy percentage, per-category breakdown,
+
         and accuracy trend over time. Recomputed from task history on each call.
+
+        '
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Estimation accuracy dashboard
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/EstimationDashboardResponse"
+                $ref: '#/components/schemas/EstimationDashboardResponse'
+        '400': *id001
   /api/weekly-review:
     get:
       operationId: getWeeklyReview
       summary: Get the weekly review read model for the authenticated user
-      description: |
-        Returns the weekly review recap for the authenticated user: tasks
+      description: 'Returns the weekly review recap for the authenticated user: tasks
+
         completed, XP earned, streak at the start vs end of the week, notable
+
         events, and any previously-saved reflection. The review week is
+
         anchored on a Sunday; pass `?weekOf=YYYY-MM-DD` for a specific Sunday,
-        otherwise the current week's Sunday is used.
+
+        otherwise the current week''s Sunday is used.
+
+        '
       parameters:
-        - name: weekOf
-          in: query
-          required: false
-          schema:
-            type: string
-            format: date
-          description: The Sunday anchoring the review week. Defaults to the current week's Sunday.
+      - name: weekOf
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date
+        description: The Sunday anchoring the review week. Defaults to the current week's Sunday.
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Weekly review read model for the current or specified week.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/WeeklyReviewResponse"
+                $ref: '#/components/schemas/WeeklyReviewResponse'
     post:
       operationId: saveWeeklyReview
       summary: Save the user's reflection for the current or specified week
-      description: |
-        Persists (insert or replace) the user's free-text reflection for the
-        given review week. When `weekOf` is omitted the current week's Sunday
+      description: 'Persists (insert or replace) the user''s free-text reflection for the
+
+        given review week. When `weekOf` is omitted the current week''s Sunday
+
         is used. Returns the saved reflection payload.
+
+        '
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SaveWeeklyReviewRequest"
+              $ref: '#/components/schemas/SaveWeeklyReviewRequest'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: The saved reflection.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/WeeklyReflectionResponse"
+                $ref: '#/components/schemas/WeeklyReflectionResponse'
   /api/profile/streak/freeze:
     post:
       operationId: freezeStreak
       summary: Activate a streak freeze for the authenticated user
-      description: |
-        Starts a streak freeze beginning today for the requested number of days
+      description: 'Starts a streak freeze beginning today for the requested number of days
+
         (1..7). While frozen the streak does not break on missed days. Returns
+
         409 if a freeze is already active.
+
+        '
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FreezeStreakRequest"
+              $ref: '#/components/schemas/FreezeStreakRequest'
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "409":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
           description: A streak freeze is already active for this profile
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "200":
+                $ref: '#/components/schemas/ProblemDetails'
+        '200':
           description: Updated profile with active freeze populated
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ProfileResponse"
+                $ref: '#/components/schemas/ProfileResponse'
+  /api/timeline:
+    get:
+      operationId: getTimeline
+      summary: Get the user's journey timeline
+      description: 'Returns a paginated, reverse-chronological list of milestone events.
+
+        Supports filtering by event type and cursor-based pagination.
+
+        '
+      parameters:
+      - name: eventType
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Filter by event type (e.g. LevelUp, QuestCompleted).
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+        description: Cursor for next page (from previous response's nextCursor).
+      - name: pageSize
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 20
+          minimum: 1
+          maximum: 100
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: Timeline page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimelineResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/notifications:
     get:
       operationId: listNotifications
       summary: List in-app notifications for the current user
-      description: |
-        Returns the authenticated user's notifications, newest-first. Dismissed
+      description: 'Returns the authenticated user''s notifications, newest-first. Dismissed
+
         notifications are always excluded. When `includeRead=true` is supplied,
+
         notifications already marked as read are included as well; otherwise
+
         only unread notifications are returned.
+
+        '
       parameters:
-        - name: includeRead
-          in: query
-          required: false
-          schema:
-            type: boolean
-            default: false
+      - name: includeRead
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
       responses:
-        "400":
-          $ref: "#/components/responses/BadRequest"
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "200":
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
           description: Notifications list (possibly empty)
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/NotificationResponse"
+                  $ref: '#/components/schemas/NotificationResponse'
               examples:
                 default:
                   value:
-                    - id: "11111111-1111-1111-1111-111111111111"
-                      type: AchievementAlert
-                      message: "Level up! You reached level 2."
-                      createdAt: "2026-04-12T12:00:00Z"
-                      status: Unread
-                      readAt: null
+                  - id: 11111111-1111-1111-1111-111111111111
+                    type: AchievementAlert
+                    message: Level up! You reached level 2.
+                    createdAt: '2026-04-12T12:00:00Z'
+                    status: Unread
+                    readAt: null
   /api/notifications/{notificationId}/read:
     post:
       operationId: markNotificationRead
       summary: Mark a notification as read
       parameters:
-        - $ref: "#/components/parameters/notificationId"
+      - $ref: '#/components/parameters/notificationId'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "404":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Notification not found for the current user
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "409":
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
           description: Notification cannot transition to read (e.g. already dismissed)
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "200":
+                $ref: '#/components/schemas/ProblemDetails'
+        '200':
           description: Updated notification with Status=Read
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/NotificationResponse"
+                $ref: '#/components/schemas/NotificationResponse'
               examples:
                 default:
                   value:
-                    id: "11111111-1111-1111-1111-111111111111"
+                    id: 11111111-1111-1111-1111-111111111111
                     type: AchievementAlert
-                    message: "Level up! You reached level 2."
-                    createdAt: "2026-04-12T12:00:00Z"
+                    message: Level up! You reached level 2.
+                    createdAt: '2026-04-12T12:00:00Z'
                     status: Read
-                    readAt: "2026-04-12T12:05:00Z"
+                    readAt: '2026-04-12T12:05:00Z'
+        '400': *id001
   /api/notifications/{notificationId}/dismiss:
     post:
       operationId: dismissNotification
       summary: Dismiss a notification (soft delete)
       parameters:
-        - $ref: "#/components/parameters/notificationId"
+      - $ref: '#/components/parameters/notificationId'
       responses:
-        "401":
-          $ref: "#/components/responses/Unauthorized"
-        "404":
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
           description: Notification not found for the current user
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
-        "200":
+                $ref: '#/components/schemas/ProblemDetails'
+        '200':
           description: Updated notification with Status=Dismissed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/NotificationResponse"
+                $ref: '#/components/schemas/NotificationResponse'
               examples:
                 default:
                   value:
-                    id: "11111111-1111-1111-1111-111111111111"
+                    id: 11111111-1111-1111-1111-111111111111
                     type: AchievementAlert
-                    message: "Level up! You reached level 2."
-                    createdAt: "2026-04-12T12:00:00Z"
+                    message: Level up! You reached level 2.
+                    createdAt: '2026-04-12T12:00:00Z'
                     status: Dismissed
                     readAt: null
+        '400': *id001
 components:
   responses:
     Unauthorized:
       description: Authentication required or bearer token is invalid/expired. Body is empty.
     BadRequest:
-      description: Malformed request (invalid headers, body, or query parameters). Body may be empty or a `ValidationProblemDetails` document.
+      description: Malformed request (invalid headers, body, or query parameters).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblemDetails'
   securitySchemes:
     bearerAuth:
       type: http
@@ -1432,18 +1510,17 @@ components:
       type: object
       description: RFC 9457 Problem Details for HTTP APIs
       required:
-        - type
-        - title
-        - status
+      - title
+      - status
       properties:
         type:
           type: string
           description: A URI reference identifying the problem type
-          example: "https://tools.ietf.org/html/rfc9457"
+          example: https://tools.ietf.org/html/rfc9457
         title:
           type: string
           description: A short, human-readable summary of the problem type
-          example: "Resource not found"
+          example: Resource not found
         status:
           type: integer
           description: The HTTP status code
@@ -1451,76 +1528,76 @@ components:
         detail:
           type: string
           description: A human-readable explanation specific to this occurrence
-          example: "Task with id '550e8400-e29b-41d4-a716-446655440000' was not found."
+          example: Task with id '550e8400-e29b-41d4-a716-446655440000' was not found.
         traceId:
           type: string
           description: Distributed trace identifier for correlation
-          example: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+          example: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
     ValidationProblemDetails:
       allOf:
-        - $ref: "#/components/schemas/ProblemDetails"
-        - type: object
-          properties:
-            errors:
-              type: object
-              description: Field-level validation errors
-              additionalProperties:
-                type: array
-                items:
-                  type: string
-              example:
-                Title:
-                  - "Title is required."
-                  - "Title must not exceed 200 characters."
+      - $ref: '#/components/schemas/ProblemDetails'
+      - type: object
+        properties:
+          errors:
+            type: object
+            description: Field-level validation errors
+            additionalProperties:
+              type: array
+              items:
+                type: string
+            example:
+              Title:
+              - Title is required.
+              - Title must not exceed 200 characters.
     RegisterRequest:
       type: object
       additionalProperties: false
       required:
-        - email
-        - password
-        - displayName
+      - email
+      - password
+      - displayName
       properties:
         email:
           type: string
           format: email
           maxLength: 254
-          example: "new-user@waypoint.dev"
+          example: new-user@waypoint.dev
         password:
           type: string
           minLength: 8
-          example: "hunter2hunter2"
+          example: hunter2hunter2
         displayName:
           type: string
           minLength: 1
           maxLength: 100
-          example: "New User"
+          example: New User
     LoginRequest:
       type: object
       additionalProperties: false
       required:
-        - email
-        - password
+      - email
+      - password
       properties:
         email:
           type: string
           format: email
-          example: "demo@waypoint.dev"
+          example: demo@waypoint.dev
         password:
           type: string
           minLength: 1
-          example: "demo1234"
+          example: demo1234
     AuthResponse:
       type: object
       required:
-        - token
-        - userId
-        - displayName
-        - expiresAt
+      - token
+      - userId
+      - displayName
+      - expiresAt
       properties:
         token:
           type: string
           description: Signed JWT bearer token.
-          example: "eyJhbGciOiJIUzI1NiJ9.payload.signature"
+          example: eyJhbGciOiJIUzI1NiJ9.payload.signature
         userId:
           type: string
           format: uuid
@@ -1533,9 +1610,9 @@ components:
     MeResponse:
       type: object
       required:
-        - userId
-        - displayName
-        - email
+      - userId
+      - displayName
+      - email
       properties:
         userId:
           type: string
@@ -1549,13 +1626,13 @@ components:
       type: object
       additionalProperties: false
       required:
-        - title
+      - title
       properties:
         title:
           type: string
           minLength: 1
           maxLength: 200
-          pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
+          pattern: ^[^\x00-\x1f\x7f-\x9f]*[^\x00-\x1f\x7f-\x9f\s][^\x00-\x1f\x7f-\x9f]*$
         scheduledDate:
           type: string
           format: date
@@ -1573,17 +1650,21 @@ components:
       type: object
       additionalProperties: false
       required:
-        - input
+      - input
       properties:
         input:
           type: string
           minLength: 1
           maxLength: 500
-          description: |
-            Raw quick-add string. Directives: `#tag` adds a tag, `!priority` sets priority
+          description: 'Raw quick-add string. Directives: `#tag` adds a tag, `!priority` sets priority
+
             (Low/Medium/High/Critical), `^date` sets the scheduled date (natural language
+
             like `tomorrow`, a weekday name, or `April 15`). The rest becomes the title.
+
             Example: `buy milk #groceries !High ^tomorrow`.
+
+            '
     UpdateTaskRequest:
       type: object
       additionalProperties: false
@@ -1593,7 +1674,7 @@ components:
           nullable: true
           minLength: 1
           maxLength: 200
-          pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
+          pattern: ^[^\x00-\x1f\x7f-\x9f]*[^\x00-\x1f\x7f-\x9f\s][^\x00-\x1f\x7f-\x9f]*$
         description:
           type: string
           nullable: true
@@ -1601,19 +1682,19 @@ components:
           type: string
           nullable: true
           enum:
-            - Trivial
-            - Easy
-            - Normal
-            - Hard
-            - Epic
+          - Trivial
+          - Easy
+          - Normal
+          - Hard
+          - Epic
         priority:
           type: string
           nullable: true
           enum:
-            - Low
-            - Medium
-            - High
-            - Critical
+          - Low
+          - Medium
+          - High
+          - Critical
         estimatedMinutes:
           type: integer
           nullable: true
@@ -1627,31 +1708,31 @@ components:
           type: string
           format: date-time
           nullable: true
-          pattern: "^[1-9]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d+)?(Z|[+-]((0\\d|1[0-3]):[0-5]\\d|14:00))$"
+          pattern: ^[1-9]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\d(\.\d+)?(Z|[+-]((0\d|1[0-3]):[0-5]\d|14:00))$
         clearDueDate:
           type: boolean
     UpdateTaskStatusRequest:
       type: object
       additionalProperties: false
       required:
-        - status
+      - status
       properties:
         status:
           type: string
           enum:
-            - Todo
-            - InProgress
-            - Done
-            - Skipped
+          - Todo
+          - InProgress
+          - Done
+          - Skipped
     TaskResponse:
       type: object
       required:
-        - id
-        - title
-        - status
-        - difficulty
-        - priority
-        - tags
+      - id
+      - title
+      - status
+      - difficulty
+      - priority
+      - tags
       properties:
         id:
           type: string
@@ -1664,25 +1745,25 @@ components:
         status:
           type: string
           enum:
-            - Todo
-            - InProgress
-            - Done
-            - Skipped
+          - Todo
+          - InProgress
+          - Done
+          - Skipped
         difficulty:
           type: string
           enum:
-            - Trivial
-            - Easy
-            - Normal
-            - Hard
-            - Epic
+          - Trivial
+          - Easy
+          - Normal
+          - Hard
+          - Epic
         priority:
           type: string
           enum:
-            - Low
-            - Medium
-            - High
-            - Critical
+          - Low
+          - Medium
+          - High
+          - Critical
         estimatedMinutes:
           type: integer
           nullable: true
@@ -1716,19 +1797,22 @@ components:
           type: array
           items:
             type: string
-          description: |
-            Normalised tags attached to the task. Currently in-memory per request only —
+          description: 'Normalised tags attached to the task. Currently in-memory per request only —
+
             tag persistence is planned for a future slice, so subsequent reads may return
+
             an empty array.
+
+            '
         difficultySuggestion:
           type: string
           nullable: true
           enum:
-            - Trivial
-            - Easy
-            - Normal
-            - Hard
-            - Epic
+          - Trivial
+          - Easy
+          - Normal
+          - Hard
+          - Epic
           description: Suggested difficulty adjustment based on actual time vs estimate.
         difficultySuggestionReason:
           type: string
@@ -1738,7 +1822,7 @@ components:
       type: object
       additionalProperties: false
       required:
-        - actualMinutes
+      - actualMinutes
       properties:
         actualMinutes:
           type: integer
@@ -1749,14 +1833,14 @@ components:
       type: object
       additionalProperties: false
       required:
-        - title
-        - description
+      - title
+      - description
       properties:
         title:
           type: string
           minLength: 1
           maxLength: 200
-          pattern: "[^\\x00-\\x1f\\x7f-\\x9f\\s]"
+          pattern: '[^\x00-\x1f\x7f-\x9f\s]'
         description:
           type: string
         dueDate:
@@ -1767,7 +1851,7 @@ components:
       type: object
       additionalProperties: false
       required:
-        - taskId
+      - taskId
       properties:
         taskId:
           type: string
@@ -1775,9 +1859,9 @@ components:
     QuestTaskResponse:
       type: object
       required:
-        - id
-        - title
-        - status
+      - id
+      - title
+      - status
       properties:
         id:
           type: string
@@ -1789,12 +1873,12 @@ components:
     QuestResponse:
       type: object
       required:
-        - id
-        - title
-        - description
-        - progress
-        - isCompleted
-        - tasks
+      - id
+      - title
+      - description
+      - progress
+      - isCompleted
+      - tasks
       properties:
         id:
           type: string
@@ -1816,19 +1900,19 @@ components:
         tasks:
           type: array
           items:
-            $ref: "#/components/schemas/QuestTaskResponse"
+            $ref: '#/components/schemas/QuestTaskResponse'
     CreateEpicRequest:
       type: object
       additionalProperties: false
       required:
-        - title
-        - description
+      - title
+      - description
       properties:
         title:
           type: string
           minLength: 1
           maxLength: 200
-          pattern: "[^\\x00-\\x1f\\x7f-\\x9f\\s]"
+          pattern: '[^\x00-\x1f\x7f-\x9f\s]'
         description:
           type: string
         targetDate:
@@ -1839,7 +1923,7 @@ components:
       type: object
       additionalProperties: false
       required:
-        - questId
+      - questId
       properties:
         questId:
           type: string
@@ -1847,9 +1931,9 @@ components:
     EpicQuestResponse:
       type: object
       required:
-        - id
-        - title
-        - progress
+      - id
+      - title
+      - progress
       properties:
         id:
           type: string
@@ -1863,12 +1947,12 @@ components:
     EpicResponse:
       type: object
       required:
-        - id
-        - title
-        - description
-        - progress
-        - isCompleted
-        - quests
+      - id
+      - title
+      - description
+      - progress
+      - isCompleted
+      - quests
       properties:
         id:
           type: string
@@ -1891,25 +1975,25 @@ components:
         quests:
           type: array
           items:
-            $ref: "#/components/schemas/EpicQuestResponse"
+            $ref: '#/components/schemas/EpicQuestResponse'
     CreateRecurringTaskRequest:
       type: object
       additionalProperties: false
       required:
-        - title
-        - pattern
+      - title
+      - pattern
       properties:
         title:
           type: string
           minLength: 1
           maxLength: 200
-          pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
+          pattern: ^[^\x00-\x1f\x7f-\x9f]*[^\x00-\x1f\x7f-\x9f\s][^\x00-\x1f\x7f-\x9f]*$
         pattern:
           type: string
           enum:
-            - Daily
-            - Weekly
-            - Monthly
+          - Daily
+          - Weekly
+          - Monthly
     UpdateRecurringTaskRequest:
       type: object
       additionalProperties: false
@@ -1919,23 +2003,23 @@ components:
           nullable: true
           minLength: 1
           maxLength: 200
-          pattern: "^[^\\x00-\\x1f\\x7f-\\x9f]*[^\\x00-\\x1f\\x7f-\\x9f\\s][^\\x00-\\x1f\\x7f-\\x9f]*$"
+          pattern: ^[^\x00-\x1f\x7f-\x9f]*[^\x00-\x1f\x7f-\x9f\s][^\x00-\x1f\x7f-\x9f]*$
         pattern:
           type: string
           nullable: true
           enum:
-            - Daily
-            - Weekly
-            - Monthly
+          - Daily
+          - Weekly
+          - Monthly
         applyToFutureInstances:
           type: boolean
     RecurringTaskResponse:
       type: object
       required:
-        - id
-        - title
-        - pattern
-        - isActive
+      - id
+      - title
+      - pattern
+      - isActive
       properties:
         id:
           type: string
@@ -1945,18 +2029,18 @@ components:
         pattern:
           type: string
           enum:
-            - Daily
-            - Weekly
-            - Monthly
+          - Daily
+          - Weekly
+          - Monthly
         isActive:
           type: boolean
     TaskInstanceResponse:
       type: object
       required:
-        - id
-        - title
-        - status
-        - difficulty
+      - id
+      - title
+      - status
+      - difficulty
       properties:
         id:
           type: string
@@ -1969,18 +2053,18 @@ components:
         status:
           type: string
           enum:
-            - Todo
-            - InProgress
-            - Done
-            - Skipped
+          - Todo
+          - InProgress
+          - Done
+          - Skipped
         difficulty:
           type: string
           enum:
-            - Trivial
-            - Easy
-            - Normal
-            - Hard
-            - Epic
+          - Trivial
+          - Easy
+          - Normal
+          - Hard
+          - Epic
         dueDate:
           type: string
           format: date-time
@@ -2000,16 +2084,16 @@ components:
     ProfileResponse:
       type: object
       required:
-        - totalXp
-        - level
-        - xpToNextLevel
-        - xpProgressPercent
-        - xpThisWeek
-        - xpThisSeason
-        - currentStreak
-        - longestStreak
-        - xpHistory
-        - titles
+      - totalXp
+      - level
+      - xpToNextLevel
+      - xpProgressPercent
+      - xpThisWeek
+      - xpThisSeason
+      - currentStreak
+      - longestStreak
+      - xpHistory
+      - titles
       properties:
         totalXp:
           type: integer
@@ -2043,25 +2127,26 @@ components:
           type: object
           nullable: true
           allOf:
-            - $ref: "#/components/schemas/XpBreakdownResponse"
+          - $ref: '#/components/schemas/XpBreakdownResponse'
         xpHistory:
           type: array
           description: Most recent XP earning events, up to the last 20, oldest first.
           items:
-            $ref: "#/components/schemas/XpHistoryEntry"
+            $ref: '#/components/schemas/XpHistoryEntry'
         titles:
-          $ref: "#/components/schemas/ProfileTitles"
+          $ref: '#/components/schemas/ProfileTitles'
         skillTrees:
           type: array
           nullable: true
-          description: Skill trees catalog. Null when user is below level 3; otherwise all seven trees with locked/unlocked state.
+          description: Skill trees catalog. Null when user is below level 3; otherwise all seven trees with locked/unlocked
+            state.
           items:
-            $ref: "#/components/schemas/SkillTreeDto"
+            $ref: '#/components/schemas/SkillTreeDto'
         streakFreeze:
           type: object
           nullable: true
           allOf:
-            - $ref: "#/components/schemas/StreakFreezeDto"
+          - $ref: '#/components/schemas/StreakFreezeDto'
           description: Present when the user's streak is currently frozen; null otherwise.
       example:
         totalXp: 120
@@ -2073,54 +2158,57 @@ components:
         currentStreak: 3
         longestStreak: 5
         xpHistory:
-          - date: "2026-04-10"
-            xpEarned: 40
-            source: "task-completed"
-            cumulativeTotal: 80
-          - date: "2026-04-12"
-            xpEarned: 40
-            source: "task-completed"
-            cumulativeTotal: 120
+        - date: '2026-04-10'
+          xpEarned: 40
+          source: task-completed
+          cumulativeTotal: 80
+        - date: '2026-04-12'
+          xpEarned: 40
+          source: task-completed
+          cumulativeTotal: 120
         titles:
           earned:
-            - type: "EarlyBird"
-              displayName: "Early Bird"
-              earnedOn: "2026-04-05"
-          active: "EarlyBird"
+          - type: EarlyBird
+            displayName: Early Bird
+            earnedOn: '2026-04-05'
+          active: EarlyBird
           progress: []
         skillTrees:
-          - type: "Scholar"
-            tier: 1
-            tasksCompletedInTier: 5
-            tasksToNextTier: 25
-            unlockHint: null
-            perks:
-              - tier: 1
-                perkType: "Tips"
-                description: "Personalised Scholar tips"
-          - type: "Creator"
-            tier: null
-            tasksCompletedInTier: null
-            tasksToNextTier: null
-            unlockHint: "Complete 10 creative tasks to unlock"
-            perks: []
+        - type: Scholar
+          tier: 1
+          tasksCompletedInTier: 5
+          tasksToNextTier: 25
+          unlockHint: null
+          perks:
+          - tier: 1
+            perkType: Tips
+            description: Personalised Scholar tips
+        - type: Creator
+          tier: null
+          tasksCompletedInTier: null
+          tasksToNextTier: null
+          unlockHint: Complete 10 creative tasks to unlock
+          perks: []
     EstimationBiasResponse:
       type: object
       description: The authenticated user's estimation calibration read model.
       required:
-        - biasFactor
-        - sampleSize
-        - calibrationState
+      - biasFactor
+      - sampleSize
+      - calibrationState
       properties:
         biasFactor:
           type: number
           format: double
           minimum: 0.5
           maximum: 2.0
-          description: |
-            Multiplier against the user's raw estimates. Clamped to
+          description: 'Multiplier against the user''s raw estimates. Clamped to
+
             [0.5, 2.0]. Neutral value is 1.0 when `calibrationState` is
+
             `NotEnoughData`.
+
+            '
         sampleSize:
           type: integer
           minimum: 0
@@ -2128,11 +2216,13 @@ components:
         calibrationState:
           type: string
           enum:
-            - NotEnoughData
-            - Calibrated
-          description: |
-            `NotEnoughData` until the user has at least three samples;
+          - NotEnoughData
+          - Calibrated
+          description: '`NotEnoughData` until the user has at least three samples;
+
             `Calibrated` once the bias factor has been computed.
+
+            '
       example:
         biasFactor: 1.3
         sampleSize: 12
@@ -2141,8 +2231,8 @@ components:
       type: object
       description: Estimation accuracy dashboard with per-category breakdown.
       required:
-        - perCategory
-        - accuracyTrend
+      - perCategory
+      - accuracyTrend
       properties:
         overallAccuracyPercent:
           type: number
@@ -2156,10 +2246,10 @@ components:
           items:
             type: object
             required:
-              - category
-              - recordCount
-              - averageVariancePercent
-              - accuracyPercent
+            - category
+            - recordCount
+            - averageVariancePercent
+            - accuracyPercent
             properties:
               category:
                 type: string
@@ -2184,11 +2274,46 @@ components:
           type: string
           nullable: true
           description: Celebration message when recent accuracy exceeds early accuracy.
+    TimelineResponse:
+      type: object
+      required:
+      - events
+      - hasMore
+      properties:
+        events:
+          type: array
+          items:
+            type: object
+            required:
+            - id
+            - eventType
+            - occurredAt
+            - details
+            properties:
+              id:
+                type: string
+                format: uuid
+              eventType:
+                type: string
+              occurredAt:
+                type: string
+                format: date-time
+              details:
+                type: string
+              note:
+                type: string
+                nullable: true
+        hasMore:
+          type: boolean
+        nextCursor:
+          type: string
+          format: uuid
+          nullable: true
     FreezeStreakRequest:
       type: object
       additionalProperties: false
       required:
-        - days
+      - days
       properties:
         days:
           type: integer
@@ -2201,9 +2326,9 @@ components:
       type: object
       description: Snapshot of the currently active streak freeze, if any.
       required:
-        - frozenAt
-        - days
-        - expiresAt
+      - frozenAt
+      - days
+      - expiresAt
       properties:
         frozenAt:
           type: string
@@ -2219,17 +2344,17 @@ components:
           format: date
           description: The first date on which the freeze is no longer active (exclusive upper bound).
       example:
-        frozenAt: "2026-04-12"
+        frozenAt: '2026-04-12'
         days: 7
-        expiresAt: "2026-04-19"
+        expiresAt: '2026-04-19'
     XpHistoryEntry:
       type: object
       description: One XP earning event recorded against the player's history.
       required:
-        - date
-        - xpEarned
-        - source
-        - cumulativeTotal
+      - date
+      - xpEarned
+      - source
+      - cumulativeTotal
       properties:
         date:
           type: string
@@ -2248,17 +2373,17 @@ components:
           minimum: 0
           description: Running cumulative XP total as of this entry.
       example:
-        date: "2026-04-12"
+        date: '2026-04-12'
         xpEarned: 40
-        source: "task-completed"
+        source: task-completed
         cumulativeTotal: 120
     TitleDto:
       type: object
       description: A title earned by the player.
       required:
-        - type
-        - displayName
-        - earnedOn
+      - type
+      - displayName
+      - earnedOn
       properties:
         type:
           type: string
@@ -2270,16 +2395,16 @@ components:
           type: string
           format: date
       example:
-        type: "EarlyBird"
-        displayName: "Early Bird"
-        earnedOn: "2026-04-05"
+        type: EarlyBird
+        displayName: Early Bird
+        earnedOn: '2026-04-05'
     TitleProgressDto:
       type: object
       description: Progress toward a not-yet-earned title.
       required:
-        - type
-        - progressPercentage
-        - remainingDescription
+      - type
+      - progressPercentage
+      - remainingDescription
       properties:
         type:
           type: string
@@ -2290,20 +2415,20 @@ components:
         remainingDescription:
           type: string
       example:
-        type: "StreakMaster"
+        type: StreakMaster
         progressPercentage: 40
-        remainingDescription: "6 more days of consistent completions needed"
+        remainingDescription: 6 more days of consistent completions needed
     ProfileTitles:
       type: object
       description: Titles section of the profile, including earned titles, the active title, and progress.
       required:
-        - earned
-        - progress
+      - earned
+      - progress
       properties:
         earned:
           type: array
           items:
-            $ref: "#/components/schemas/TitleDto"
+            $ref: '#/components/schemas/TitleDto'
         active:
           type: string
           nullable: true
@@ -2311,21 +2436,21 @@ components:
         progress:
           type: array
           items:
-            $ref: "#/components/schemas/TitleProgressDto"
+            $ref: '#/components/schemas/TitleProgressDto'
       example:
         earned:
-          - type: "EarlyBird"
-            displayName: "Early Bird"
-            earnedOn: "2026-04-05"
-        active: "EarlyBird"
+        - type: EarlyBird
+          displayName: Early Bird
+          earnedOn: '2026-04-05'
+        active: EarlyBird
         progress: []
     SkillTreePerkDto:
       type: object
       description: A perk unlocked at a specific tier of a skill tree.
       required:
-        - tier
-        - perkType
-        - description
+      - tier
+      - perkType
+      - description
       properties:
         tier:
           type: integer
@@ -2333,23 +2458,24 @@ components:
           maximum: 3
         perkType:
           type: string
-          description: "One of: Tips, Workflow, Cosmetic."
+          description: 'One of: Tips, Workflow, Cosmetic.'
         description:
           type: string
       example:
         tier: 1
-        perkType: "Tips"
-        description: "Personalised Scholar tips"
+        perkType: Tips
+        description: Personalised Scholar tips
     SkillTreeDto:
       type: object
-      description: A skill tree entry. Locked trees carry an unlockHint and empty tier/perks; unlocked trees carry tier progress and perks.
+      description: A skill tree entry. Locked trees carry an unlockHint and empty tier/perks; unlocked trees carry tier progress
+        and perks.
       required:
-        - type
-        - perks
+      - type
+      - perks
       properties:
         type:
           type: string
-          description: "One of the seven skill-tree types: Creator, Guardian, Scholar, Architect, Connector, Steward, Builder."
+          description: 'One of the seven skill-tree types: Creator, Guardian, Scholar, Architect, Connector, Steward, Builder.'
         tier:
           type: integer
           nullable: true
@@ -2369,24 +2495,24 @@ components:
         perks:
           type: array
           items:
-            $ref: "#/components/schemas/SkillTreePerkDto"
+            $ref: '#/components/schemas/SkillTreePerkDto'
       example:
-        type: "Scholar"
+        type: Scholar
         tier: 1
         tasksCompletedInTier: 5
         tasksToNextTier: 25
         unlockHint: null
         perks:
-          - tier: 1
-            perkType: "Tips"
-            description: "Personalised Scholar tips"
+        - tier: 1
+          perkType: Tips
+          description: Personalised Scholar tips
     XpBreakdownResponse:
       type: object
       required:
-        - baseXp
-        - deadlineModifier
-        - streakMultiplier
-        - finalXp
+      - baseXp
+      - deadlineModifier
+      - streakMultiplier
+      - finalXp
       properties:
         baseXp:
           type: integer
@@ -2403,11 +2529,11 @@ components:
     NotificationResponse:
       type: object
       required:
-        - id
-        - type
-        - message
-        - createdAt
-        - status
+      - id
+      - type
+      - message
+      - createdAt
+      - status
       properties:
         id:
           type: string
@@ -2415,11 +2541,11 @@ components:
         type:
           type: string
           enum:
-            - TaskReminder
-            - AchievementAlert
-            - DailyBriefReady
-            - WeeklyReviewPrompt
-            - CapacityWarning
+          - TaskReminder
+          - AchievementAlert
+          - DailyBriefReady
+          - WeeklyReviewPrompt
+          - CapacityWarning
         message:
           type: string
           maxLength: 500
@@ -2429,28 +2555,28 @@ components:
         status:
           type: string
           enum:
-            - Unread
-            - Read
-            - Dismissed
+          - Unread
+          - Read
+          - Dismissed
         readAt:
           type: string
           format: date-time
           nullable: true
       example:
-        id: "11111111-1111-1111-1111-111111111111"
+        id: 11111111-1111-1111-1111-111111111111
         type: AchievementAlert
-        message: "Level up! You reached level 2."
-        createdAt: "2026-04-12T12:00:00Z"
+        message: Level up! You reached level 2.
+        createdAt: '2026-04-12T12:00:00Z'
         status: Unread
         readAt: null
     DailyBriefTaskDto:
       type: object
       description: A single task surfaced inside a daily brief.
       required:
-        - id
-        - title
-        - difficulty
-        - priority
+      - id
+      - title
+      - difficulty
+      - priority
       properties:
         id:
           type: string
@@ -2459,12 +2585,12 @@ components:
           type: string
         difficulty:
           type: string
-          description: "One of: Trivial, Easy, Normal, Hard, Epic."
-          example: "Normal"
+          description: 'One of: Trivial, Easy, Normal, Hard, Epic.'
+          example: Normal
         priority:
           type: string
-          description: "One of: Low, Medium, High, Critical."
-          example: "Medium"
+          description: 'One of: Low, Medium, High, Critical.'
+          example: Medium
         estimatedMinutes:
           type: integer
           nullable: true
@@ -2473,11 +2599,15 @@ components:
           type: integer
           nullable: true
           minimum: 1
-          description: |
-            Estimated minutes adjusted by the user's learned estimation bias.
+          description: 'Estimated minutes adjusted by the user''s learned estimation bias.
+
             `null` when the user has too few completed tasks with actual times
+
             recorded to produce a calibration — clients should fall back to
+
             `estimatedMinutes` in that case.
+
+            '
         scheduledDate:
           type: string
           format: date
@@ -2486,16 +2616,16 @@ components:
       type: object
       description: Stateless daily brief for the authenticated user.
       required:
-        - date
-        - greeting
-        - currentStreakDays
-        - corePlanCount
-        - ifTimeAllowsCount
-        - overdueCount
-        - corePlan
-        - ifTimeAllows
-        - overdue
-        - status
+      - date
+      - greeting
+      - currentStreakDays
+      - corePlanCount
+      - ifTimeAllowsCount
+      - overdueCount
+      - corePlan
+      - ifTimeAllows
+      - overdue
+      - status
       properties:
         date:
           type: string
@@ -2519,72 +2649,74 @@ components:
         corePlan:
           type: array
           items:
-            $ref: "#/components/schemas/DailyBriefTaskDto"
+            $ref: '#/components/schemas/DailyBriefTaskDto'
         ifTimeAllows:
           type: array
           items:
-            $ref: "#/components/schemas/DailyBriefTaskDto"
+            $ref: '#/components/schemas/DailyBriefTaskDto'
         overdue:
           type: array
           items:
-            $ref: "#/components/schemas/DailyBriefTaskDto"
+            $ref: '#/components/schemas/DailyBriefTaskDto'
         status:
           type: string
-          description: |
-            `Available` when the brief has enough content to display;
+          description: '`Available` when the brief has enough content to display;
+
             `InsufficientTasks` when fewer than two core-plan items exist.
+
+            '
           enum:
-            - Available
-            - InsufficientTasks
+          - Available
+          - InsufficientTasks
       example:
-        date: "2026-04-12"
-        greeting: "Good morning, Demo User"
+        date: '2026-04-12'
+        greeting: Good morning, Demo User
         currentStreakDays: 3
         corePlanCount: 2
         ifTimeAllowsCount: 1
         overdueCount: 1
         corePlan:
-          - id: "550e8400-e29b-41d4-a716-446655440000"
-            title: "Review quarterly plan"
-            difficulty: "Normal"
-            priority: "Medium"
-            estimatedMinutes: 30
-            calibratedMinutes: 42
-            scheduledDate: "2026-04-12"
-          - id: "550e8400-e29b-41d4-a716-446655440001"
-            title: "Respond to overdue email"
-            difficulty: "Easy"
-            priority: "High"
-            estimatedMinutes: 10
-            calibratedMinutes: 14
-            scheduledDate: "2026-04-11"
+        - id: 550e8400-e29b-41d4-a716-446655440000
+          title: Review quarterly plan
+          difficulty: Normal
+          priority: Medium
+          estimatedMinutes: 30
+          calibratedMinutes: 42
+          scheduledDate: '2026-04-12'
+        - id: 550e8400-e29b-41d4-a716-446655440001
+          title: Respond to overdue email
+          difficulty: Easy
+          priority: High
+          estimatedMinutes: 10
+          calibratedMinutes: 14
+          scheduledDate: '2026-04-11'
         ifTimeAllows:
-          - id: "550e8400-e29b-41d4-a716-446655440002"
-            title: "Tidy inbox"
-            difficulty: "Trivial"
-            priority: "Low"
-            estimatedMinutes: 15
-            calibratedMinutes: 21
-            scheduledDate: "2026-04-13"
+        - id: 550e8400-e29b-41d4-a716-446655440002
+          title: Tidy inbox
+          difficulty: Trivial
+          priority: Low
+          estimatedMinutes: 15
+          calibratedMinutes: 21
+          scheduledDate: '2026-04-13'
         overdue:
-          - id: "550e8400-e29b-41d4-a716-446655440001"
-            title: "Respond to overdue email"
-            difficulty: "Easy"
-            priority: "High"
-            estimatedMinutes: 10
-            calibratedMinutes: 14
-            scheduledDate: "2026-04-11"
-        status: "Available"
+        - id: 550e8400-e29b-41d4-a716-446655440001
+          title: Respond to overdue email
+          difficulty: Easy
+          priority: High
+          estimatedMinutes: 10
+          calibratedMinutes: 14
+          scheduledDate: '2026-04-11'
+        status: Available
     WeeklyReviewResponse:
       type: object
       description: Weekly review recap for the authenticated user.
       required:
-        - weekOf
-        - tasksCompleted
-        - xpEarned
-        - streakStart
-        - streakEnd
-        - notableEvents
+      - weekOf
+      - tasksCompleted
+      - xpEarned
+      - streakStart
+      - streakEnd
+      - notableEvents
       properties:
         weekOf:
           type: string
@@ -2612,29 +2744,29 @@ components:
           type: object
           nullable: true
           allOf:
-            - $ref: "#/components/schemas/WeeklyReflectionResponse"
+          - $ref: '#/components/schemas/WeeklyReflectionResponse'
           description: The previously-saved reflection for this week, if any.
       example:
-        weekOf: "2026-04-12"
+        weekOf: '2026-04-12'
         tasksCompleted: 7
         xpEarned: 420
         streakStart: 4
         streakEnd: 11
         notableEvents:
-          - "Completed 7 task(s) this week"
-          - "+50 XP (TaskCompletion) on 2026-04-13"
+        - Completed 7 task(s) this week
+        - +50 XP (TaskCompletion) on 2026-04-13
         reflection:
-          whatWentWell: "Shipped the weekly review slice end-to-end"
-          whatDragged: "Too many context switches"
-          adjustment: "Block a 2-hour deep-work window every morning"
-          savedAt: "2026-04-15T20:00:00Z"
+          whatWentWell: Shipped the weekly review slice end-to-end
+          whatDragged: Too many context switches
+          adjustment: Block a 2-hour deep-work window every morning
+          savedAt: '2026-04-15T20:00:00Z'
     SaveWeeklyReviewRequest:
       type: object
       description: User-authored reflection to save for a review week.
       required:
-        - whatWentWell
-        - whatDragged
-        - adjustment
+      - whatWentWell
+      - whatDragged
+      - adjustment
       properties:
         whatWentWell:
           type: string
@@ -2654,18 +2786,18 @@ components:
           nullable: true
           description: The Sunday anchoring the review week. Defaults to the current week's Sunday.
       example:
-        whatWentWell: "Shipped the weekly review slice end-to-end"
-        whatDragged: "Too many context switches"
-        adjustment: "Block a 2-hour deep-work window every morning"
-        weekOf: "2026-04-12"
+        whatWentWell: Shipped the weekly review slice end-to-end
+        whatDragged: Too many context switches
+        adjustment: Block a 2-hour deep-work window every morning
+        weekOf: '2026-04-12'
     WeeklyReflectionResponse:
       type: object
       description: A saved reflection for one review week.
       required:
-        - whatWentWell
-        - whatDragged
-        - adjustment
-        - savedAt
+      - whatWentWell
+      - whatDragged
+      - adjustment
+      - savedAt
       properties:
         whatWentWell:
           type: string
@@ -2677,7 +2809,7 @@ components:
           type: string
           format: date-time
       example:
-        whatWentWell: "Shipped the weekly review slice end-to-end"
-        whatDragged: "Too many context switches"
-        adjustment: "Block a 2-hour deep-work window every morning"
-        savedAt: "2026-04-15T20:00:00Z"
+        whatWentWell: Shipped the weekly review slice end-to-end
+        whatDragged: Too many context switches
+        adjustment: Block a 2-hour deep-work window every morning
+        savedAt: '2026-04-15T20:00:00Z'

@@ -175,6 +175,12 @@ builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Even
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
     EM2Devs.Todo.Application.Events.QuestCompletionXpHandler>();
 
+// Energy check-in: in-memory store for energy level tracking.
+builder.Services.AddSingleton<InMemoryEnergyCheckInStore>();
+builder.Services.AddScoped<IEnergyCheckInRepository, InMemoryEnergyCheckInRepository>();
+builder.Services.AddTransient<IRequestHandler<EnergyCheckInCommand, Result<EnergyCheckInResult>>, EnergyCheckInCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<GetEnergyProfileQuery, Result<EnergyProfileReadModel>>, GetEnergyProfileQueryHandler>();
+
 // Timeline: in-memory store for journey timeline events.
 builder.Services.AddSingleton<InMemoryTimelineStore>();
 builder.Services.AddScoped<ITimelineRepository, InMemoryTimelineRepository>();

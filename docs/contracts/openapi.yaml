@@ -1275,6 +1275,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProfileResponse"
+  /api/timeline:
+    get:
+      operationId: getTimeline
+      summary: Get the user's journey timeline
+      description: |
+        Returns a paginated, reverse-chronological list of milestone events.
+        Supports filtering by event type and cursor-based pagination.
+      parameters:
+        - name: eventType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter by event type (e.g. LevelUp, QuestCompleted).
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Cursor for next page (from previous response's nextCursor).
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "200":
+          description: Timeline page
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimelineResponse"
   /api/notifications:
     get:
       operationId: listNotifications
@@ -2184,6 +2222,41 @@ components:
           type: string
           nullable: true
           description: Celebration message when recent accuracy exceeds early accuracy.
+    TimelineResponse:
+      type: object
+      required:
+        - events
+        - hasMore
+      properties:
+        events:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - eventType
+              - occurredAt
+              - details
+            properties:
+              id:
+                type: string
+                format: uuid
+              eventType:
+                type: string
+              occurredAt:
+                type: string
+                format: date-time
+              details:
+                type: string
+              note:
+                type: string
+                nullable: true
+        hasMore:
+          type: boolean
+        nextCursor:
+          type: string
+          format: uuid
+          nullable: true
     FreezeStreakRequest:
       type: object
       additionalProperties: false

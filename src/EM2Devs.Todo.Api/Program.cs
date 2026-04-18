@@ -286,6 +286,7 @@ builder.Services.AddApiVersioning(options =>
 builder.Services.AddControllers(options =>
     {
         options.ModelBinderProviders.Insert(0, new DateOnlyModelBinderProvider());
+        options.Filters.Add<EM2Devs.Todo.Api.Middleware.RejectUnknownQueryParametersFilter>();
     })
     .AddJsonOptions(options =>
     {

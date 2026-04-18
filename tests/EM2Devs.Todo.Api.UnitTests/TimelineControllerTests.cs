@@ -34,6 +34,17 @@ public sealed class TimelineControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Should_RejectUnknownQueryParameter_When_ExtraParamSent()
+    {
+        HttpResponseMessage response = await _client.GetAsync(
+            "/api/timeline?pageSize=20&unknownParam=42");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        string body = await response.Content.ReadAsStringAsync();
+        body.ShouldContain("unknownParam");
+    }
+
+    [Fact]
     public async Task Should_Return401_When_Unauthenticated()
     {
         using HttpClient unauth = _factory.CreateClient();

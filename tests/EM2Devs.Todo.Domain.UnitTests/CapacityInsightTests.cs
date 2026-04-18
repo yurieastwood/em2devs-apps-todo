@@ -167,4 +167,27 @@ public sealed class CapacityInsightTests
 
         CapacityInsight.GetPlanningRecommendation(overview).ShouldBeNull();
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNull_When_OverviewIsNull()
+    {
+        Should.Throw<ArgumentNullException>(() =>
+            CapacityInsight.GetPlanningRecommendation(null!));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnRecommendation_When_DifferenceIsExactlyTwo()
+    {
+        var overview = WeeklyCapacityOverview.From(new Dictionary<DayOfWeek, int>
+        {
+            { DayOfWeek.Monday, 6 }, { DayOfWeek.Tuesday, 5 }, { DayOfWeek.Wednesday, 5 },
+            { DayOfWeek.Thursday, 5 }, { DayOfWeek.Friday, 4 }, { DayOfWeek.Saturday, 4 },
+            { DayOfWeek.Sunday, 4 }
+        });
+
+        string? recommendation = CapacityInsight.GetPlanningRecommendation(overview);
+        recommendation.ShouldNotBeNull();
+    }
 }

@@ -1510,7 +1510,6 @@ components:
       type: object
       description: RFC 9457 Problem Details for HTTP APIs
       required:
-      - type
       - title
       - status
       properties:

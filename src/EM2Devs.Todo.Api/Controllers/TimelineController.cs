@@ -27,6 +27,16 @@ public sealed class TimelineController : ControllerBase
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
     {
+        if (pageSize < 1 || pageSize > 100)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid page size",
+                Status = 400,
+                Detail = "pageSize must be between 1 and 100."
+            });
+        }
+
         Result<TimelineReadModel> result = await _mediator
             .Send(new GetTimelineQuery(eventType, cursor, pageSize), ct)
             .ConfigureAwait(false);

@@ -5,6 +5,7 @@ using EM2Devs.Todo.Api.Extensions;
 using EM2Devs.Todo.Application.Commands;
 using EM2Devs.Todo.Application.Mediator;
 using EM2Devs.Todo.Application.Queries;
+using EM2Devs.Todo.Application.ReadModels;
 using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
@@ -139,6 +140,16 @@ public sealed class TasksController : ControllerBase
         Result<FocusModeResult> result = await _mediator
             .Send(new EndFocusModeCommand(), ct).ConfigureAwait(false);
         return result.ToHttpResult(r => Ok(new { taskId = r.TaskId, durationMinutes = r.DurationMinutes }));
+    }
+
+    [HttpGet("procrastination-candidates")]
+    public async Task<IActionResult> GetProcrastinationCandidates(CancellationToken ct)
+    {
+        Result<IReadOnlyList<ProcrastinationCandidateReadModel>> result = await _mediator
+            .Send(new GetProcrastinationCandidatesQuery(), ct).ConfigureAwait(false);
+        return result.Match<IActionResult>(
+            candidates => Ok(candidates),
+            error => Problem(error.Message, statusCode: 500));
     }
 
     private static TaskResponse MapToResponse(TodoTask task)

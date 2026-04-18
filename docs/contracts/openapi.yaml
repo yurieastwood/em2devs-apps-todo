@@ -1301,6 +1301,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileResponse'
+  /api/tasks/procrastination-candidates:
+    get:
+      operationId: getProcrastinationCandidates
+      summary: Get tasks flagged as procrastination candidates
+      description: Evaluates the user's task list and returns tasks showing procrastination signals with urgency scores and intervention options.
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: List of procrastination candidates sorted by urgency
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    taskId:
+                      type: string
+                      format: uuid
+                    title:
+                      type: string
+                    urgencyScore:
+                      type: integer
+                    signals:
+                      type: array
+                      items:
+                        type: string
+                    interventions:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                          description:
+                            type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/insights:
     get:
       operationId: listInsights

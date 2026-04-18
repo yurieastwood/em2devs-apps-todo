@@ -175,6 +175,9 @@ builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Even
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
     EM2Devs.Todo.Application.Events.QuestCompletionXpHandler>();
 
+// Procrastination detection query handler.
+builder.Services.AddTransient<IRequestHandler<GetProcrastinationCandidatesQuery, Result<IReadOnlyList<ProcrastinationCandidateReadModel>>>, GetProcrastinationCandidatesQueryHandler>();
+
 // Insight cards: in-memory store for personalised productivity insights.
 builder.Services.AddSingleton<InMemoryInsightCardStore>();
 builder.Services.AddScoped<IInsightCardRepository, InMemoryInsightCardRepository>();

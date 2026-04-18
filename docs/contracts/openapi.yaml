@@ -1313,6 +1313,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TimelineResponse"
+        "400":
+          description: Unknown query parameter
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
   /api/notifications:
     get:
       operationId: listNotifications

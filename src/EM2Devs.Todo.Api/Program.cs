@@ -175,6 +175,14 @@ builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Even
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
     EM2Devs.Todo.Application.Events.QuestCompletionXpHandler>();
 
+// Insight cards: in-memory store for personalised productivity insights.
+builder.Services.AddSingleton<InMemoryInsightCardStore>();
+builder.Services.AddScoped<IInsightCardRepository, InMemoryInsightCardRepository>();
+builder.Services.AddTransient<IRequestHandler<ListInsightCardsQuery, Result<IReadOnlyList<InsightCardReadModel>>>, ListInsightCardsQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<MarkInsightReadCommand, Result<bool>>, MarkInsightReadCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<SaveInsightCommand, Result<bool>>, SaveInsightCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<DismissInsightCommand, Result<bool>>, DismissInsightCommandHandler>();
+
 // Energy check-in: in-memory store for energy level tracking.
 builder.Services.AddSingleton<InMemoryEnergyCheckInStore>();
 builder.Services.AddScoped<IEnergyCheckInRepository, InMemoryEnergyCheckInRepository>();

@@ -1301,6 +1301,119 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileResponse'
+  /api/insights:
+    get:
+      operationId: listInsights
+      summary: List active insight cards
+      description: Returns insight cards for the authenticated user.
+      parameters:
+      - name: includeRead
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: List of insight cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    type:
+                      type: string
+                    message:
+                      type: string
+                    supportingData:
+                      type: string
+                    status:
+                      type: string
+                      enum: [Unread, Read, Saved, Dismissed]
+                    generatedAt:
+                      type: string
+                      format: date
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/insights/{insightId}/read:
+    post:
+      operationId: markInsightRead
+      summary: Mark an insight card as read
+      parameters:
+      - name: insightId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '204':
+          description: Insight marked as read
+        '404':
+          description: Insight not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/insights/{insightId}/save:
+    post:
+      operationId: saveInsight
+      summary: Save an insight card to collection
+      parameters:
+      - name: insightId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '204':
+          description: Insight saved
+        '404':
+          description: Insight not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/insights/{insightId}/dismiss:
+    post:
+      operationId: dismissInsight
+      summary: Dismiss an insight card
+      parameters:
+      - name: insightId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '204':
+          description: Insight dismissed
+        '404':
+          description: Insight not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/energy/check-in:
     post:
       operationId: energyCheckIn

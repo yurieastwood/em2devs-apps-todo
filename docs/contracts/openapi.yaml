@@ -1301,6 +1301,77 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileResponse'
+  /api/energy/check-in:
+    post:
+      operationId: energyCheckIn
+      summary: Record or update today's energy level
+      description: Records the user's current energy level. If already checked in today, updates the level and tracks fluctuation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - level
+              properties:
+                level:
+                  type: string
+                  enum:
+                  - Low
+                  - Medium
+                  - High
+                  - Peak
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: Energy level recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  level:
+                    type: string
+                  isUpdate:
+                    type: boolean
+                  hasFluctuated:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/energy/profile:
+    get:
+      operationId: getEnergyProfile
+      summary: Get the user's energy profile and inference confidence
+      description: Returns current energy level, data sufficiency, and inference confidence based on historical check-ins.
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: Energy profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentLevel:
+                    type: string
+                    nullable: true
+                  hasSufficientData:
+                    type: boolean
+                  confidenceScore:
+                    type: number
+                    format: double
+                  confidenceLevel:
+                    type: string
+                  dataPoints:
+                    type: integer
+                  insufficientDataMessage:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/timeline:
     get:
       operationId: getTimeline

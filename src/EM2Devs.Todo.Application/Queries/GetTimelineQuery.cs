@@ -35,9 +35,22 @@ public sealed class GetTimelineQueryHandler
             timeline = timeline.FilterByEventType(filter);
         }
 
-        TimelinePage page = request.Cursor.HasValue
-            ? timeline.GetNextPage(new TimelineEventId(request.Cursor.Value), request.PageSize)
-            : timeline.GetFirstPage(request.PageSize);
+        TimelinePage page;
+        if (request.Cursor.HasValue)
+        {
+            try
+            {
+                page = timeline.GetNextPage(new TimelineEventId(request.Cursor.Value), request.PageSize);
+            }
+            catch (Domain.Exceptions.DomainException)
+            {
+                page = timeline.GetFirstPage(request.PageSize);
+            }
+        }
+        else
+        {
+            page = timeline.GetFirstPage(request.PageSize);
+        }
 
         var items = page.Events
             .Select(e => new TimelineEventReadModel(

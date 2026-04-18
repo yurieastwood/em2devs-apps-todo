@@ -17,7 +17,7 @@ Feature: Energy-Aware Scheduling
       Then my current energy should be recorded as "High"
       And my task suggestions should prioritise difficult tasks
 
-    @todo
+    @done
     Scenario: Skip energy check-in with sufficient history
       Given I have at least 14 days of task completion data
       When I open Waypoint for my first session of the day
@@ -46,7 +46,7 @@ Feature: Energy-Aware Scheduling
         | Medium  | Normal difficulty tasks                |
         | Low     | Easy, routine, and administrative tasks |
 
-    @todo
+    @done
     Scenario: New user with insufficient data for pattern inference
       Given I have fewer than 14 days of task completion data
       When I dismiss the energy check-in prompt
@@ -74,7 +74,7 @@ Feature: Energy-Aware Scheduling
       Then it should build a weekly energy profile for me
       And the profile should be visible in my productivity insights
 
-    @todo
+    @done
     Scenario: Energy inference improves with data
       Given I have provided energy check-ins for 14 days
       When I skip a check-in on a typical Wednesday morning
@@ -86,7 +86,7 @@ Feature: Energy-Aware Scheduling
 
   Rule: Task recommendations adapt to energy levels throughout the day
 
-    @todo
+    @done
     Scenario: Mid-day energy shift recommendation
       Given my energy was "High" this morning
       And it is now 2 PM

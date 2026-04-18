@@ -78,7 +78,7 @@ Feature: Capacity Modelling
       When I view my Today tasks
       Then I should not see any capacity warning
 
-    @todo
+    @done
     Scenario: Capacity warnings dismissed repeatedly
       Given my weekday capacity is 6 tasks
       And I have dismissed the capacity warning 3 times this week
@@ -87,7 +87,7 @@ Feature: Capacity Modelling
       And it should not show a modal or interruptive warning
       And the full warning should resume the following week
 
-    @todo
+    @done
     Scenario: Reprioritisation assistance offered
       Given I have 12 tasks scheduled for today
       And my capacity is 6 tasks
@@ -98,14 +98,14 @@ Feature: Capacity Modelling
 
   Rule: Users can view their capacity model and trends
 
-    @todo
+    @done
     Scenario: View weekly capacity overview
       When I navigate to my capacity insights
       Then I should see my average daily capacity for each day of the week
       And I should see a trend line showing capacity changes over the last 90 days
       And I should see my most and least productive days
 
-    @todo
+    @done
     Scenario: Capacity insight informs planning
       Given my capacity model shows Mondays average 8 tasks and Fridays average 4 tasks
       When I am planning tasks for the week

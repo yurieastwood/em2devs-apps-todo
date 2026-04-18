@@ -8,6 +8,9 @@ public sealed class EnergyProfile : IEquatable<EnergyProfile>
 {
     private const int MinimumDaysForSufficientData = 7;
 
+    public const string InsufficientDataMessage =
+        "We're still learning your energy patterns — check in daily for personalised suggestions after 14 days";
+
     private readonly IReadOnlyDictionary<DayOfWeek, EnergyLevel> _patterns;
 
     public bool HasSufficientData { get; }

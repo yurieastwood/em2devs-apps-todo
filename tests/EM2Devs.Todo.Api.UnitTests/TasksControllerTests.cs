@@ -361,6 +361,16 @@ public sealed class TasksControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Should_ReturnEmptyList_When_NoProcrastinationCandidates()
+    {
+        HttpResponseMessage response = await _client.GetAsync("/api/tasks/procrastination-candidates");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        string json = await response.Content.ReadAsStringAsync();
+        json.ShouldBe("[]");
+    }
+
+    [Fact]
     public async Task Should_RejectFocusMode_When_TaskIsNotBossTask()
     {
         var createResponse = await _client.PostAsJsonAsync("/api/tasks", new { title = "Not a boss task" });

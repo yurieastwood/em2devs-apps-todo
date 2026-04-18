@@ -68,4 +68,21 @@ public sealed record CapacityInsight
 
         return new CapacityInsight(trend, Math.Round(recentAvg, 2), Math.Round(previousAvg, 2));
     }
+
+    public static string? GetPlanningRecommendation(WeeklyCapacityOverview overview)
+    {
+        ArgumentNullException.ThrowIfNull(overview);
+
+        DayOfWeek most = overview.MostProductiveDay;
+        DayOfWeek least = overview.LeastProductiveDay;
+        int mostCap = overview.CapacityByDay[most];
+        int leastCap = overview.CapacityByDay[least];
+
+        if (mostCap - leastCap < 2)
+        {
+            return null;
+        }
+
+        return $"Consider front-loading harder tasks to {most} ({mostCap} tasks) and lighter loads for {least} ({leastCap} tasks).";
+    }
 }

@@ -485,4 +485,12 @@ public sealed class EnergyProfileTests
         // Then — hash code should not be default zero
         hashCode.ShouldNotBe(0);
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ExposeInsufficientDataMessage_When_NewUser()
+    {
+        EnergyProfile.InsufficientDataMessage.ShouldContain("still learning");
+        EnergyProfile.InsufficientDataMessage.ShouldContain("14 days");
+    }
 }

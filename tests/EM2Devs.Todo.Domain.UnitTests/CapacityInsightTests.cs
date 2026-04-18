@@ -132,4 +132,62 @@ public sealed class CapacityInsightTests
         insight.RecentAverage.ShouldBe(8.0);
         insight.PreviousAverage.ShouldBe(6.0);
     }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnPlanningRecommendation_When_CapacityVariesAcrossDays()
+    {
+        var overview = WeeklyCapacityOverview.From(new Dictionary<DayOfWeek, int>
+        {
+            { DayOfWeek.Monday, 8 }, { DayOfWeek.Tuesday, 6 }, { DayOfWeek.Wednesday, 6 },
+            { DayOfWeek.Thursday, 5 }, { DayOfWeek.Friday, 4 }, { DayOfWeek.Saturday, 2 },
+            { DayOfWeek.Sunday, 3 }
+        });
+
+        CapacityInsight insight = CapacityInsight.Evaluate(List(6, 7), List(5, 6));
+
+        string? recommendation = CapacityInsight.GetPlanningRecommendation(overview);
+        recommendation.ShouldNotBeNull();
+        recommendation.ShouldContain("Monday");
+        recommendation.ShouldContain("Saturday");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnNull_When_CapacityIsUniformAcrossDays()
+    {
+        var overview = WeeklyCapacityOverview.From(new Dictionary<DayOfWeek, int>
+        {
+            { DayOfWeek.Monday, 5 }, { DayOfWeek.Tuesday, 5 }, { DayOfWeek.Wednesday, 5 },
+            { DayOfWeek.Thursday, 5 }, { DayOfWeek.Friday, 5 }, { DayOfWeek.Saturday, 5 },
+            { DayOfWeek.Sunday, 5 }
+        });
+
+        CapacityInsight insight = CapacityInsight.Evaluate(List(5), List(5));
+
+        CapacityInsight.GetPlanningRecommendation(overview).ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowArgumentNull_When_OverviewIsNull()
+    {
+        Should.Throw<ArgumentNullException>(() =>
+            CapacityInsight.GetPlanningRecommendation(null!));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReturnRecommendation_When_DifferenceIsExactlyTwo()
+    {
+        var overview = WeeklyCapacityOverview.From(new Dictionary<DayOfWeek, int>
+        {
+            { DayOfWeek.Monday, 6 }, { DayOfWeek.Tuesday, 5 }, { DayOfWeek.Wednesday, 5 },
+            { DayOfWeek.Thursday, 5 }, { DayOfWeek.Friday, 4 }, { DayOfWeek.Saturday, 4 },
+            { DayOfWeek.Sunday, 4 }
+        });
+
+        string? recommendation = CapacityInsight.GetPlanningRecommendation(overview);
+        recommendation.ShouldNotBeNull();
+    }
 }

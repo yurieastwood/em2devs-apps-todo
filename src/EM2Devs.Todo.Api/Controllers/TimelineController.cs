@@ -29,12 +29,8 @@ public sealed class TimelineController : ControllerBase
     {
         if (pageSize < 1 || pageSize > 100)
         {
-            return BadRequest(new ProblemDetails
-            {
-                Title = "Invalid page size",
-                Status = 400,
-                Detail = "pageSize must be between 1 and 100."
-            });
+            ModelState.AddModelError("pageSize", "pageSize must be between 1 and 100.");
+            return ValidationProblem(ModelState);
         }
 
         Result<TimelineReadModel> result = await _mediator

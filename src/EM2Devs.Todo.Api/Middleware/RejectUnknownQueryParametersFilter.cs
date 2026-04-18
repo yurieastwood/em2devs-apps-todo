@@ -34,13 +34,15 @@ public sealed class RejectUnknownQueryParametersFilter : IActionFilter
         {
             if (!allowed.Contains(key) && !_globallyIgnored.Contains(key))
             {
-                context.Result = new BadRequestObjectResult(new ProblemDetails
+                var errors = new Dictionary<string, string[]>
                 {
-                    Type = "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-                    Title = "Unknown query parameter",
-                    Status = StatusCodes.Status400BadRequest,
-                    Detail = $"Query parameter '{key}' is not recognized by this endpoint."
-                });
+                    [key] = [$"Query parameter '{key}' is not recognized by this endpoint."]
+                };
+                var problem = new ValidationProblemDetails(errors)
+                {
+                    Status = StatusCodes.Status400BadRequest
+                };
+                context.Result = new BadRequestObjectResult(problem);
                 return;
             }
         }

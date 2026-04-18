@@ -1314,11 +1314,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/TimelineResponse"
         "400":
-          description: Unknown query parameter
+          description: Invalid query parameter or unknown parameter
           content:
             application/problem+json:
               schema:
-                $ref: "#/components/schemas/ProblemDetails"
+                $ref: "#/components/schemas/ValidationProblemDetails"
   /api/notifications:
     get:
       operationId: listNotifications

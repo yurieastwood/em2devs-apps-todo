@@ -9,7 +9,7 @@ Feature: Subscription Tiers
 
   Rule: Free-tier users have full access to core task management and gamification
 
-    @todo
+    @done
     Scenario: Free-tier user has access to core features
       Given I have a free-tier account
       Then I should have access to the following features:
@@ -28,7 +28,7 @@ Feature: Subscription Tiers
         | Local data storage               |
         | Manual data export               |
 
-    @todo
+    @done
     Scenario: Free-tier user encounters a premium feature
       Given I have a free-tier account
       When I attempt to access a premium feature such as "Sagas"
@@ -39,7 +39,7 @@ Feature: Subscription Tiers
 
   Rule: Premium unlocks advanced intelligence, social, and customisation features
 
-    @todo
+    @done
     Scenario: Subscribe to premium
       Given I have a free-tier account
       When I navigate to the subscription page
@@ -48,7 +48,7 @@ Feature: Subscription Tiers
       Then my account should be upgraded to premium
       And all premium features should become immediately available
 
-    @todo
+    @done
     Scenario: Premium user has access to all premium features
       Given I have a premium subscription
       Then I should have access to the following additional features:
@@ -66,7 +66,7 @@ Feature: Subscription Tiers
         | Annual Wrapped                    |
         | Calendar integration              |
 
-    @todo
+    @done
     Scenario: Premium subscription expires
       Given I have a premium subscription that has expired
       Then my account should revert to free-tier access
@@ -76,7 +76,7 @@ Feature: Subscription Tiers
       And guild memberships should be preserved but limited to view-only
       And I should be prompted to renew with a clear explanation of what was lost
 
-    @todo
+    @done
     Scenario: In-progress guild activities on premium expiry
       Given I have a premium subscription
       And I am participating in a guild challenge
@@ -87,7 +87,7 @@ Feature: Subscription Tiers
       But I should not be able to create new guild activities
       And I should be able to view but not interact with guild boards
 
-    @todo
+    @done
     Scenario: Cosmetics retained after downgrade
       Given I have a premium subscription
       And I have purchased the "Midnight Theme" colour palette
@@ -98,7 +98,7 @@ Feature: Subscription Tiers
 
   Rule: Team tier provides everything in Pro plus team management features
 
-    @todo
+    @done
     Scenario: Subscribe to team tier
       Given I am the administrator of a team workspace
       When I subscribe to the "Waypoint Guild" plan for up to 25 members
@@ -106,7 +106,7 @@ Feature: Subscription Tiers
       And all team members should receive premium features
       And team-specific features should be available
 
-    @todo
+    @done
     Scenario: Team tier includes team-specific features
       Given my team has the "Waypoint Guild" subscription
       Then the team should have access to:
@@ -117,7 +117,7 @@ Feature: Subscription Tiers
         | Admin controls and onboarding flows  |
         | Dedicated team leaderboards          |
 
-    @todo
+    @done
     Scenario: Team lead cancels the subscription
       Given my team has the "Waypoint Guild" subscription with 10 members
       When the team subscription is cancelled
@@ -126,7 +126,7 @@ Feature: Subscription Tiers
       And team-specific features should become read-only
       And each member should be notified of the change
 
-    @todo
+    @done
     Scenario: Team member is removed from the team
       Given my team has the "Waypoint Guild" subscription
       And "Jordan" is a team member
@@ -135,7 +135,7 @@ Feature: Subscription Tiers
       And "Jordan" should retain a copy of their personal data
       And "Jordan" should lose access to shared team quest boards
 
-    @todo
+    @done
     Scenario: Downgrade from Team to Pro
       Given my team has the "Waypoint Guild" subscription
       When I downgrade to the "Waypoint Pro" plan
@@ -146,7 +146,7 @@ Feature: Subscription Tiers
 
   Rule: Cosmetics are purchasable and provide no productivity advantage
 
-    @todo
+    @done
     Scenario: Purchase a cosmetic item
       Given I am viewing the cosmetics shop
       When I purchase the "Midnight Theme" colour palette
@@ -154,7 +154,7 @@ Feature: Subscription Tiers
       And I should be able to apply it in my settings
       And the purchase should provide no XP or gameplay advantage
 
-    @todo
+    @done
     Scenario: Cosmetics do not affect gameplay
       Given two users with identical task completion patterns
       And one user has purchased premium cosmetics

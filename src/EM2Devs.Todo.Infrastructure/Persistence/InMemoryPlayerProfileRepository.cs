@@ -134,4 +134,16 @@ public sealed class InMemoryPlayerProfileRepository : IPlayerProfileRepository
 
         return Task.CompletedTask;
     }
+
+    public Task AwardTitleAsync(Title title, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(title);
+        lock (_lock)
+        {
+            PlayerProfile profile = GetOrCreate();
+            profile.AwardTitle(title);
+        }
+
+        return Task.CompletedTask;
+    }
 }

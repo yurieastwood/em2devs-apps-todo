@@ -215,6 +215,10 @@ builder.Services.AddScoped<ITimelineRepository, InMemoryTimelineRepository>();
 builder.Services.AddTransient<IRequestHandler<GetTimelineQuery, Result<TimelineReadModel>>, GetTimelineQueryHandler>();
 
 // Timeline event creation: populate timeline on level-up, streak milestone, quest completion.
+// Title evaluation: check title eligibility after each task completion.
+builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,
+    EM2Devs.Todo.Application.Events.TitleEvaluationHandler>();
+
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.LevelUpEvent>,
     EM2Devs.Todo.Application.Events.TimelineRecordingHandler>();
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.StreakMilestoneReachedEvent>,

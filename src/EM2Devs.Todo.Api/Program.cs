@@ -175,6 +175,12 @@ builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Even
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
     EM2Devs.Todo.Application.Events.QuestCompletionXpHandler>();
 
+// Onboarding state query handler.
+builder.Services.AddTransient<IRequestHandler<GetOnboardingStateQuery, Result<OnboardingStateReadModel>>, GetOnboardingStateQueryHandler>();
+
+// Seasons query handler.
+builder.Services.AddTransient<IRequestHandler<GetCurrentSeasonQuery, Result<CurrentSeasonReadModel>>, GetCurrentSeasonQueryHandler>();
+
 // Annual wrapped query handler.
 builder.Services.AddTransient<IRequestHandler<GetAnnualWrappedQuery, Result<AnnualWrappedReadModel>>, GetAnnualWrappedQueryHandler>();
 

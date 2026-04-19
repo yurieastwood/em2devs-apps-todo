@@ -1301,6 +1301,97 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileResponse'
+  /api/onboarding:
+    get:
+      operationId: getOnboardingState
+      summary: Get progressive disclosure state
+      description: Returns unlocked features, gamification status, and previews of upcoming features based on engagement.
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: Onboarding state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unlockedFeatures:
+                    type: array
+                    items:
+                      type: string
+                  isGamificationActive:
+                    type: boolean
+                  upcomingFeatures:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        feature:
+                          type: string
+                        description:
+                          type: string
+                        unlockRequirement:
+                          type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/seasons/current:
+    get:
+      operationId: getCurrentSeason
+      summary: Get the current season details
+      description: Returns current season name, theme, quest line progress, days remaining, and available cosmetics.
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: Current season info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  theme:
+                    type: string
+                  startDate:
+                    type: string
+                    format: date
+                  endDate:
+                    type: string
+                    format: date
+                  daysRemaining:
+                    type: integer
+                  isActive:
+                    type: boolean
+                  questLine:
+                    type: object
+                    properties:
+                      totalStages:
+                        type: integer
+                      currentStage:
+                        type: integer
+                      tasksCompletedInStage:
+                        type: integer
+                      tasksRemaining:
+                        type: integer
+                      isCompleted:
+                        type: boolean
+                  availableCosmetics:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        rarity:
+                          type: string
+                        requiredStage:
+                          type: integer
+                        isEarned:
+                          type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/subscription:
     get:
       operationId: getSubscription

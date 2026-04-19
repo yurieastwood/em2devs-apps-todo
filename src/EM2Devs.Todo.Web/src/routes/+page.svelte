@@ -9,6 +9,7 @@
 	let { data, form }: { data: PageData; form: ActionData | null } = $props();
 
 	let tasks = $derived(data.tasks);
+	let recurringTasks = $derived(data.recurringTasks ?? []);
 	let loadError = $derived(data.error);
 	let profile = $derived(data.profile);
 	let currentView = $derived<TaskView>(data.view);
@@ -124,6 +125,7 @@
 	let newTitle = $state('');
 	let newScheduledDate = $state('');
 	let newTags = $state('');
+	let newRepeatPattern = $state('');
 	let quickAddInput = $state('');
 	let quickAddMode = $state(false);
 	let creating = $state(false);
@@ -258,7 +260,7 @@
 	{#if !quickAddMode}
 		<form
 			method="POST"
-			action="?/create"
+			action={newRepeatPattern ? '?/createRecurring' : '?/create'}
 			use:enhance={() => {
 				creating = true;
 				return async ({ update, result }) => {
@@ -270,6 +272,7 @@
 							newTitle = '';
 							newScheduledDate = '';
 							newTags = '';
+							newRepeatPattern = '';
 						}
 					}
 				};
@@ -289,16 +292,28 @@
 				type="date"
 				name="scheduledDate"
 				bind:value={newScheduledDate}
-				disabled={creating}
+				disabled={creating || !!newRepeatPattern}
 				data-testid="task-scheduled-date-input"
 				aria-label="Scheduled date"
 			/>
+			<select
+				name="pattern"
+				bind:value={newRepeatPattern}
+				disabled={creating}
+				data-testid="task-repeat-select"
+				aria-label="Repeat"
+			>
+				<option value="">No repeat</option>
+				<option value="Daily">Daily</option>
+				<option value="Weekly">Weekly</option>
+				<option value="Monthly">Monthly</option>
+			</select>
 			<input
 				type="text"
 				name="tags"
 				bind:value={newTags}
 				placeholder="tags (comma-separated)"
-				disabled={creating}
+				disabled={creating || !!newRepeatPattern}
 				maxlength={500}
 				data-testid="task-tags-input"
 			/>
@@ -307,7 +322,7 @@
 				disabled={creating || !newTitle.trim()}
 				data-testid="add-task-button"
 			>
-				{creating ? 'Adding...' : 'Add Task'}
+				{creating ? 'Adding...' : newRepeatPattern ? 'Add Recurring' : 'Add Task'}
 			</button>
 			{#if createError}
 				<p class="form-error" role="alert" data-testid="create-error">{createError}</p>
@@ -594,6 +609,45 @@
 				{@render taskItem(task)}
 			{/each}
 		</ul>
+	{/if}
+
+	{#if recurringTasks.length > 0}
+		<section class="recurring-section" data-testid="recurring-section">
+			<h2>Recurring Tasks</h2>
+			<ul class="task-list">
+				{#each recurringTasks as rt (rt.id)}
+					<li class="task-item" class:paused={!rt.isActive} data-testid="recurring-item">
+						<div class="task-main">
+							<span class="recurring-icon" title="Recurring">🔁</span>
+							<span class="task-title-text" data-testid="recurring-title"
+								>{rt.title}</span
+							>
+							<span class="recurring-pattern">{rt.pattern}</span>
+							{#if !rt.isActive}
+								<span class="recurring-paused">Paused</span>
+							{/if}
+						</div>
+						<div class="task-actions-row">
+							{#if rt.isActive}
+								<form method="POST" action="?/pauseRecurring" use:enhance>
+									<input type="hidden" name="id" value={rt.id} />
+									<button type="submit" class="btn-sm">Pause</button>
+								</form>
+							{:else}
+								<form method="POST" action="?/resumeRecurring" use:enhance>
+									<input type="hidden" name="id" value={rt.id} />
+									<button type="submit" class="btn-sm">Resume</button>
+								</form>
+							{/if}
+							<form method="POST" action="?/deleteRecurring" use:enhance>
+								<input type="hidden" name="id" value={rt.id} />
+								<button type="submit" class="btn-sm btn-danger">Delete</button>
+							</form>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		</section>
 	{/if}
 </main>
 
@@ -1002,5 +1056,70 @@
 		font-size: 0.75rem;
 		color: #6b7280;
 		font-style: italic;
+	}
+
+	.create-form select {
+		padding: 0.5rem;
+		border: 1px solid #d1d5db;
+		border-radius: 0.25rem;
+		font-size: 0.9rem;
+		background: white;
+	}
+
+	.recurring-section {
+		margin-top: 2rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid #e5e7eb;
+	}
+
+	.recurring-section h2 {
+		font-size: 1rem;
+		color: #6b7280;
+		margin-bottom: 0.75rem;
+	}
+
+	.recurring-icon {
+		font-size: 0.85rem;
+	}
+
+	.recurring-pattern {
+		font-size: 0.75rem;
+		color: #9ca3af;
+		padding: 0.1rem 0.4rem;
+		background: #f3f4f6;
+		border-radius: 4px;
+	}
+
+	.recurring-paused {
+		font-size: 0.7rem;
+		color: #f59e0b;
+		font-weight: 600;
+	}
+
+	.task-item.paused {
+		opacity: 0.6;
+	}
+
+	.task-actions-row {
+		display: flex;
+		gap: 0.25rem;
+	}
+
+	.btn-sm {
+		padding: 0.2rem 0.5rem;
+		border: 1px solid #d1d5db;
+		border-radius: 4px;
+		background: white;
+		cursor: pointer;
+		font-size: 0.75rem;
+	}
+
+	.btn-sm:hover {
+		background: #f3f4f6;
+	}
+
+	.btn-danger {
+		color: #dc2626;
+		border-color: #fca5a5;
 	}
 </style>

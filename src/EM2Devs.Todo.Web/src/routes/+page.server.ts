@@ -9,6 +9,13 @@ import {
 	ApiError,
 	type TaskView
 } from '$lib/api/tasks';
+import {
+	listRecurringTasks,
+	createRecurringTask,
+	pauseRecurringTask,
+	resumeRecurringTask,
+	deleteRecurringTask
+} from '$lib/api/recurring';
 import { getProfile } from '$lib/api/profile';
 import { getBaseUrl } from '$lib/server/config';
 import type { Actions, PageServerLoad } from './$types';
@@ -32,14 +39,15 @@ function failFromError(e: unknown, fallbackMessage: string, action: string) {
 export const load: PageServerLoad = async ({ fetch, url }) => {
 	const view = parseView(url.searchParams.get('view'));
 	try {
-		const [tasks, profile] = await Promise.all([
+		const [tasks, profile, recurringTasks] = await Promise.all([
 			listTasks(fetch, getBaseUrl(), { view }),
-			getProfile(fetch, getBaseUrl()).catch(() => null)
+			getProfile(fetch, getBaseUrl()).catch(() => null),
+			listRecurringTasks(fetch, getBaseUrl()).catch(() => [])
 		]);
-		return { tasks, profile, view, error: null };
+		return { tasks, profile, recurringTasks, view, error: null };
 	} catch (e) {
 		const message = e instanceof Error ? e.message : 'An unexpected error occurred';
-		return { tasks: [], profile: null, view, error: message };
+		return { tasks: [], profile: null, recurringTasks: [], view, error: message };
 	}
 };
 
@@ -143,6 +151,56 @@ export const actions: Actions = {
 			return { action: 'delete', success: true };
 		} catch (e) {
 			return failFromError(e, 'Failed to delete task', 'delete');
+		}
+	},
+
+	createRecurring: async ({ request, fetch }) => {
+		const formData = await request.formData();
+		const title = formData.get('title')?.toString()?.trim() ?? '';
+		const pattern = formData.get('pattern')?.toString() ?? '';
+
+		if (!title) return fail(400, { action: 'createRecurring', error: 'Title is required.' });
+		if (!pattern)
+			return fail(400, { action: 'createRecurring', error: 'Pattern is required.' });
+
+		try {
+			await createRecurringTask(fetch, getBaseUrl(), title, pattern);
+			return { action: 'createRecurring', success: true };
+		} catch (e) {
+			return failFromError(e, 'Failed to create recurring task', 'createRecurring');
+		}
+	},
+
+	pauseRecurring: async ({ request, fetch }) => {
+		const formData = await request.formData();
+		const id = formData.get('id')?.toString() ?? '';
+		try {
+			await pauseRecurringTask(fetch, getBaseUrl(), id);
+			return { action: 'pauseRecurring', success: true };
+		} catch (e) {
+			return failFromError(e, 'Failed to pause', 'pauseRecurring');
+		}
+	},
+
+	resumeRecurring: async ({ request, fetch }) => {
+		const formData = await request.formData();
+		const id = formData.get('id')?.toString() ?? '';
+		try {
+			await resumeRecurringTask(fetch, getBaseUrl(), id);
+			return { action: 'resumeRecurring', success: true };
+		} catch (e) {
+			return failFromError(e, 'Failed to resume', 'resumeRecurring');
+		}
+	},
+
+	deleteRecurring: async ({ request, fetch }) => {
+		const formData = await request.formData();
+		const id = formData.get('id')?.toString() ?? '';
+		try {
+			await deleteRecurringTask(fetch, getBaseUrl(), id);
+			return { action: 'deleteRecurring', success: true };
+		} catch (e) {
+			return failFromError(e, 'Failed to delete recurring task', 'deleteRecurring');
 		}
 	}
 };

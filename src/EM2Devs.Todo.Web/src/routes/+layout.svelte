@@ -45,6 +45,11 @@
 				class:active={page.url.pathname.startsWith('/weekly-review')}
 				data-testid="nav-weekly-review">Weekly review</a
 			>
+			<a
+				href={resolve('/timeline')}
+				class:active={page.url.pathname === '/timeline'}
+				data-testid="nav-timeline">Timeline</a
+			>
 		</div>
 		<div class="nav-user">
 			<span class="user-name" data-testid="user-display-name">{user.displayName}</span>

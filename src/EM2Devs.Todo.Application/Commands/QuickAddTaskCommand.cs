@@ -16,12 +16,18 @@ public sealed record QuickAddTaskCommand(string Input) : IRequest<Result<TodoTas
 public sealed class QuickAddTaskCommandHandler : IRequestHandler<QuickAddTaskCommand, Result<TodoTask>>
 {
     private readonly ITaskRepository _repository;
+    private readonly IRecurringTaskRepository _recurringRepository;
     private readonly ICurrentUser _currentUser;
     private readonly TimeProvider _timeProvider;
 
-    public QuickAddTaskCommandHandler(ITaskRepository repository, ICurrentUser currentUser, TimeProvider timeProvider)
+    public QuickAddTaskCommandHandler(
+        ITaskRepository repository,
+        IRecurringTaskRepository recurringRepository,
+        ICurrentUser currentUser,
+        TimeProvider timeProvider)
     {
         _repository = repository;
+        _recurringRepository = recurringRepository;
         _currentUser = currentUser;
         _timeProvider = timeProvider;
     }
@@ -40,6 +46,19 @@ public sealed class QuickAddTaskCommandHandler : IRequestHandler<QuickAddTaskCom
         catch (DomainException ex)
         {
             return new ValidationError(ex.Message);
+        }
+
+        if (parsed.RepeatPattern.HasValue)
+        {
+            RecurringTask recurring = RecurringTask.Create(
+                _currentUser.UserId,
+                parsed.Title,
+                parsed.RepeatPattern.Value);
+            await _recurringRepository.SaveAsync(recurring, ct).ConfigureAwait(false);
+
+            TodoTask instance = recurring.GenerateNextInstance(today);
+            await _repository.SaveAsync(instance, ct).ConfigureAwait(false);
+            return instance;
         }
 
         TodoTask task = TodoTask.Create(

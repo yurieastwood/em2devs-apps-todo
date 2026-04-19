@@ -13,8 +13,9 @@ public sealed record QuickAddResult
     public IReadOnlyList<Tag> Tags { get; }
     public TaskPriority? Priority { get; }
     public DateOnly? DueDate { get; }
+    public RecurrencePattern? RepeatPattern { get; }
 
-    public QuickAddResult(TaskTitle title, IReadOnlyList<Tag> tags, TaskPriority? priority, DateOnly? dueDate)
+    public QuickAddResult(TaskTitle title, IReadOnlyList<Tag> tags, TaskPriority? priority, DateOnly? dueDate, RecurrencePattern? repeatPattern = null)
     {
         ArgumentNullException.ThrowIfNull(title);
         ArgumentNullException.ThrowIfNull(tags);
@@ -23,6 +24,7 @@ public sealed record QuickAddResult
         Tags = tags;
         Priority = priority;
         DueDate = dueDate;
+        RepeatPattern = repeatPattern;
     }
 }
 
@@ -47,6 +49,7 @@ public static class QuickAddParser
         var tags = new List<Tag>();
         TaskPriority? priority = null;
         DateOnly? dueDate = null;
+        RecurrencePattern? repeatPattern = null;
         var dateTokens = new List<string>();
         bool collectingDate = false;
 
@@ -76,6 +79,10 @@ public static class QuickAddParser
             {
                 priority = ParsePriority(token.Substring(1));
             }
+            else if (token.StartsWith('~') && token.Length > 1)
+            {
+                repeatPattern = ParseRepeatPattern(token.Substring(1));
+            }
             else if (token.StartsWith('^') && token.Length > 1)
             {
                 dateTokens.Add(token.Substring(1));
@@ -98,11 +105,11 @@ public static class QuickAddParser
         }
 
         var title = new TaskTitle(string.Join(' ', titleTokens));
-        return new QuickAddResult(title, tags, priority, dueDate);
+        return new QuickAddResult(title, tags, priority, dueDate, repeatPattern);
     }
 
     private static bool IsDirective(string token) =>
-        token.Length > 1 && (token[0] == '#' || token[0] == '!' || token[0] == '^');
+        token.Length > 1 && (token[0] == '#' || token[0] == '!' || token[0] == '^' || token[0] == '~');
 
     private static TaskPriority ParsePriority(string value)
     {
@@ -113,6 +120,17 @@ public static class QuickAddParser
         }
 
         return priority;
+    }
+
+    private static RecurrencePattern ParseRepeatPattern(string value)
+    {
+        if (!Enum.TryParse(value, ignoreCase: true, out RecurrencePattern pattern)
+            || !Enum.IsDefined(pattern))
+        {
+            throw new DomainException($"Unrecognised repeat pattern: '{value}'. Use daily, weekly, or monthly.");
+        }
+
+        return pattern;
     }
 
     private static void FinaliseDate(List<string> tokens, DateOnly today, ref DateOnly? dueDate)

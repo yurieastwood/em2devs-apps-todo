@@ -13,6 +13,7 @@ public sealed class QuickAddTaskCommandHandlerTests
     private static readonly string[] _expectedTags = ["groceries"];
 
     private readonly ITaskRepository _repository = Substitute.For<ITaskRepository>();
+    private readonly IRecurringTaskRepository _recurringRepository = Substitute.For<IRecurringTaskRepository>();
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
     private readonly FakeTimeProvider _timeProvider = new(new DateTimeOffset(2026, 4, 12, 12, 0, 0, TimeSpan.Zero));
     private readonly QuickAddTaskCommandHandler _handler;
@@ -20,7 +21,7 @@ public sealed class QuickAddTaskCommandHandlerTests
     public QuickAddTaskCommandHandlerTests()
     {
         _currentUser.UserId.Returns(TestUserId);
-        _handler = new QuickAddTaskCommandHandler(_repository, _currentUser, _timeProvider);
+        _handler = new QuickAddTaskCommandHandler(_repository, _recurringRepository, _currentUser, _timeProvider);
     }
 
     [Fact]

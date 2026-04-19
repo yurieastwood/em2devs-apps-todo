@@ -175,6 +175,12 @@ builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Even
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
     EM2Devs.Todo.Application.Events.QuestCompletionXpHandler>();
 
+// Annual wrapped query handler.
+builder.Services.AddTransient<IRequestHandler<GetAnnualWrappedQuery, Result<AnnualWrappedReadModel>>, GetAnnualWrappedQueryHandler>();
+
+// Subscription query handler.
+builder.Services.AddTransient<IRequestHandler<GetSubscriptionQuery, Result<SubscriptionReadModel>>, GetSubscriptionQueryHandler>();
+
 // Capacity modelling query handler.
 builder.Services.AddTransient<IRequestHandler<GetCapacityOverviewQuery, Result<CapacityOverviewReadModel>>, GetCapacityOverviewQueryHandler>();
 

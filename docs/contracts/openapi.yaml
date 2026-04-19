@@ -1301,6 +1301,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileResponse'
+  /api/seasons/current:
+    get:
+      operationId: getCurrentSeason
+      summary: Get the current season details
+      description: Returns current season name, theme, quest line progress, days remaining, and available cosmetics.
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: Current season info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  theme:
+                    type: string
+                  startDate:
+                    type: string
+                    format: date
+                  endDate:
+                    type: string
+                    format: date
+                  daysRemaining:
+                    type: integer
+                  isActive:
+                    type: boolean
+                  questLine:
+                    type: object
+                    properties:
+                      totalStages:
+                        type: integer
+                      currentStage:
+                        type: integer
+                      tasksCompletedInStage:
+                        type: integer
+                      tasksRemaining:
+                        type: integer
+                      isCompleted:
+                        type: boolean
+                  availableCosmetics:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        rarity:
+                          type: string
+                        requiredStage:
+                          type: integer
+                        isEarned:
+                          type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/subscription:
     get:
       operationId: getSubscription

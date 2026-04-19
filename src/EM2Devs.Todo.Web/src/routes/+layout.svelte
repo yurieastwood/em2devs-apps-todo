@@ -50,6 +50,31 @@
 				class:active={page.url.pathname === '/timeline'}
 				data-testid="nav-timeline">Timeline</a
 			>
+			<a
+				href={resolve('/energy')}
+				class:active={page.url.pathname === '/energy'}
+				data-testid="nav-energy">Energy</a
+			>
+			<a
+				href={resolve('/capacity')}
+				class:active={page.url.pathname === '/capacity'}
+				data-testid="nav-capacity">Capacity</a
+			>
+			<a
+				href={resolve('/insights')}
+				class:active={page.url.pathname === '/insights'}
+				data-testid="nav-insights">Insights</a
+			>
+			<a
+				href={resolve('/seasons')}
+				class:active={page.url.pathname === '/seasons'}
+				data-testid="nav-seasons">Seasons</a
+			>
+			<a
+				href={resolve('/wrapped')}
+				class:active={page.url.pathname === '/wrapped'}
+				data-testid="nav-wrapped">Wrapped</a
+			>
 		</div>
 		<div class="nav-user">
 			<span class="user-name" data-testid="user-display-name">{user.displayName}</span>

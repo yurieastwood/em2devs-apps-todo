@@ -175,6 +175,9 @@ builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Even
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.QuestCompletedEvent>,
     EM2Devs.Todo.Application.Events.QuestCompletionXpHandler>();
 
+// Capacity modelling query handler.
+builder.Services.AddTransient<IRequestHandler<GetCapacityOverviewQuery, Result<CapacityOverviewReadModel>>, GetCapacityOverviewQueryHandler>();
+
 // Procrastination detection query handler.
 builder.Services.AddTransient<IRequestHandler<GetProcrastinationCandidatesQuery, Result<IReadOnlyList<ProcrastinationCandidateReadModel>>>, GetProcrastinationCandidatesQueryHandler>();
 

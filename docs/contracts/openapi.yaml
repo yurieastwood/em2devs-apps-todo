@@ -1337,6 +1337,46 @@ paths:
                     nullable: true
         '400':
           $ref: '#/components/responses/BadRequest'
+  /api/wrapped:
+    get:
+      operationId: getAnnualWrapped
+      summary: Get annual wrapped summary
+      description: Generates a multi-slide annual summary of the user's productivity journey. Optionally specify a year.
+      parameters:
+      - name: year
+        in: query
+        required: false
+        schema:
+          type: integer
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: Annual wrapped summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  year:
+                    type: integer
+                  isPartialYear:
+                    type: boolean
+                  slides:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                        metric:
+                          type: string
+                        visualizationType:
+                          type: string
+                        isShareable:
+                          type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/tasks/procrastination-candidates:
     get:
       operationId: getProcrastinationCandidates

@@ -94,6 +94,14 @@ public sealed class PostgresPlayerProfileRepository : IPlayerProfileRepository
         await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 
+    public async Task AwardTitleAsync(Title title, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(title);
+        PlayerProfile profile = await GetOrCreateForCurrentUserAsync(ct).ConfigureAwait(false);
+        profile.AwardTitle(title);
+        await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
+
     private async Task<PlayerProfile> GetOrCreateForCurrentUserAsync(CancellationToken ct)
     {
         Guid userId = _currentUser.UserId;

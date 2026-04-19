@@ -5,7 +5,7 @@
       "tests/EM2Devs.Todo.Domain.UnitTests/EM2Devs.Todo.Domain.UnitTests.csproj"
     ],
     "mutation-level": "Standard",
-    "concurrency": 2,
+    "concurrency": 1,
     "thresholds": {
       "high": 100,
       "low": 100,

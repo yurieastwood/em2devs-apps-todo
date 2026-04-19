@@ -38,19 +38,21 @@ public sealed class CorsConfigurationTests : IDisposable
     }
 
     [Fact]
-    public async Task Should_NotReturnCorsHeaders_When_OriginIsNotAllowed()
+    public async Task Should_AllowAnyOrigin_When_RunningInDevelopment()
     {
-        // Given
+        // Given — Development environment allows all origins for network access
         var request = new HttpRequestMessage(HttpMethod.Get, "/api/tasks");
-        request.Headers.Add("Origin", "http://malicious-site.com");
+        request.Headers.Add("Origin", "http://10.0.0.79:5173");
 
         // When
         var response = await _client.SendAsync(request);
 
         // Then
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        response.Headers.Contains("Access-Control-Allow-Origin").ShouldBeFalse();
+        response.Headers.Contains("Access-Control-Allow-Origin").ShouldBeTrue();
+        response.Headers.Contains("Access-Control-Allow-Credentials").ShouldBeTrue();
     }
+
 
     [Fact]
     public async Task Should_ReturnPreflightHeaders_When_PreflightRequestSent()

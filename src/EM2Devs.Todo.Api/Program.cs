@@ -251,7 +251,20 @@ string[] allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins")
     .Get<string[]>() ?? [];
 
-if (allowedOrigins.Length > 0)
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(CorsPolicyName, policy =>
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
+    });
+}
+else if (allowedOrigins.Length > 0)
 {
     builder.Services.AddCors(options =>
     {
@@ -349,7 +362,7 @@ if (!string.IsNullOrEmpty(connectionString) && isNonProduction && autoMigrateReq
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.MapDefaultEndpoints();
-if (allowedOrigins.Length > 0)
+if (app.Environment.IsDevelopment() || allowedOrigins.Length > 0)
 {
     app.UseCors(CorsPolicyName);
 }
@@ -359,6 +372,21 @@ app.MapOpenApi();
 app.MapScalarApiReference();
 app.MapControllers();
 app.MapHub<NotificationsHub>("/hubs/notifications");
+
+if (app.Environment.IsDevelopment())
+{
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        foreach (var ip in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
+            .Where(n => n.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up
+                && n.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
+            .SelectMany(n => n.GetIPProperties().UnicastAddresses)
+            .Where(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork))
+        {
+            Console.WriteLine($"  Network: http://{ip.Address}:5001");
+        }
+    });
+}
 
 app.Run();
 

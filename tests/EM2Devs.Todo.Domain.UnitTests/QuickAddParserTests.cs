@@ -156,4 +156,43 @@ public sealed class QuickAddParserTests
         result.DueDate!.Value.Month.ShouldBe(2);
         result.DueDate.Value.Day.ShouldBe(14);
     }
+
+    [Theory]
+    [Trait("Category", "Domain")]
+    [InlineData("daily", RecurrencePattern.Daily)]
+    [InlineData("weekly", RecurrencePattern.Weekly)]
+    [InlineData("monthly", RecurrencePattern.Monthly)]
+    [InlineData("Daily", RecurrencePattern.Daily)]
+    public void Should_ParseRepeatPattern_When_TildeDirectiveGiven(string pattern, RecurrencePattern expected)
+    {
+        var result = QuickAddParser.Parse($"standup notes ~{pattern}", _today);
+        result.Title.Value.ShouldBe("standup notes");
+        result.RepeatPattern.ShouldBe(expected);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ThrowDomainException_When_RepeatPatternUnknown()
+    {
+        var ex = Should.Throw<DomainException>(() => QuickAddParser.Parse("task ~biweekly", _today));
+        ex.Message.ShouldContain("biweekly");
+        ex.Message.ShouldContain("daily, weekly, or monthly");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_HaveNoRepeatPattern_When_NoTildeDirective()
+    {
+        var result = QuickAddParser.Parse("normal task #work", _today);
+        result.RepeatPattern.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_TreatBareTilde_AsTitleContent()
+    {
+        var result = QuickAddParser.Parse("Task ~ end", _today);
+        result.Title.Value.ShouldBe("Task ~ end");
+        result.RepeatPattern.ShouldBeNull();
+    }
 }

@@ -6,7 +6,7 @@ import { TOKEN_COOKIE } from '../../hooks.server';
 import type { Actions } from './$types';
 
 export const actions: Actions = {
-	default: async ({ request, fetch, cookies }) => {
+	default: async ({ request, fetch, cookies, url }) => {
 		const formData = await request.formData();
 		const email = formData.get('email')?.toString()?.trim() ?? '';
 		const password = formData.get('password')?.toString() ?? '';
@@ -37,6 +37,7 @@ export const actions: Actions = {
 			path: '/',
 			httpOnly: true,
 			sameSite: 'lax',
+			secure: url.protocol === 'https:',
 			expires: expiresAt
 		});
 

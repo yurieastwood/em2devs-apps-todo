@@ -1301,6 +1301,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProfileResponse'
+  /api/capacity:
+    get:
+      operationId: getCapacityOverview
+      summary: Get weekly capacity overview and overcommitment status
+      description: Returns per-day capacity averages, today's capacity vs scheduled count, overcommitment flag, and planning recommendation.
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: Capacity overview
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  capacityByDay:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                  mostProductiveDay:
+                    type: string
+                  leastProductiveDay:
+                    type: string
+                  averageDailyCapacity:
+                    type: integer
+                  todayCapacity:
+                    type: integer
+                  todayScheduled:
+                    type: integer
+                  isOvercommitted:
+                    type: boolean
+                  planningRecommendation:
+                    type: string
+                    nullable: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/tasks/procrastination-candidates:
     get:
       operationId: getProcrastinationCandidates

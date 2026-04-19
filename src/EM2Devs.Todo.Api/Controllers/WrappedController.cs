@@ -24,6 +24,12 @@ public sealed class WrappedController : ControllerBase
         [FromQuery] int? year = null,
         CancellationToken ct = default)
     {
+        if (Request.Query.ContainsKey("year") && !year.HasValue)
+        {
+            ModelState.AddModelError("year", "year must be a valid integer.");
+            return ValidationProblem(ModelState);
+        }
+
         Result<AnnualWrappedReadModel> result = await _mediator
             .Send(new GetAnnualWrappedQuery(year), ct)
             .ConfigureAwait(false);

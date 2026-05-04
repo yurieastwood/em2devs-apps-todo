@@ -11,6 +11,7 @@ public sealed class TodoDbContext : DbContext
     public DbSet<StreakSnapshot> StreakSnapshots => Set<StreakSnapshot>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Quest> Quests => Set<Quest>();
 
     public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)
     {

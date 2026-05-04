@@ -127,4 +127,52 @@ public sealed class PostgresEpicRepositoryTests : IAsyncLifetime, IDisposable
 
         result.ShouldBeNull();
     }
+
+    [Fact]
+    public async Task Should_NotPersistQuestsThroughEpicSave_When_EpicIsSaved()
+    {
+        Epic epic = Epic.Create(new EpicTitle("cascade guard"), "");
+        Quest quest = Quest.Create(new QuestTitle("only via quest repo"), "");
+        quest.AssignToEpic(epic.Id);
+        epic.AddQuest(quest);
+
+        await _repository.SaveAsync(epic);
+
+        // Quest is in Epic's in-memory list but was NOT persisted via SaveAsync(epic).
+        Quest? retrievedQuest = await _questRepository.GetByIdAsync(quest.Id);
+        retrievedQuest.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Should_HydrateMultipleQuestsWithMultipleTasks_When_EpicIsRetrieved()
+    {
+        Epic epic = Epic.Create(new EpicTitle("multi"), "");
+        await _repository.SaveAsync(epic);
+
+        Quest q1 = Quest.Create(new QuestTitle("Q-A"), "");
+        q1.AssignToEpic(epic.Id);
+        await _questRepository.SaveAsync(q1);
+        Quest q2 = Quest.Create(new QuestTitle("Q-B"), "");
+        q2.AssignToEpic(epic.Id);
+        await _questRepository.SaveAsync(q2);
+
+        TodoTask t1 = TodoTask.Create(TestUserId, new TaskTitle("T1"));
+        t1.AssignToQuest(q1.Id);
+        TodoTask t2 = TodoTask.Create(TestUserId, new TaskTitle("T2"));
+        t2.AssignToQuest(q1.Id);
+        TodoTask t3 = TodoTask.Create(TestUserId, new TaskTitle("T3"));
+        t3.AssignToQuest(q2.Id);
+        await _taskRepository.SaveAsync(t1);
+        await _taskRepository.SaveAsync(t2);
+        await _taskRepository.SaveAsync(t3);
+
+        Epic? retrieved = await _repository.GetByIdAsync(epic.Id);
+
+        retrieved.ShouldNotBeNull();
+        retrieved.Quests.Count.ShouldBe(2);
+        Quest rq1 = retrieved.Quests.Single(q => q.Id == q1.Id);
+        Quest rq2 = retrieved.Quests.Single(q => q.Id == q2.Id);
+        rq1.Tasks.Count.ShouldBe(2);
+        rq2.Tasks.Count.ShouldBe(1);
+    }
 }

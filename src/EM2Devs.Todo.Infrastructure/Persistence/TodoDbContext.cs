@@ -12,6 +12,7 @@ public sealed class TodoDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<Quest> Quests => Set<Quest>();
+    public DbSet<Epic> Epics => Set<Epic>();
 
     public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)
     {

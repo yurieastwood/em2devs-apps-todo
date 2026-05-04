@@ -87,8 +87,11 @@ else
 }
 
 // TODO: Add conditional Postgres/InMemory registration for Quest/Epic repositories when their persistence implementations are added
-builder.Services.AddSingleton<IQuestRepository, InMemoryQuestRepository>();
-builder.Services.AddSingleton<IEpicRepository, InMemoryEpicRepository>();
+builder.Services.AddSingleton<InMemoryQuestStore>();
+builder.Services.AddScoped<IQuestRepository, InMemoryQuestRepository>();
+
+builder.Services.AddSingleton<InMemoryEpicStore>();
+builder.Services.AddScoped<IEpicRepository, InMemoryEpicRepository>();
 
 // Weekly review reflections: in-memory only for this slice. Persistence is keyed by
 // (UserId, WeekOf) — the singleton store survives across scoped repositories.

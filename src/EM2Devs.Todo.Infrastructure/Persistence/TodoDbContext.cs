@@ -17,6 +17,7 @@ public sealed class TodoDbContext : DbContext
     internal DbSet<WeeklyReflectionRow> WeeklyReflections => Set<WeeklyReflectionRow>();
     public DbSet<InsightCard> InsightCards => Set<InsightCard>();
     public DbSet<EnergyCheckIn> EnergyCheckIns => Set<EnergyCheckIn>();
+    public DbSet<TimelineEvent> TimelineEvents => Set<TimelineEvent>();
 
     public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)
     {

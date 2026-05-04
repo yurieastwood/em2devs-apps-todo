@@ -6,7 +6,7 @@ namespace EM2Devs.Todo.Infrastructure.Persistence.Configurations;
 // Internal EF row type. The domain-facing API is WeeklyReflectionReadModel
 // (a flat record); this row exists only to give EF Core a stable shape for
 // the weekly_reflections table. Mapped both ways inside PostgresWeeklyReflectionRepository.
-public sealed class WeeklyReflectionRow
+internal sealed class WeeklyReflectionRow
 {
     public Guid UserId { get; set; }
     public DateOnly WeekOf { get; set; }
@@ -16,7 +16,7 @@ public sealed class WeeklyReflectionRow
     public DateTimeOffset SavedAt { get; set; }
 }
 
-public sealed class WeeklyReflectionConfiguration : IEntityTypeConfiguration<WeeklyReflectionRow>
+internal sealed class WeeklyReflectionConfiguration : IEntityTypeConfiguration<WeeklyReflectionRow>
 {
     public void Configure(EntityTypeBuilder<WeeklyReflectionRow> builder)
     {

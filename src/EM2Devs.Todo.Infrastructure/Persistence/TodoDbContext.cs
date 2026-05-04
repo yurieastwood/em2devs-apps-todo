@@ -14,7 +14,7 @@ public sealed class TodoDbContext : DbContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<Quest> Quests => Set<Quest>();
     public DbSet<Epic> Epics => Set<Epic>();
-    public DbSet<WeeklyReflectionRow> WeeklyReflections => Set<WeeklyReflectionRow>();
+    internal DbSet<WeeklyReflectionRow> WeeklyReflections => Set<WeeklyReflectionRow>();
 
     public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)
     {

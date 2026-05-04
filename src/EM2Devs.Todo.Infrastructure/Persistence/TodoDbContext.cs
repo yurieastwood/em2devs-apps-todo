@@ -1,4 +1,5 @@
 using EM2Devs.Todo.Domain.Entities;
+using EM2Devs.Todo.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace EM2Devs.Todo.Infrastructure.Persistence;
@@ -13,6 +14,7 @@ public sealed class TodoDbContext : DbContext
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<Quest> Quests => Set<Quest>();
     public DbSet<Epic> Epics => Set<Epic>();
+    public DbSet<WeeklyReflectionRow> WeeklyReflections => Set<WeeklyReflectionRow>();
 
     public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)
     {

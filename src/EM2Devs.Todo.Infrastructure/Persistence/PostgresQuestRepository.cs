@@ -33,6 +33,8 @@ public sealed class PostgresQuestRepository : IQuestRepository
 
     public async Task<IReadOnlyList<Quest>> GetAllAsync(CancellationToken ct = default)
     {
+        // TODO(perf): batch task hydration — currently N+1 (one query per Quest).
+        // Acceptable at current scale; see design spec docs/superpowers/specs/2026-05-03-postgres-persistence-design.md.
         List<Quest> quests = await _dbContext.Quests.ToListAsync(ct).ConfigureAwait(false);
         foreach (Quest q in quests)
         {

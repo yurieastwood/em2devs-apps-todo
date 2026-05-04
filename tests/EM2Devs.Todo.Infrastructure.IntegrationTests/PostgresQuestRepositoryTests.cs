@@ -1,4 +1,3 @@
-using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
@@ -37,14 +36,6 @@ public sealed class PostgresQuestRepositoryTests : IAsyncLifetime, IDisposable
     {
         await _dbContext.DisposeAsync();
         await _postgres.DisposeAsync();
-    }
-
-    private sealed class FakeCurrentUser : ICurrentUser
-    {
-        public FakeCurrentUser(Guid userId) { UserId = userId; }
-        public Guid UserId { get; }
-        public string DisplayName => "Test";
-        public bool IsAuthenticated => true;
     }
 
     [Fact]
@@ -141,5 +132,13 @@ public sealed class PostgresQuestRepositoryTests : IAsyncLifetime, IDisposable
         bool deleted = await _repository.DeleteAsync(QuestId.New());
 
         deleted.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Should_ReturnNull_When_QuestDoesNotExist()
+    {
+        Quest? result = await _repository.GetByIdAsync(QuestId.New());
+
+        result.ShouldBeNull();
     }
 }

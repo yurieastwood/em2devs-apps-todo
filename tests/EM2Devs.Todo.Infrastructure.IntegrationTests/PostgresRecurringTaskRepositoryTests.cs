@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Testcontainers.PostgreSql;
-using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Domain;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
@@ -31,14 +30,6 @@ public sealed class PostgresRecurringTaskRepositoryTests : IAsyncLifetime, IDisp
         _dbContext = new TodoDbContext(options);
         await _dbContext.Database.EnsureCreatedAsync();
         _repository = new PostgresRecurringTaskRepository(_dbContext, new FakeCurrentUser(TestData.TestUserId));
-    }
-
-    private sealed class FakeCurrentUser : ICurrentUser
-    {
-        public FakeCurrentUser(Guid userId) { UserId = userId; }
-        public Guid UserId { get; }
-        public string DisplayName => "Test";
-        public bool IsAuthenticated => true;
     }
 
     public async Task DisposeAsync()

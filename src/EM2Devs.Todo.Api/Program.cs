@@ -67,6 +67,12 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.Services.AddScoped<IStreakSnapshotRepository, PostgresStreakSnapshotRepository>();
     builder.Services.AddScoped<IUserRepository, PostgresUserRepository>();
     builder.Services.AddScoped<INotificationRepository, PostgresNotificationRepository>();
+    builder.Services.AddScoped<IQuestRepository, PostgresQuestRepository>();
+    builder.Services.AddScoped<IEpicRepository, PostgresEpicRepository>();
+    builder.Services.AddScoped<IWeeklyReflectionRepository, PostgresWeeklyReflectionRepository>();
+    builder.Services.AddScoped<IInsightCardRepository, PostgresInsightCardRepository>();
+    builder.Services.AddScoped<IEnergyCheckInRepository, PostgresEnergyCheckInRepository>();
+    builder.Services.AddScoped<ITimelineRepository, PostgresTimelineRepository>();
 }
 else
 {
@@ -84,16 +90,21 @@ else
     // Notifications: scoped repo with singleton store, mirrors the task pattern
     builder.Services.AddSingleton<InMemoryNotificationStore>();
     builder.Services.AddScoped<INotificationRepository, InMemoryNotificationRepository>();
+    // Quest/Epic: store + scoped repo
+    builder.Services.AddSingleton<InMemoryQuestStore>();
+    builder.Services.AddScoped<IQuestRepository, InMemoryQuestRepository>();
+    builder.Services.AddSingleton<InMemoryEpicStore>();
+    builder.Services.AddScoped<IEpicRepository, InMemoryEpicRepository>();
+    // Read-model trio + WeeklyReflection
+    builder.Services.AddSingleton<InMemoryWeeklyReflectionStore>();
+    builder.Services.AddScoped<IWeeklyReflectionRepository, InMemoryWeeklyReflectionRepository>();
+    builder.Services.AddSingleton<InMemoryInsightCardStore>();
+    builder.Services.AddScoped<IInsightCardRepository, InMemoryInsightCardRepository>();
+    builder.Services.AddSingleton<InMemoryEnergyCheckInStore>();
+    builder.Services.AddScoped<IEnergyCheckInRepository, InMemoryEnergyCheckInRepository>();
+    builder.Services.AddSingleton<InMemoryTimelineStore>();
+    builder.Services.AddScoped<ITimelineRepository, InMemoryTimelineRepository>();
 }
-
-// TODO: Add conditional Postgres/InMemory registration for Quest/Epic repositories when their persistence implementations are added
-builder.Services.AddSingleton<IQuestRepository, InMemoryQuestRepository>();
-builder.Services.AddSingleton<IEpicRepository, InMemoryEpicRepository>();
-
-// Weekly review reflections: in-memory only for this slice. Persistence is keyed by
-// (UserId, WeekOf) — the singleton store survives across scoped repositories.
-builder.Services.AddSingleton<InMemoryWeeklyReflectionStore>();
-builder.Services.AddScoped<IWeeklyReflectionRepository, InMemoryWeeklyReflectionRepository>();
 
 // JWT-backed ICurrentUser reads HttpContext.User claims on each request.
 builder.Services.AddScoped<ICurrentUser, JwtCurrentUser>();
@@ -193,23 +204,15 @@ builder.Services.AddTransient<IRequestHandler<GetCapacityOverviewQuery, Result<C
 // Procrastination detection query handler.
 builder.Services.AddTransient<IRequestHandler<GetProcrastinationCandidatesQuery, Result<IReadOnlyList<ProcrastinationCandidateReadModel>>>, GetProcrastinationCandidatesQueryHandler>();
 
-// Insight cards: in-memory store for personalised productivity insights.
-builder.Services.AddSingleton<InMemoryInsightCardStore>();
-builder.Services.AddScoped<IInsightCardRepository, InMemoryInsightCardRepository>();
+// Insight cards: personalised productivity insights.
 builder.Services.AddTransient<IRequestHandler<ListInsightCardsQuery, Result<IReadOnlyList<InsightCardReadModel>>>, ListInsightCardsQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<MarkInsightReadCommand, Result<bool>>, MarkInsightReadCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<SaveInsightCommand, Result<bool>>, SaveInsightCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<DismissInsightCommand, Result<bool>>, DismissInsightCommandHandler>();
 
-// Energy check-in: in-memory store for energy level tracking.
-builder.Services.AddSingleton<InMemoryEnergyCheckInStore>();
-builder.Services.AddScoped<IEnergyCheckInRepository, InMemoryEnergyCheckInRepository>();
+// Energy check-in: energy level tracking.
 builder.Services.AddTransient<IRequestHandler<EnergyCheckInCommand, Result<EnergyCheckInResult>>, EnergyCheckInCommandHandler>();
 builder.Services.AddTransient<IRequestHandler<GetEnergyProfileQuery, Result<EnergyProfileReadModel>>, GetEnergyProfileQueryHandler>();
-
-// Timeline: in-memory store for journey timeline events.
-builder.Services.AddSingleton<InMemoryTimelineStore>();
-builder.Services.AddScoped<ITimelineRepository, InMemoryTimelineRepository>();
 
 // Timeline query handler.
 builder.Services.AddTransient<IRequestHandler<GetTimelineQuery, Result<TimelineReadModel>>, GetTimelineQueryHandler>();

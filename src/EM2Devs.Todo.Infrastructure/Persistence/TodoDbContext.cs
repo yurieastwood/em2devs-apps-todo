@@ -1,4 +1,5 @@
 using EM2Devs.Todo.Domain.Entities;
+using EM2Devs.Todo.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace EM2Devs.Todo.Infrastructure.Persistence;
@@ -11,6 +12,12 @@ public sealed class TodoDbContext : DbContext
     public DbSet<StreakSnapshot> StreakSnapshots => Set<StreakSnapshot>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Quest> Quests => Set<Quest>();
+    public DbSet<Epic> Epics => Set<Epic>();
+    internal DbSet<WeeklyReflectionRow> WeeklyReflections => Set<WeeklyReflectionRow>();
+    public DbSet<InsightCard> InsightCards => Set<InsightCard>();
+    public DbSet<EnergyCheckIn> EnergyCheckIns => Set<EnergyCheckIn>();
+    public DbSet<TimelineEvent> TimelineEvents => Set<TimelineEvent>();
 
     public TodoDbContext(DbContextOptions<TodoDbContext> options) : base(options)
     {

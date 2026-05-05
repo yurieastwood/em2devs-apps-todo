@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Testcontainers.PostgreSql;
-using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Application.ReadModels;
 using EM2Devs.Todo.Domain.ValueObjects;
 using EM2Devs.Todo.Infrastructure.Persistence;
@@ -33,14 +32,6 @@ public sealed class PostgresPlayerProfileRepositoryTests : IAsyncLifetime, IDisp
         _breakdownCache = new LastXpBreakdownCache();
         _repository = new PostgresPlayerProfileRepository(
             _dbContext, _breakdownCache, new FakeCurrentUser(TestData.TestUserId));
-    }
-
-    private sealed class FakeCurrentUser : ICurrentUser
-    {
-        public FakeCurrentUser(Guid userId) { UserId = userId; }
-        public Guid UserId { get; }
-        public string DisplayName => "Test";
-        public bool IsAuthenticated => true;
     }
 
     public async Task DisposeAsync()

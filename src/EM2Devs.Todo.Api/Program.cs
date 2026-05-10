@@ -217,6 +217,9 @@ builder.Services.AddTransient<IRequestHandler<GetEnergyProfileQuery, Result<Ener
 // Timeline query handler.
 builder.Services.AddTransient<IRequestHandler<GetTimelineQuery, Result<TimelineReadModel>>, GetTimelineQueryHandler>();
 
+// Full-data export query handler (JSON envelope; CSV/import deferred to follow-up scenarios).
+builder.Services.AddTransient<IRequestHandler<ExportDataQuery, Result<DataExportEnvelopeReadModel>>, ExportDataQueryHandler>();
+
 // Timeline event creation: populate timeline on level-up, streak milestone, quest completion.
 // Title evaluation: check title eligibility after each task completion.
 builder.Services.AddTransient<INotificationHandler<EM2Devs.Todo.Application.Events.TaskCompletedEvent>,

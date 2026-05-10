@@ -1876,6 +1876,49 @@ paths:
                     status: Dismissed
                     readAt: null
         '400': *id001
+  /api/data/export:
+    get:
+      operationId: exportData
+      summary: Export the authenticated user's data
+      description: |
+        Returns a downloadable export of the authenticated user's data in the requested format and scope.
+        The response is served with `Content-Disposition: attachment` so browsers prompt the user to save the file.
+      tags:
+      - Data
+      parameters:
+      - name: format
+        in: query
+        required: true
+        description: Export format. Currently only `json` is supported; `csv` is reserved for the tasks-only export scenario.
+        schema:
+          type: string
+          enum:
+          - json
+      - name: scope
+        in: query
+        required: true
+        description: Scope of data to export. Currently only `all` is supported; `tasksOnly` is reserved for the CSV export scenario.
+        schema:
+          type: string
+          enum:
+          - all
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: Export envelope. Browsers receive a file download attachment.
+          headers:
+            Content-Disposition:
+              description: Triggers a file download in browsers.
+              schema:
+                type: string
+                example: attachment; filename="waypoint-export-20260506T120000Z.json"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataExportResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
 components:
   responses:
     Unauthorized:
@@ -3236,3 +3279,151 @@ components:
         whatDragged: Too many context switches
         adjustment: Block a 2-hour deep-work window every morning
         savedAt: '2026-04-15T20:00:00Z'
+    DataExportMeta:
+      type: object
+      description: Metadata describing the export operation.
+      additionalProperties: false
+      required:
+      - exportedAt
+      - format
+      - scope
+      - recordCount
+      properties:
+        exportedAt:
+          type: string
+          format: date-time
+        format:
+          type: string
+          enum:
+          - json
+        scope:
+          type: string
+          enum:
+          - all
+        recordCount:
+          type: integer
+          minimum: 0
+          description: Total number of records across all populated arrays.
+    DataExportLevel:
+      type: object
+      description: The user's current level snapshot.
+      additionalProperties: false
+      required:
+      - current
+      - xp
+      - longestStreak
+      properties:
+        current:
+          type: integer
+          minimum: 1
+        xp:
+          type: integer
+          minimum: 0
+        longestStreak:
+          type: integer
+          minimum: 0
+    DataExportSettings:
+      type: object
+      description: Per-user settings. Each field is null until the corresponding settings feature is wired to persistence.
+      additionalProperties: false
+      required:
+      - dataPrivacy
+      - notifications
+      - sync
+      - leaderboard
+      properties:
+        dataPrivacy:
+          type: object
+          nullable: true
+          additionalProperties: true
+        notifications:
+          type: object
+          nullable: true
+          additionalProperties: true
+        sync:
+          type: object
+          nullable: true
+          additionalProperties: true
+        leaderboard:
+          type: object
+          nullable: true
+          additionalProperties: true
+    DataExportResponse:
+      type: object
+      description: |
+        Full data export envelope for the authenticated user. Inner arrays carry entity snapshots
+        with open shapes (additionalProperties: true) — exact field-level coverage lives in handler tests
+        rather than the wire contract so the export grows additively as new entities are persisted.
+      additionalProperties: false
+      required:
+      - meta
+      - tasks
+      - quests
+      - epics
+      - sagas
+      - xpHistory
+      - level
+      - skillTreeProgress
+      - titlesEarned
+      - weeklyReviews
+      - timelineEvents
+      - insightCards
+      - settings
+      properties:
+        meta:
+          $ref: '#/components/schemas/DataExportMeta'
+        tasks:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        quests:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        epics:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        sagas:
+          type: array
+          description: Always empty until Saga persistence ships.
+          items:
+            type: object
+            additionalProperties: true
+        xpHistory:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        level:
+          $ref: '#/components/schemas/DataExportLevel'
+        skillTreeProgress:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        titlesEarned:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        weeklyReviews:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        timelineEvents:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        insightCards:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        settings:
+          $ref: '#/components/schemas/DataExportSettings'

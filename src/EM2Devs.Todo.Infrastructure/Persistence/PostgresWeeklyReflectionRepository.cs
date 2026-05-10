@@ -66,4 +66,18 @@ public sealed class PostgresWeeklyReflectionRepository : IWeeklyReflectionReposi
 
         await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
     }
+
+    public async Task<IReadOnlyList<WeeklyReflectionSnapshot>> ListAllForCurrentUserAsync(CancellationToken ct = default)
+    {
+        Guid userId = _currentUser.UserId;
+        List<WeeklyReflectionRow> rows = await _dbContext.WeeklyReflections
+            .Where(r => r.UserId == userId)
+            .OrderBy(r => r.WeekOf)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        return rows
+            .Select(r => new WeeklyReflectionSnapshot(r.WeekOf, r.WhatWentWell, r.WhatDragged, r.Adjustment, r.SavedAt))
+            .ToList();
+    }
 }

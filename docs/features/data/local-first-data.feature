@@ -79,7 +79,7 @@ Feature: Local-First Data and Export
 
   Rule: Users can export all their data at any time in open formats
 
-    @todo
+    @done
     Scenario: Export all data as JSON
       When I navigate to data export settings
       And I choose to export all data as JSON

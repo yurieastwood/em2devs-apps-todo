@@ -23,3 +23,14 @@ public sealed record WeeklyReflectionReadModel(
     string WhatDragged,
     string Adjustment,
     DateTimeOffset SavedAt);
+
+/// <summary>
+/// A weekly reflection paired with the week it covers. Used by full-history
+/// reads such as the data export.
+/// </summary>
+public sealed record WeeklyReflectionSnapshot(
+    DateOnly WeekOf,
+    string WhatWentWell,
+    string WhatDragged,
+    string Adjustment,
+    DateTimeOffset SavedAt);

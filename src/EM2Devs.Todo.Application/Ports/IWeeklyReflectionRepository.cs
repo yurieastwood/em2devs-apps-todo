@@ -27,4 +27,10 @@ public interface IWeeklyReflectionRepository
         string adjustment,
         DateTimeOffset savedAt,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns every reflection the current user has ever saved, ordered by week.
+    /// Used by full-history reads such as the data export.
+    /// </summary>
+    Task<IReadOnlyList<WeeklyReflectionSnapshot>> ListAllForCurrentUserAsync(CancellationToken ct = default);
 }

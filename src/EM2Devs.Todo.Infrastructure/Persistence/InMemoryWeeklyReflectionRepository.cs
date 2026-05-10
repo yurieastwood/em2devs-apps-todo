@@ -47,4 +47,20 @@ public sealed class InMemoryWeeklyReflectionRepository : IWeeklyReflectionReposi
         _store.Reflections[(_currentUser.UserId, weekOf)] = reflection;
         return Task.CompletedTask;
     }
+
+    public Task<IReadOnlyList<WeeklyReflectionSnapshot>> ListAllForCurrentUserAsync(CancellationToken ct = default)
+    {
+        Guid userId = _currentUser.UserId;
+        IReadOnlyList<WeeklyReflectionSnapshot> snapshots = _store.Reflections
+            .Where(kvp => kvp.Key.UserId == userId)
+            .OrderBy(kvp => kvp.Key.WeekOf)
+            .Select(kvp => new WeeklyReflectionSnapshot(
+                kvp.Key.WeekOf,
+                kvp.Value.WhatWentWell,
+                kvp.Value.WhatDragged,
+                kvp.Value.Adjustment,
+                kvp.Value.SavedAt))
+            .ToList();
+        return Task.FromResult(snapshots);
+    }
 }

@@ -147,6 +147,73 @@ public sealed class DataControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Should_ReturnCsv_When_FormatCsvAndScopeTasksOnly()
+    {
+        HttpResponseMessage create = await _client.PostAsJsonAsync("/api/tasks", new { title = "Buy milk" });
+        create.IsSuccessStatusCode.ShouldBeTrue();
+
+        HttpResponseMessage response = await _client.GetAsync("/api/data/export?format=csv&scope=tasksOnly");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.Content.Headers.ContentType.ShouldNotBeNull();
+        response.Content.Headers.ContentType!.MediaType.ShouldBe("text/csv");
+        response.Content.Headers.ContentDisposition.ShouldNotBeNull();
+        response.Content.Headers.ContentDisposition!.DispositionType.ShouldBe("attachment");
+        response.Content.Headers.ContentDisposition.FileName.ShouldNotBeNull();
+        response.Content.Headers.ContentDisposition.FileName!.ShouldStartWith("waypoint-tasks-");
+        response.Content.Headers.ContentDisposition.FileName.ShouldEndWith(".csv");
+
+        string csv = await response.Content.ReadAsStringAsync();
+        string[] lines = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        lines.Length.ShouldBeGreaterThan(1, "CSV must include header plus at least one row");
+        lines[0].Trim().ShouldBe("id,title,description,status,difficulty,priority,baseXp,tags,dueDate,scheduledDate,completedAt,createdAt,assignedQuestId");
+
+        bool hasOurRow = lines.Skip(1).Any(l => l.Contains("Buy milk", StringComparison.Ordinal));
+        hasOurRow.ShouldBeTrue("Created task must appear as a data row");
+    }
+
+    [Fact]
+    public async Task Should_QuoteFields_When_TaskContainsCommasOrQuotesOrNewlines()
+    {
+        await _client.PostAsJsonAsync("/api/tasks", new { title = "Hello, world" });
+
+        HttpResponseMessage withQuotes = await _client.PostAsJsonAsync("/api/tasks", new { title = "Quoted task" });
+        Guid quotedId = (await withQuotes.Content.ReadFromJsonAsync<TaskIdResponse>())!.Id;
+        await _client.PatchAsJsonAsync($"/api/tasks/{quotedId}", new { description = "She said \"hi\"" });
+
+        HttpResponseMessage withNewline = await _client.PostAsJsonAsync("/api/tasks", new { title = "Multiline task" });
+        Guid multilineId = (await withNewline.Content.ReadFromJsonAsync<TaskIdResponse>())!.Id;
+        await _client.PatchAsJsonAsync($"/api/tasks/{multilineId}", new { description = "Line1\nLine2" });
+
+        HttpResponseMessage response = await _client.GetAsync("/api/data/export?format=csv&scope=tasksOnly");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        string csv = await response.Content.ReadAsStringAsync();
+
+        // RFC 4180: fields with commas, quotes, or newlines are double-quoted;
+        // embedded quotes are doubled.
+        csv.ShouldContain("\"Hello, world\"");
+        csv.ShouldContain("\"She said \"\"hi\"\"\"");
+        csv.ShouldContain("\"Line1\nLine2\"");
+    }
+
+    private sealed record TaskIdResponse(Guid Id);
+
+    [Fact]
+    public async Task Should_Return400_When_CsvFormatPairedWithAllScope()
+    {
+        HttpResponseMessage response = await _client.GetAsync("/api/data/export?format=csv&scope=all");
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Should_Return400_When_JsonFormatPairedWithTasksOnlyScope()
+    {
+        HttpResponseMessage response = await _client.GetAsync("/api/data/export?format=json&scope=tasksOnly");
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task Should_NotIncludeAnotherUsersData_When_ExportRequested()
     {
         Guid userA = AuthTestFixture.DefaultUserId;

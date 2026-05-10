@@ -99,7 +99,7 @@ Feature: Local-First Data and Export
         | Settings           |
       And the file should be downloadable to my device
 
-    @todo
+    @done
     Scenario: Export tasks as CSV
       When I choose to export tasks as CSV
       Then a CSV file should be generated with all task data

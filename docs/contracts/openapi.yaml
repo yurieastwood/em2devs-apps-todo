@@ -1883,30 +1883,40 @@ paths:
       description: |
         Returns a downloadable export of the authenticated user's data in the requested format and scope.
         The response is served with `Content-Disposition: attachment` so browsers prompt the user to save the file.
+
+        Only two combinations are valid:
+        * `format=json` with `scope=all` — full data envelope as JSON
+        * `format=csv` with `scope=tasksOnly` — tasks-only spreadsheet-friendly CSV
+
+        Any other combination (e.g. `csv`+`all`, `json`+`tasksOnly`) returns 400.
       tags:
       - Data
       parameters:
       - name: format
         in: query
         required: true
-        description: Export format. Currently only `json` is supported; `csv` is reserved for the tasks-only export scenario.
+        description: Export format. Pair `json` with `scope=all` for the full envelope or `csv` with `scope=tasksOnly` for the tasks spreadsheet.
         schema:
           type: string
           enum:
           - json
+          - csv
       - name: scope
         in: query
         required: true
-        description: Scope of data to export. Currently only `all` is supported; `tasksOnly` is reserved for the CSV export scenario.
+        description: Scope of data to export. Pair `all` with `format=json` for the full envelope or `tasksOnly` with `format=csv` for tasks only.
         schema:
           type: string
           enum:
           - all
+          - tasksOnly
       responses:
         '401':
           $ref: '#/components/responses/Unauthorized'
         '200':
-          description: Export envelope. Browsers receive a file download attachment.
+          description: |
+            Export response. Browsers receive a file download attachment. The body shape depends on `format`:
+            `application/json` for `format=json`, `text/csv` for `format=csv`.
           headers:
             Content-Disposition:
               description: Triggers a file download in browsers.
@@ -1917,6 +1927,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DataExportResponse'
+            text/csv:
+              schema:
+                type: string
+                description: |
+                  RFC 4180 CSV of the authenticated user's tasks. First row is a header listing
+                  the columns: id, title, description, status, difficulty, priority, baseXp, tags,
+                  dueDate, scheduledDate, completedAt, createdAt, assignedQuestId. Fields containing
+                  commas, double quotes, or newlines are quoted; embedded double quotes are doubled.
+                example: |
+                  id,title,description,status,difficulty,priority,baseXp,tags,dueDate,scheduledDate,completedAt,createdAt,assignedQuestId
+                  11111111-1111-1111-1111-111111111111,Call dentist,,Todo,Normal,Medium,10,,,,,2026-05-10T12:00:00+00:00,
         '400':
           $ref: '#/components/responses/BadRequest'
 components:

@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
@@ -39,17 +40,49 @@ public sealed class DataController : ControllerBase
         [FromQuery] string? scope,
         CancellationToken ct)
     {
-        if (!string.Equals(format, "json", StringComparison.OrdinalIgnoreCase))
+        if (!IsKnown(format, "json", "csv"))
         {
             ModelState.AddModelError("format",
-                string.IsNullOrEmpty(format) ? "format is required." : $"Unsupported format '{format}'. Allowed: json.");
+                string.IsNullOrEmpty(format)
+                    ? "format is required."
+                    : $"Unsupported format '{format}'. Allowed: json, csv.");
             return ValidationProblem(ModelState);
         }
-        if (!string.Equals(scope, "all", StringComparison.OrdinalIgnoreCase))
+        if (!IsKnown(scope, "all", "tasksOnly"))
         {
             ModelState.AddModelError("scope",
-                string.IsNullOrEmpty(scope) ? "scope is required." : $"Unsupported scope '{scope}'. Allowed: all.");
+                string.IsNullOrEmpty(scope)
+                    ? "scope is required."
+                    : $"Unsupported scope '{scope}'. Allowed: all, tasksOnly.");
             return ValidationProblem(ModelState);
+        }
+
+        bool jsonAll = string.Equals(format, "json", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(scope, "all", StringComparison.OrdinalIgnoreCase);
+        bool csvTasksOnly = string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase)
+            && string.Equals(scope, "tasksOnly", StringComparison.OrdinalIgnoreCase);
+
+        if (!jsonAll && !csvTasksOnly)
+        {
+            ModelState.AddModelError("scope",
+                "format=json must pair with scope=all; format=csv must pair with scope=tasksOnly.");
+            return ValidationProblem(ModelState);
+        }
+
+        if (csvTasksOnly)
+        {
+            Result<string> csvResult = await _mediator
+                .Send(new ExportTasksAsCsvQuery(), ct)
+                .ConfigureAwait(false);
+
+            return csvResult.Match<IActionResult>(
+                csv =>
+                {
+                    byte[] bytes = Encoding.UTF8.GetBytes(csv);
+                    string fileName = $"waypoint-tasks-{_timeProvider.GetUtcNow():yyyyMMddTHHmmssZ}.csv";
+                    return File(bytes, "text/csv", fileName);
+                },
+                ToErrorResponse);
         }
 
         Result<DataExportEnvelopeReadModel> result = await _mediator
@@ -63,10 +96,30 @@ public sealed class DataController : ControllerBase
                 string fileName = $"waypoint-export-{_timeProvider.GetUtcNow():yyyyMMddTHHmmssZ}.json";
                 return File(bytes, "application/json", fileName);
             },
-            error =>
+            ToErrorResponse);
+    }
+
+    private IActionResult ToErrorResponse(ResultError error)
+    {
+        int status = error is ValidationError
+            ? StatusCodes.Status400BadRequest
+            : StatusCodes.Status500InternalServerError;
+        return Problem(error.Message, statusCode: status);
+    }
+
+    private static bool IsKnown(string? value, params string[] allowed)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return false;
+        }
+        foreach (string a in allowed)
+        {
+            if (string.Equals(value, a, StringComparison.OrdinalIgnoreCase))
             {
-                int status = error is ValidationError ? StatusCodes.Status400BadRequest : StatusCodes.Status500InternalServerError;
-                return Problem(error.Message, statusCode: status);
-            });
+                return true;
+            }
+        }
+        return false;
     }
 }

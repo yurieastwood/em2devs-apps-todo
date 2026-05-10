@@ -1940,6 +1940,37 @@ paths:
                   11111111-1111-1111-1111-111111111111,Call dentist,,Todo,Normal,Medium,10,,,,,2026-05-10T12:00:00+00:00,
         '400':
           $ref: '#/components/responses/BadRequest'
+  /api/data/delete:
+    post:
+      operationId: deleteAllUserData
+      summary: Permanently delete the authenticated user's data
+      description: |
+        Deletes every record belonging to the authenticated user across tasks, recurring tasks,
+        notifications, player profile, weekly reflections, insight cards, energy check-ins,
+        and timeline events. The `User` account row is preserved so login keeps working — the
+        scenario calls this "active but empty".
+
+        Requires a confirmation phrase in the request body to guard against accidental deletion.
+        The phrase must be the literal string `DELETE MY DATA` (case-sensitive).
+
+        Note: Quest, Epic, and StreakSnapshot are not currently user-scoped at the repository layer
+        (pre-existing data-model gap) and are skipped by this endpoint. Tasks the user owned that
+        were assigned to a quest are deleted, leaving any global quest/epic records orphaned.
+      tags:
+      - Data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAllDataRequest'
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '204':
+          description: All user data permanently deleted. Account remains active.
+        '400':
+          $ref: '#/components/responses/BadRequest'
 components:
   responses:
     Unauthorized:
@@ -3300,6 +3331,18 @@ components:
         whatDragged: Too many context switches
         adjustment: Block a 2-hour deep-work window every morning
         savedAt: '2026-04-15T20:00:00Z'
+    DeleteAllDataRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - confirmation
+      properties:
+        confirmation:
+          type: string
+          description: Must be the literal string `DELETE MY DATA` (case-sensitive) to confirm permanent deletion.
+          enum:
+          - DELETE MY DATA
+          example: DELETE MY DATA
     DataExportMeta:
       type: object
       description: Metadata describing the export operation.

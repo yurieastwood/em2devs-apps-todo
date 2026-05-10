@@ -50,6 +50,14 @@ public sealed class InMemoryInsightCardStore
             list.Add(card);
         }
     }
+
+    public void RemoveAllForUser(Guid userId)
+    {
+        lock (_lock)
+        {
+            _cards.Remove(userId);
+        }
+    }
 }
 
 public sealed class InMemoryInsightCardRepository : IInsightCardRepository

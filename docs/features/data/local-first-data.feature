@@ -142,7 +142,7 @@ Feature: Local-First Data and Export
 
   Rule: Users can delete their data and account permanently
 
-    @todo
+    @done
     Scenario: Delete all data
       When I choose to delete all my Waypoint data
       Then I should see a warning about permanent data loss

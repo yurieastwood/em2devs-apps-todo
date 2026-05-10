@@ -49,6 +49,14 @@ public sealed class InMemoryEnergyCheckInStore
             list.Add(checkIn);
         }
     }
+
+    public void RemoveAllForUser(Guid userId)
+    {
+        lock (_lock)
+        {
+            _checkIns.Remove(userId);
+        }
+    }
 }
 
 public sealed class InMemoryEnergyCheckInRepository : IEnergyCheckInRepository

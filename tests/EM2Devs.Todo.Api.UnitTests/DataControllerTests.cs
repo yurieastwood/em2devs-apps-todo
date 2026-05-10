@@ -200,6 +200,97 @@ public sealed class DataControllerTests : IDisposable
     private sealed record TaskIdResponse(Guid Id);
 
     [Fact]
+    public async Task Should_Return204_When_DeleteAllDataConfirmed()
+    {
+        await _client.PostAsJsonAsync("/api/tasks", new { title = "soon to be deleted" });
+
+        HttpResponseMessage response = await _client.PostAsJsonAsync(
+            "/api/data/delete", new { confirmation = "DELETE MY DATA" });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Should_RemoveUserTasksAndNotifications_When_DeleteConfirmed()
+    {
+        await _client.PostAsJsonAsync("/api/tasks", new { title = "task A" });
+        await _client.PostAsJsonAsync("/api/tasks", new { title = "task B" });
+
+        HttpResponseMessage tasksBefore = await _client.GetAsync("/api/tasks");
+        JsonElement listBefore = await tasksBefore.Content.ReadFromJsonAsync<JsonElement>();
+        listBefore.GetArrayLength().ShouldBeGreaterThan(0);
+
+        HttpResponseMessage del = await _client.PostAsJsonAsync(
+            "/api/data/delete", new { confirmation = "DELETE MY DATA" });
+        del.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        HttpResponseMessage tasksAfter = await _client.GetAsync("/api/tasks");
+        JsonElement listAfter = await tasksAfter.Content.ReadFromJsonAsync<JsonElement>();
+        listAfter.GetArrayLength().ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task Should_KeepAccountActive_When_DeleteConfirmed()
+    {
+        await _client.PostAsJsonAsync("/api/tasks", new { title = "before purge" });
+
+        await _client.PostAsJsonAsync(
+            "/api/data/delete", new { confirmation = "DELETE MY DATA" });
+
+        // /api/auth/me should still succeed — the User row is preserved.
+        HttpResponseMessage me = await _client.GetAsync("/api/auth/me");
+        me.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Should_Return400_When_ConfirmationMissing()
+    {
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/api/data/delete", new { });
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Should_Return400_When_ConfirmationWrong()
+    {
+        HttpResponseMessage response = await _client.PostAsJsonAsync(
+            "/api/data/delete", new { confirmation = "delete my data" });
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Should_Return401_When_DeleteUnauthenticated()
+    {
+        using HttpClient unauth = _factory.CreateClient();
+        HttpResponseMessage response = await unauth.PostAsJsonAsync(
+            "/api/data/delete", new { confirmation = "DELETE MY DATA" });
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Should_NotDeleteOtherUsersData_When_OneUserPurges()
+    {
+        Guid userA = AuthTestFixture.DefaultUserId;
+        Guid userB = Guid.NewGuid();
+
+        using HttpClient clientA = _factory.CreateClient();
+        clientA.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthTestFixture.GetTokenFor(userA));
+        using HttpClient clientB = _factory.CreateClient();
+        clientB.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthTestFixture.GetTokenFor(userB));
+
+        await clientB.PostAsJsonAsync("/api/tasks", new { title = "B's task — must survive" });
+
+        await clientA.PostAsJsonAsync(
+            "/api/data/delete", new { confirmation = "DELETE MY DATA" });
+
+        HttpResponseMessage bTasks = await clientB.GetAsync("/api/tasks");
+        bTasks.StatusCode.ShouldBe(HttpStatusCode.OK);
+        JsonElement bList = await bTasks.Content.ReadFromJsonAsync<JsonElement>();
+        bList.GetArrayLength().ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Should_Return400_When_CsvFormatPairedWithAllScope()
     {
         HttpResponseMessage response = await _client.GetAsync("/api/data/export?format=csv&scope=all");

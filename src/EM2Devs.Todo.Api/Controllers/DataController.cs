@@ -4,6 +4,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using EM2Devs.Todo.Application.Commands;
 using EM2Devs.Todo.Application.Mediator;
 using EM2Devs.Todo.Application.Queries;
 using EM2Devs.Todo.Application.ReadModels;
@@ -99,6 +100,26 @@ public sealed class DataController : ControllerBase
             ToErrorResponse);
     }
 
+    [HttpPost("delete")]
+    public async Task<IActionResult> DeleteAll(
+        [FromBody] DeleteAllDataRequest? request,
+        CancellationToken ct)
+    {
+        if (request is null)
+        {
+            ModelState.AddModelError("body", "Request body is required.");
+            return ValidationProblem(ModelState);
+        }
+
+        Result<bool> result = await _mediator
+            .Send(new DeleteAllUserDataCommand(request.Confirmation), ct)
+            .ConfigureAwait(false);
+
+        return result.Match<IActionResult>(
+            _ => NoContent(),
+            ToErrorResponse);
+    }
+
     private IActionResult ToErrorResponse(ResultError error)
     {
         int status = error is ValidationError
@@ -123,3 +144,5 @@ public sealed class DataController : ControllerBase
         return false;
     }
 }
+
+public sealed record DeleteAllDataRequest(string? Confirmation);

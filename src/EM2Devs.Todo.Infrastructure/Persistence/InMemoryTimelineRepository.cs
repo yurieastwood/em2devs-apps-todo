@@ -32,6 +32,14 @@ public sealed class InMemoryTimelineStore
             list.Add(timelineEvent);
         }
     }
+
+    public void RemoveAllForUser(Guid userId)
+    {
+        lock (_lock)
+        {
+            _events.Remove(userId);
+        }
+    }
 }
 
 public sealed class InMemoryTimelineRepository : ITimelineRepository

@@ -73,6 +73,7 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.Services.AddScoped<IInsightCardRepository, PostgresInsightCardRepository>();
     builder.Services.AddScoped<IEnergyCheckInRepository, PostgresEnergyCheckInRepository>();
     builder.Services.AddScoped<ITimelineRepository, PostgresTimelineRepository>();
+    builder.Services.AddScoped<IUserDataPurger, PostgresUserDataPurger>();
 }
 else
 {
@@ -104,6 +105,7 @@ else
     builder.Services.AddScoped<IEnergyCheckInRepository, InMemoryEnergyCheckInRepository>();
     builder.Services.AddSingleton<InMemoryTimelineStore>();
     builder.Services.AddScoped<ITimelineRepository, InMemoryTimelineRepository>();
+    builder.Services.AddScoped<IUserDataPurger, InMemoryUserDataPurger>();
 }
 
 // JWT-backed ICurrentUser reads HttpContext.User claims on each request.
@@ -220,6 +222,7 @@ builder.Services.AddTransient<IRequestHandler<GetTimelineQuery, Result<TimelineR
 // Full-data export query handler (JSON envelope; import deferred to a follow-up scenario).
 builder.Services.AddTransient<IRequestHandler<ExportDataQuery, Result<DataExportEnvelopeReadModel>>, ExportDataQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<ExportTasksAsCsvQuery, Result<string>>, ExportTasksAsCsvQueryHandler>();
+builder.Services.AddTransient<IRequestHandler<DeleteAllUserDataCommand, Result<bool>>, DeleteAllUserDataCommandHandler>();
 
 // Timeline event creation: populate timeline on level-up, streak milestone, quest completion.
 // Title evaluation: check title eligibility after each task completion.

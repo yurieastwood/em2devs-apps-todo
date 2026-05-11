@@ -24,6 +24,10 @@ public sealed class User
     public string PasswordHash { get; private set; }
     public string DisplayName { get; private set; }
     public DateTimeOffset CreatedAt { get; }
+    public DateTimeOffset? DeactivatedAt { get; private set; }
+
+    /// <summary>True when the account is in its post-deletion holding period.</summary>
+    public bool IsDeactivated => DeactivatedAt.HasValue;
 
     private User(UserId id, string email, string passwordHash, string displayName, DateTimeOffset createdAt)
     {
@@ -75,6 +79,38 @@ public sealed class User
     public void UpdateDisplayName(string newDisplayName)
     {
         DisplayName = ValidateDisplayName(newDisplayName);
+    }
+
+    /// <summary>
+    /// Marks the account as deactivated at the given instant. The user row is preserved
+    /// so the email/displayName cannot be immediately reclaimed; cleanup happens after
+    /// the 30-day holding period (see <see cref="HoldingPeriodElapsed"/>).
+    /// </summary>
+    public void Deactivate(DateTimeOffset at)
+    {
+        if (at == default)
+        {
+            throw new DomainException("Deactivation timestamp cannot be default.");
+        }
+
+        if (DeactivatedAt.HasValue)
+        {
+            throw new DomainException("Account is already deactivated.");
+        }
+
+        DeactivatedAt = at;
+    }
+
+    /// <summary>Length of the post-deletion holding period before the email is released.</summary>
+    public static readonly TimeSpan HoldingPeriod = TimeSpan.FromDays(30);
+
+    /// <summary>
+    /// Returns true when this account was deactivated more than the holding period ago,
+    /// meaning the email/displayName can be reclaimed by a new registration.
+    /// </summary>
+    public bool HoldingPeriodElapsed(DateTimeOffset now)
+    {
+        return DeactivatedAt.HasValue && now - DeactivatedAt.Value >= HoldingPeriod;
     }
 
     private static string ValidateEmail(string email)

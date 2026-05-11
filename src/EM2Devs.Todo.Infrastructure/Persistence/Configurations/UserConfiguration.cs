@@ -42,5 +42,8 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.CreatedAt)
             .HasColumnName("created_at")
             .IsRequired();
+
+        builder.Property(u => u.DeactivatedAt)
+            .HasColumnName("deactivated_at");
     }
 }

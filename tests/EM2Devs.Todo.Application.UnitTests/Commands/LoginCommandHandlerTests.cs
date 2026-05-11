@@ -91,4 +91,21 @@ public sealed class LoginCommandHandlerTests
         await Should.ThrowAsync<ArgumentNullException>(
             () => _handler.Handle(null!, CancellationToken.None));
     }
+
+    [Fact]
+    [Trait("Category", "Application")]
+    public async Task Should_ReturnUnauthorized_When_AccountDeactivated()
+    {
+        User user = ArrangeExistingUser();
+        user.Deactivate(_now);
+        _hasher.Verify("password123", "stored-hash").Returns(true);
+
+        Result<LoginResult> result = await _handler.Handle(
+            new LoginCommand("alice@waypoint.dev", "password123"),
+            CancellationToken.None);
+
+        result.IsError.ShouldBeTrue();
+        result.Match(_ => null!, e => e).ShouldBeOfType<UnauthorizedError>();
+        _tokens.DidNotReceive().Issue(Arg.Any<User>());
+    }
 }

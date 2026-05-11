@@ -68,4 +68,11 @@ public sealed class InMemoryUserRepository : IUserRepository
         _store[user.Id.Value] = user;
         return Task.CompletedTask;
     }
+
+    public Task DeleteAsync(UserId id, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        _store.TryRemove(id.Value, out _);
+        return Task.CompletedTask;
+    }
 }

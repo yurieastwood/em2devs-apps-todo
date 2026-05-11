@@ -52,4 +52,13 @@ public sealed class PostgresUserRepository : IUserRepository
 
         await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
     }
+
+    public async Task DeleteAsync(UserId id, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        await _dbContext.Users
+            .Where(u => u.Id == id)
+            .ExecuteDeleteAsync(ct)
+            .ConfigureAwait(false);
+    }
 }

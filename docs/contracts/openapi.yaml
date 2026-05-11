@@ -1940,6 +1940,41 @@ paths:
                   11111111-1111-1111-1111-111111111111,Call dentist,,Todo,Normal,Medium,10,,,,,2026-05-10T12:00:00+00:00,
         '400':
           $ref: '#/components/responses/BadRequest'
+  /api/account/delete:
+    post:
+      operationId: deleteAccount
+      summary: Permanently delete the authenticated user's account
+      description: |
+        Deletes every record belonging to the authenticated user (per `POST /api/data/delete`)
+        and additionally deactivates the `User` row. The row is preserved with a `deactivated_at`
+        timestamp so the email and display name cannot be reclaimed during the 30-day holding
+        period.
+
+        After the holding period elapses, a subsequent registration with the same email releases
+        the old user row and proceeds normally. Within the holding period, registration with that
+        email is rejected with 409.
+
+        Login is rejected with 401 for deactivated accounts. JWTs issued before deactivation remain
+        valid until their natural 1-hour expiry — accepted trade-off since the underlying data is
+        already purged.
+
+        Requires a confirmation phrase in the request body. Distinct from `DELETE MY DATA` (the
+        data-only purge phrase) so the bigger action requires its own typed confirmation.
+      tags:
+      - Account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteAccountRequest'
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '204':
+          description: Account permanently deleted. Login attempts will be rejected; the email is reclaimable after 30 days.
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/data/delete:
     post:
       operationId: deleteAllUserData
@@ -3331,6 +3366,18 @@ components:
         whatDragged: Too many context switches
         adjustment: Block a 2-hour deep-work window every morning
         savedAt: '2026-04-15T20:00:00Z'
+    DeleteAccountRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - confirmation
+      properties:
+        confirmation:
+          type: string
+          description: Must be the literal string `DELETE MY ACCOUNT` (case-sensitive) to confirm permanent account deletion.
+          enum:
+          - DELETE MY ACCOUNT
+          example: DELETE MY ACCOUNT
     DeleteAllDataRequest:
       type: object
       additionalProperties: false

@@ -162,7 +162,7 @@ Feature: Local-First Data and Export
       And my account should be deactivated
       And my username should be released after a 30-day holding period
 
-    @todo
+    @done
     Scenario: Recover account during the 30-day holding period
       Given I have deleted my account within the last 30 days
       When I sign in using my original social login provider

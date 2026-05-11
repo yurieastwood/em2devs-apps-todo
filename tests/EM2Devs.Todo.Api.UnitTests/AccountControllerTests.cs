@@ -107,6 +107,97 @@ public sealed class AccountControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Should_RecoverAccount_When_CredentialsValidAndWithinHoldingPeriod()
+    {
+        // Deactivate the seeded demo user via the standard flow
+        HttpResponseMessage del = await _client.PostAsJsonAsync(
+            "/api/account/delete", new { confirmation = "DELETE MY ACCOUNT" });
+        del.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        // Recover with the seeded credentials
+        using HttpClient anon = _factory.CreateClient();
+        HttpResponseMessage recover = await anon.PostAsJsonAsync(
+            "/api/account/recover",
+            new { email = "demo@waypoint.dev", password = "demo1234" });
+
+        recover.StatusCode.ShouldBe(HttpStatusCode.OK);
+        AuthResponse? body = await recover.Content.ReadFromJsonAsync<AuthResponse>();
+        body.ShouldNotBeNull();
+        body.Token.ShouldNotBeNullOrEmpty();
+        body.UserId.ShouldBe(AuthTestFixture.DefaultUserId);
+
+        // Login should work again
+        HttpResponseMessage login = await _factory.CreateClient().PostAsJsonAsync(
+            "/api/auth/login",
+            new { email = "demo@waypoint.dev", password = "demo1234" });
+        login.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Should_Return409_When_RecoverOnActiveAccount()
+    {
+        using HttpClient anon = _factory.CreateClient();
+        HttpResponseMessage recover = await anon.PostAsJsonAsync(
+            "/api/account/recover",
+            new { email = "demo@waypoint.dev", password = "demo1234" });
+
+        recover.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task Should_Return401_When_RecoverWithWrongCredentials()
+    {
+        await _client.PostAsJsonAsync(
+            "/api/account/delete", new { confirmation = "DELETE MY ACCOUNT" });
+
+        using HttpClient anon = _factory.CreateClient();
+        HttpResponseMessage recover = await anon.PostAsJsonAsync(
+            "/api/account/recover",
+            new { email = "demo@waypoint.dev", password = "wrong-password" });
+
+        recover.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Should_Return400_When_RecoverWithEmptyCredentials()
+    {
+        // Guards against the unvalidated path through GetByEmailAsync (which throws
+        // ArgumentException on empty input) — caught by Schemathesis in the loop.
+        using HttpClient anon = _factory.CreateClient();
+        HttpResponseMessage response = await anon.PostAsJsonAsync(
+            "/api/account/recover",
+            new { email = "", password = "" });
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Should_Return401_When_RecoverWithUnknownEmail()
+    {
+        using HttpClient anon = _factory.CreateClient();
+        HttpResponseMessage recover = await anon.PostAsJsonAsync(
+            "/api/account/recover",
+            new { email = "ghost@nowhere.dev", password = "whatever" });
+
+        recover.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Should_AllowRecoverWithoutAuthentication()
+    {
+        // Recover endpoint must be reachable without a bearer token —
+        // the user can't log in yet (deactivated) so they have no JWT.
+        using HttpClient anon = _factory.CreateClient();
+        HttpResponseMessage recover = await anon.PostAsJsonAsync(
+            "/api/account/recover",
+            new { email = "demo@waypoint.dev", password = "demo1234" });
+
+        // Either 200 (recovery success) or 409 (not deactivated) — never 401 for missing JWT.
+        recover.StatusCode.ShouldNotBe(HttpStatusCode.Unauthorized);
+    }
+
+    private sealed record AuthResponse(string Token, Guid UserId, string DisplayName, DateTimeOffset ExpiresAt);
+
+    [Fact]
     public async Task Should_NotAffectOtherUsers_When_OneAccountDeleted()
     {
         Guid userA = AuthTestFixture.DefaultUserId;

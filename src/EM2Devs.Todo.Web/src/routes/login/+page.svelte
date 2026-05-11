@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
+	let deactivatedBanner = $derived(page.url.searchParams.get('deactivated') === '1');
 </script>
 
 <svelte:head>
@@ -14,8 +16,16 @@
 	<div class="login-card">
 		<h1>Welcome to Waypoint</h1>
 		<p>Sign in to your account to continue.</p>
+
+		{#if deactivatedBanner}
+			<div class="banner" data-testid="deactivated-banner">
+				Your account has been deactivated. Sign in within 30 days to recover it.
+			</div>
+		{/if}
+
 		<form
 			method="POST"
+			action={form?.deactivated ? '?/recover' : ''}
 			use:enhance={() => {
 				return async ({ update }) => {
 					await update({ invalidateAll: true });
@@ -47,7 +57,17 @@
 				<p class="error" data-testid="login-error">{form.error}</p>
 			{/if}
 
-			<button type="submit" class="btn-primary" data-testid="login-button">Sign In</button>
+			{#if form?.deactivated}
+				<p class="hint-inline" data-testid="recover-hint">
+					This account is deactivated. Submit the same credentials to recover it.
+				</p>
+				<button type="submit" class="btn-primary" data-testid="recover-button">
+					Recover account
+				</button>
+			{:else}
+				<button type="submit" class="btn-primary" data-testid="login-button">Sign In</button
+				>
+			{/if}
 		</form>
 		<p class="hint">
 			New here? <a href={resolve('/register')} data-testid="register-link"
@@ -86,6 +106,17 @@
 		text-align: center;
 	}
 
+	.banner {
+		background: #fef3c7;
+		border: 1px solid #fcd34d;
+		color: #92400e;
+		padding: 0.75rem;
+		border-radius: 0.25rem;
+		margin-bottom: 1rem;
+		font-size: 0.875rem;
+		text-align: left;
+	}
+
 	label {
 		display: block;
 		font-size: 0.875rem;
@@ -109,6 +140,13 @@
 		margin: 0.75rem 0 0;
 		font-size: 0.875rem;
 		text-align: left;
+	}
+
+	.hint-inline {
+		margin: 0.5rem 0 0;
+		font-size: 0.875rem;
+		text-align: left;
+		color: #92400e;
 	}
 
 	.btn-primary {

@@ -434,4 +434,47 @@ public sealed class UserTests
 
         user.HoldingPeriodElapsed(_createdAt.AddDays(31)).ShouldBeTrue();
     }
+
+    // -- Reactivation -----------------------------------------------------
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ClearDeactivatedAt_When_ReactivateCalledOnDeactivatedAccount()
+    {
+        var user = User.Create(ValidEmail, ValidHash, ValidDisplayName, _createdAt);
+        user.Deactivate(_createdAt.AddHours(1));
+
+        user.Reactivate();
+
+        user.IsDeactivated.ShouldBeFalse();
+        user.DeactivatedAt.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_ReactivateCalledOnActiveAccount()
+    {
+        var user = User.Create(ValidEmail, ValidHash, ValidDisplayName, _createdAt);
+
+        Action act = () => user.Reactivate();
+
+        var ex = act.ShouldThrow<DomainException>();
+        ex.Message.ShouldBe("Account is not deactivated.");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_AllowSecondDeactivate_After_Reactivate()
+    {
+        var user = User.Create(ValidEmail, ValidHash, ValidDisplayName, _createdAt);
+        user.Deactivate(_createdAt.AddHours(1));
+        user.Reactivate();
+
+        // Reactivation reset the invariant so a fresh Deactivate works again.
+        var secondDeactivation = _createdAt.AddDays(5);
+        user.Deactivate(secondDeactivation);
+
+        user.IsDeactivated.ShouldBeTrue();
+        user.DeactivatedAt.ShouldBe(secondDeactivation);
+    }
 }

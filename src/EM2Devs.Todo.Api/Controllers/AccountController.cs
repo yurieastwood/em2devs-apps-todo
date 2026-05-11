@@ -36,6 +36,27 @@ public sealed class AccountController : ControllerBase
 
         return result.ToHttpResult(_ => NoContent());
     }
+
+    [HttpPost("recover")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Recover(
+        [FromBody] RecoverAccountRequest? request,
+        CancellationToken ct)
+    {
+        if (request is null)
+        {
+            ModelState.AddModelError("body", "Request body is required.");
+            return ValidationProblem(ModelState);
+        }
+
+        Result<LoginResult> result = await _mediator
+            .Send(new RecoverAccountCommand(request.Email, request.Password), ct)
+            .ConfigureAwait(false);
+
+        return result.ToHttpResult(ok => Ok(new AuthResponse(
+            ok.Token, ok.UserId, ok.DisplayName, ok.ExpiresAt)));
+    }
 }
 
 public sealed record DeleteAccountRequest(string? Confirmation);
+public sealed record RecoverAccountRequest(string Email, string Password);

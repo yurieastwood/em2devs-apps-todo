@@ -113,6 +113,21 @@ public sealed class User
         return DeactivatedAt.HasValue && now - DeactivatedAt.Value >= HoldingPeriod;
     }
 
+    /// <summary>
+    /// Cancels a pending deactivation and returns the account to active state.
+    /// Throws when the account is not currently deactivated (paired invariant with
+    /// <see cref="Deactivate"/>).
+    /// </summary>
+    public void Reactivate()
+    {
+        if (!DeactivatedAt.HasValue)
+        {
+            throw new DomainException("Account is not deactivated.");
+        }
+
+        DeactivatedAt = null;
+    }
+
     private static string ValidateEmail(string email)
     {
         if (string.IsNullOrWhiteSpace(email))

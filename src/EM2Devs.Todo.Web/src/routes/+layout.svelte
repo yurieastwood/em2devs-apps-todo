@@ -67,6 +67,7 @@
 						<a href={resolve('/insights')} data-testid="nav-insights">Insights</a>
 						<a href={resolve('/seasons')} data-testid="nav-seasons">Seasons</a>
 						<a href={resolve('/wrapped')} data-testid="nav-wrapped">Wrapped</a>
+						<a href={resolve('/account')} data-testid="nav-account">Account</a>
 					</div>
 				{/if}
 			</div>

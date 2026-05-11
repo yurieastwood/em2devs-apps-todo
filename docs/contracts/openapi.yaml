@@ -1975,6 +1975,53 @@ paths:
           description: Account permanently deleted. Login attempts will be rejected; the email is reclaimable after 30 days.
         '400':
           $ref: '#/components/responses/BadRequest'
+  /api/account/recover:
+    post:
+      operationId: recoverAccount
+      summary: Recover a deactivated account within the 30-day holding period
+      description: |
+        Re-activates a previously-deactivated account when valid credentials are presented
+        within the 30-day holding period. Clears `deactivated_at` and returns a fresh JWT
+        identical in shape to the standard login response.
+
+        This endpoint is intentionally anonymous: a deactivated user cannot log in (the
+        login endpoint rejects them) so they need an alternative path to identify
+        themselves.
+
+        Data is not restored — the holding period only protects the account identity. The
+        scenario's "all data should be restored to its pre-deletion state" requirement is
+        deferred (would require a soft-delete refactor of every per-user repository; see
+        the corresponding feature file note).
+      tags:
+      - Account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoverAccountRequest'
+      responses:
+        '200':
+          description: Recovery successful. Body is the same shape as login/register.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Unknown email or incorrect password.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '409':
+          description: Account is not deactivated, or the 30-day holding period has elapsed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/data/delete:
     post:
       operationId: deleteAllUserData
@@ -3366,6 +3413,22 @@ components:
         whatDragged: Too many context switches
         adjustment: Block a 2-hour deep-work window every morning
         savedAt: '2026-04-15T20:00:00Z'
+    RecoverAccountRequest:
+      type: object
+      additionalProperties: false
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          example: recover-me@waypoint.dev
+        password:
+          type: string
+          minLength: 8
+          example: hunter2hunter2
     DeleteAccountRequest:
       type: object
       additionalProperties: false

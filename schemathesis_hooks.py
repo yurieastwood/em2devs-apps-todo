@@ -6,34 +6,50 @@ Two responsibilities:
    are followed (prevents Schemathesis from reusing parent IDs as child IDs
    in compound endpoints like quest->tasks, epic->quests).
 
-2. Authenticate all requests with a JWT obtained by calling
-   ``POST /api/auth/login`` with the seeded demo credentials. Implemented via
-   Schemathesis' ``@auth`` provider, which integrates with the framework's
-   auth pipeline so the Coverage phase can still probe negative-auth behaviour
-   (``ignored_auth`` check) while Stateful and Examples phases get a valid
-   bearer token attached.
+2. Authenticate each request with a JWT obtained by registering a *fresh*
+   ephemeral user. We can't reuse a single seeded account because the
+   ``POST /api/account/delete`` endpoint permanently deactivates its caller —
+   once Schemathesis exercises that operation mid-run, any subsequent case
+   using the same account would fail authentication and cascade into
+   "Missing authentication" warnings across many operations.
+
+   By registering a fresh user per credential request, each case is isolated:
+   if a case happens to delete its account, only that ephemeral user is
+   destroyed and the next case gets a new one.
 """
 
 from __future__ import annotations
 
+import itertools
 import json
 import os
 import urllib.error
 import urllib.request
+import uuid
 from typing import Optional
 
 import schemathesis
 
-# Seeded dev credentials — see InMemoryUserRepository / AddUsersAndSeed migration.
-DEMO_EMAIL = os.environ.get("SCHEMATHESIS_AUTH_EMAIL", "demo@waypoint.dev")
-DEMO_PASSWORD = os.environ.get("SCHEMATHESIS_AUTH_PASSWORD", "demo1234")
+_RUN_ID = uuid.uuid4().hex[:8]
+_COUNTER = itertools.count(1)
+_PASSWORD = "Schemathesis-12345"
 
 
-def _login(base_url: str) -> Optional[str]:
-    """POST seeded credentials to /api/auth/login and return the JWT."""
-    data = json.dumps({"email": DEMO_EMAIL, "password": DEMO_PASSWORD}).encode("utf-8")
+def _register_ephemeral(base_url: str) -> Optional[str]:
+    """Register a fresh ephemeral user and return their JWT.
+
+    Each call uses a unique email so registration always succeeds even when
+    a prior case left a previously-registered user in the deactivated state.
+    """
+    idx = next(_COUNTER)
+    email = f"schemathesis-{_RUN_ID}-{idx}@example.test"
+    data = json.dumps({
+        "email": email,
+        "password": _PASSWORD,
+        "displayName": f"Schemathesis User {idx}",
+    }).encode("utf-8")
     req = urllib.request.Request(
-        base_url.rstrip("/") + "/api/auth/login",
+        base_url.rstrip("/") + "/api/auth/register",
         data=data,
         headers={"Content-Type": "application/json"},
         method="POST",
@@ -43,7 +59,7 @@ def _login(base_url: str) -> Optional[str]:
             body = json.loads(resp.read().decode("utf-8"))
             return body.get("token")
     except (urllib.error.URLError, urllib.error.HTTPError, ValueError) as exc:
-        print(f"[schemathesis_hooks] Login failed: {exc}")
+        print(f"[schemathesis_hooks] Register failed: {exc}")
         return None
 
 
@@ -54,23 +70,20 @@ def after_load_schema(context, schema):
 
 
 @schemathesis.auth()
-class DemoBearerAuth:
-    """Fetch a JWT once per refresh interval and attach it as a bearer token.
+class EphemeralBearerAuth:
+    """Mint a JWT for a fresh user on each credential request.
 
-    Schemathesis uses ``get`` to retrieve the credential and ``set`` to apply it
-    to each generated case. Because this is registered via ``@auth``, the
-    framework knows about our auth requirement and can still run its
-    ``ignored_auth`` negative-auth probe correctly (it suppresses our provider
-    for that specific check).
+    Schemathesis caches credentials between cases by default; this provider
+    refreshes per case so a case that destroys its account cannot affect
+    subsequent cases.
     """
 
     def get(self, case, context):
-        # Resolve the base URL from the schema — Schemathesis sets this from --url.
         base_url = (
             getattr(getattr(case.operation, "schema", None), "base_url", None)
             or os.environ.get("SCHEMATHESIS_BASE_URL", "http://localhost:15001")
         )
-        return _login(base_url)
+        return _register_ephemeral(base_url)
 
     def set(self, case, data, context):
         if not data:

@@ -223,6 +223,7 @@ builder.Services.AddTransient<IRequestHandler<GetTimelineQuery, Result<TimelineR
 builder.Services.AddTransient<IRequestHandler<ExportDataQuery, Result<DataExportEnvelopeReadModel>>, ExportDataQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<ExportTasksAsCsvQuery, Result<string>>, ExportTasksAsCsvQueryHandler>();
 builder.Services.AddTransient<IRequestHandler<DeleteAllUserDataCommand, Result<bool>>, DeleteAllUserDataCommandHandler>();
+builder.Services.AddTransient<IRequestHandler<DeleteAccountCommand, Result<bool>>, DeleteAccountCommandHandler>();
 
 // Timeline event creation: populate timeline on level-up, streak milestone, quest completion.
 // Title evaluation: check title eligibility after each task completion.

@@ -338,4 +338,100 @@ public sealed class UserTests
 
         new UserId(guid).ShouldBe(new UserId(guid));
     }
+
+    // -- Deactivation -----------------------------------------------------
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_NotBeDeactivated_When_NewlyCreated()
+    {
+        var user = User.Create(ValidEmail, ValidHash, ValidDisplayName, _createdAt);
+
+        user.IsDeactivated.ShouldBeFalse();
+        user.DeactivatedAt.ShouldBeNull();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_RecordDeactivatedAt_When_DeactivateCalled()
+    {
+        var user = User.Create(ValidEmail, ValidHash, ValidDisplayName, _createdAt);
+        var deletedAt = _createdAt.AddHours(1);
+
+        user.Deactivate(deletedAt);
+
+        user.IsDeactivated.ShouldBeTrue();
+        user.DeactivatedAt.ShouldBe(deletedAt);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_DeactivateCalledWithDefaultTimestamp()
+    {
+        var user = User.Create(ValidEmail, ValidHash, ValidDisplayName, _createdAt);
+
+        Action act = () => user.Deactivate(default);
+
+        var ex = act.ShouldThrow<DomainException>();
+        ex.Message.ShouldBe("Deactivation timestamp cannot be default.");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_DeactivateCalledTwice()
+    {
+        var user = User.Create(ValidEmail, ValidHash, ValidDisplayName, _createdAt);
+        user.Deactivate(_createdAt.AddHours(1));
+
+        Action act = () => user.Deactivate(_createdAt.AddHours(2));
+
+        var ex = act.ShouldThrow<DomainException>();
+        ex.Message.ShouldBe("Account is already deactivated.");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ExposeHoldingPeriodOfThirtyDays()
+    {
+        User.HoldingPeriod.ShouldBe(TimeSpan.FromDays(30));
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReportHoldingPeriodNotElapsed_When_NotDeactivated()
+    {
+        var user = User.Create(ValidEmail, ValidHash, ValidDisplayName, _createdAt);
+
+        user.HoldingPeriodElapsed(_createdAt.AddYears(10)).ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReportHoldingPeriodNotElapsed_When_LessThanThirtyDaysSinceDeactivation()
+    {
+        var user = User.Create(ValidEmail, ValidHash, ValidDisplayName, _createdAt);
+        user.Deactivate(_createdAt);
+
+        user.HoldingPeriodElapsed(_createdAt.AddDays(29).AddHours(23)).ShouldBeFalse();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReportHoldingPeriodElapsed_When_ExactlyThirtyDaysSinceDeactivation()
+    {
+        var user = User.Create(ValidEmail, ValidHash, ValidDisplayName, _createdAt);
+        user.Deactivate(_createdAt);
+
+        user.HoldingPeriodElapsed(_createdAt.AddDays(30)).ShouldBeTrue();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReportHoldingPeriodElapsed_When_MoreThanThirtyDaysSinceDeactivation()
+    {
+        var user = User.Create(ValidEmail, ValidHash, ValidDisplayName, _createdAt);
+        user.Deactivate(_createdAt);
+
+        user.HoldingPeriodElapsed(_createdAt.AddDays(31)).ShouldBeTrue();
+    }
 }

@@ -152,7 +152,7 @@ Feature: Local-First Data and Export
       And all cloud data (if sync was enabled) should be permanently deleted
       And my account should remain active but empty
 
-    @todo
+    @done
     Scenario: Delete account entirely
       When I choose to delete my account
       Then I should see a warning about permanent account and data loss

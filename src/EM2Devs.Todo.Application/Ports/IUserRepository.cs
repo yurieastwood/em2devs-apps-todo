@@ -12,4 +12,10 @@ public interface IUserRepository
     Task<User?> GetByEmailAsync(string email, CancellationToken ct = default);
     Task AddAsync(User user, CancellationToken ct = default);
     Task SaveAsync(User user, CancellationToken ct = default);
+
+    /// <summary>
+    /// Permanently removes the user row. Used after the deactivation holding period
+    /// elapses to release the email/displayName back to the pool.
+    /// </summary>
+    Task DeleteAsync(UserId id, CancellationToken ct = default);
 }

@@ -35,7 +35,16 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
         User? existing = await _users.GetByEmailAsync(request.Email, ct).ConfigureAwait(false);
         if (existing is not null)
         {
-            return new ConflictError($"A user with email '{request.Email}' is already registered.");
+            DateTimeOffset now = _clock.GetUtcNow();
+            if (existing.IsDeactivated && existing.HoldingPeriodElapsed(now))
+            {
+                // 30-day holding period elapsed — release the row so the email can be reclaimed.
+                await _users.DeleteAsync(existing.Id, ct).ConfigureAwait(false);
+            }
+            else
+            {
+                return new ConflictError($"A user with email '{request.Email}' is already registered.");
+            }
         }
 
         string passwordHash = _hasher.Hash(request.Password);

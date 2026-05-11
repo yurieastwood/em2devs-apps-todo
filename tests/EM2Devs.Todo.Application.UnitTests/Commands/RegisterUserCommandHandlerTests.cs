@@ -101,4 +101,45 @@ public sealed class RegisterUserCommandHandlerTests
         await Should.ThrowAsync<ArgumentNullException>(
             () => _handler.Handle(null!, CancellationToken.None));
     }
+
+    [Fact]
+    [Trait("Category", "Application")]
+    public async Task Should_ReturnConflictError_When_EmailDeactivatedWithinHoldingPeriod()
+    {
+        var existing = User.Create("alice@waypoint.dev", "hash", "Alice", _fixedNow.AddDays(-10));
+        existing.Deactivate(_fixedNow.AddDays(-10));
+        _users.GetByEmailAsync("alice@waypoint.dev", Arg.Any<CancellationToken>())
+            .Returns(existing);
+
+        var command = new RegisterUserCommand("alice@waypoint.dev", "password123", "Alice");
+
+        Result<LoginResult> result = await _handler.Handle(command, CancellationToken.None);
+
+        result.IsError.ShouldBeTrue();
+        result.Match(_ => null!, e => e).ShouldBeOfType<ConflictError>();
+        await _users.DidNotReceive().AddAsync(Arg.Any<User>(), Arg.Any<CancellationToken>());
+        await _users.DidNotReceive().DeleteAsync(Arg.Any<EM2Devs.Todo.Domain.ValueObjects.UserId>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    [Trait("Category", "Application")]
+    public async Task Should_ReleaseEmail_When_HoldingPeriodElapsed()
+    {
+        var existing = User.Create(
+            "alice@waypoint.dev", "hash", "Alice",
+            _fixedNow.AddDays(-60));
+        existing.Deactivate(_fixedNow.AddDays(-31));
+        _users.GetByEmailAsync("alice@waypoint.dev", Arg.Any<CancellationToken>())
+            .Returns(existing);
+
+        var command = new RegisterUserCommand("alice@waypoint.dev", "password123", "Alice");
+
+        Result<LoginResult> result = await _handler.Handle(command, CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        await _users.Received(1).DeleteAsync(existing.Id, Arg.Any<CancellationToken>());
+        await _users.Received(1).AddAsync(
+            Arg.Is<User>(u => u.Email == "alice@waypoint.dev" && !u.IsDeactivated),
+            Arg.Any<CancellationToken>());
+    }
 }

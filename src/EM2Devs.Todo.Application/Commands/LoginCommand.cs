@@ -41,6 +41,11 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, Result<L
             return new UnauthorizedError("Invalid email or password.");
         }
 
+        if (user.IsDeactivated)
+        {
+            return new UnauthorizedError("Account has been deactivated.");
+        }
+
         JwtToken token = _tokens.Issue(user);
         return new LoginResult(token.Token, user.Id.Value, user.DisplayName, token.ExpiresAt);
     }

@@ -53,14 +53,7 @@ builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
 if (!string.IsNullOrEmpty(connectionString))
 {
-    // Suppress PendingModelChangesWarning: the model snapshot doesn't exactly match the
-    // runtime model for Phase 0–3 entities added outside of `dotnet ef migrations add`.
-    // The hand-written AddPhase0to3TaskColumns migration creates the columns correctly;
-    // chasing the snapshot-model diff is technical debt for a later pass.
-    builder.AddNpgsqlDbContext<TodoDbContext>("tododb", configureDbContextOptions: options =>
-    {
-        options.ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
-    });
+    builder.AddNpgsqlDbContext<TodoDbContext>("tododb");
     builder.Services.AddScoped<ITaskRepository, PostgresTaskRepository>();
     builder.Services.AddScoped<IRecurringTaskRepository, PostgresRecurringTaskRepository>();
     builder.Services.AddScoped<IPlayerProfileRepository, PostgresPlayerProfileRepository>();

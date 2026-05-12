@@ -50,5 +50,11 @@ public sealed class QuestConfiguration : IEntityTypeConfiguration<Quest>
         // Quest's `_tasks` list and `Progress` (computed) are not persisted here.
         builder.Ignore(q => q.Tasks);
         builder.Ignore(q => q.Progress);
+
+        // Multi-user isolation: every quest is owned by exactly one user. Modelled as a
+        // shadow property since the Quest aggregate doesn't expose UserId directly. The
+        // column already exists in the Postgres schema (see AddQuestEpicReflectionInsightEnergyTimeline).
+        builder.Property<Guid>("UserId").HasColumnName("user_id").IsRequired();
+        builder.HasIndex("UserId");
     }
 }

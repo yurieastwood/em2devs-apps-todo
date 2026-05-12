@@ -43,5 +43,11 @@ public sealed class EpicConfiguration : IEntityTypeConfiguration<Epic>
 
         builder.Ignore(e => e.Quests);
         builder.Ignore(e => e.Progress);
+
+        // Multi-user isolation: every epic is owned by exactly one user. Modelled as a
+        // shadow property since the Epic aggregate doesn't expose UserId directly. The
+        // column already exists in the Postgres schema (see AddQuestEpicReflectionInsightEnergyTimeline).
+        builder.Property<Guid>("UserId").HasColumnName("user_id").IsRequired();
+        builder.HasIndex("UserId");
     }
 }

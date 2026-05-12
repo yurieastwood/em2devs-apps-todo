@@ -22,17 +22,20 @@ public sealed partial class DailyStreakEvaluationJob : IJob
 {
     private readonly IPlayerProfileRepository _profileRepository;
     private readonly IStreakSnapshotRepository _snapshotRepository;
+    private readonly ICurrentUser _currentUser;
     private readonly ILogger<DailyStreakEvaluationJob> _logger;
     private readonly TimeProvider _timeProvider;
 
     public DailyStreakEvaluationJob(
         IPlayerProfileRepository profileRepository,
         IStreakSnapshotRepository snapshotRepository,
+        ICurrentUser currentUser,
         ILogger<DailyStreakEvaluationJob> logger,
         TimeProvider timeProvider)
     {
         _profileRepository = profileRepository;
         _snapshotRepository = snapshotRepository;
+        _currentUser = currentUser;
         _logger = logger;
         _timeProvider = timeProvider;
     }
@@ -70,6 +73,7 @@ public sealed partial class DailyStreakEvaluationJob : IJob
         bool wasActive = before.CurrentStreak > 0 || after.CurrentStreak > 0;
 
         StreakSnapshot snapshot = StreakSnapshot.Capture(
+            userId: _currentUser.UserId,
             snapshotDate: evaluatedDay,
             currentDays: after.CurrentStreak,
             longestDays: after.LongestStreak,

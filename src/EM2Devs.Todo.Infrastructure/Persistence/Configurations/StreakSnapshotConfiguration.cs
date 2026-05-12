@@ -15,11 +15,17 @@ public sealed class StreakSnapshotConfiguration : IEntityTypeConfiguration<Strea
 
         builder.Property(s => s.Id).HasColumnName("id");
 
+        builder.Property(s => s.UserId)
+            .HasColumnName("user_id")
+            .IsRequired();
+
         builder.Property(s => s.SnapshotDate)
             .HasColumnName("snapshot_date")
             .IsRequired();
 
-        builder.HasIndex(s => s.SnapshotDate).IsUnique();
+        // One snapshot per (user, day). Replaces the previous global unique index on
+        // snapshot_date which assumed single-user mode.
+        builder.HasIndex(s => new { s.UserId, s.SnapshotDate }).IsUnique();
 
         builder.Property(s => s.CurrentDays)
             .HasColumnName("current_days")

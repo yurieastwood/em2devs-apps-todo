@@ -22,6 +22,26 @@ public sealed class DataControllerTests : IDisposable
     public void Dispose() => _factory.Dispose();
 
     [Fact]
+    public async Task Should_AllowBothExportFormats_When_UserIsFreeTier()
+    {
+        // Regression lock for the "export available regardless of subscription" scenario:
+        // a free-tier user must be able to download both the full JSON envelope and the
+        // tasks CSV without tier gating. The seeded demo user is Free by default.
+        HttpResponseMessage subscription = await _client.GetAsync("/api/subscription");
+        subscription.StatusCode.ShouldBe(HttpStatusCode.OK);
+        JsonElement sub = await subscription.Content.ReadFromJsonAsync<JsonElement>();
+        sub.GetProperty("tier").GetString().ShouldBe("Free", "demo user is Free tier by default");
+        sub.GetProperty("isPremium").GetBoolean().ShouldBeFalse();
+
+        HttpResponseMessage json = await _client.GetAsync("/api/data/export?format=json&scope=all");
+        json.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        HttpResponseMessage csv = await _client.GetAsync("/api/data/export?format=csv&scope=tasksOnly");
+        csv.StatusCode.ShouldBe(HttpStatusCode.OK);
+        csv.Content.Headers.ContentType!.MediaType.ShouldBe("text/csv");
+    }
+
+    [Fact]
     public async Task Should_ReturnJsonExportEnvelope_When_AuthenticatedUserRequestsAllAsJson()
     {
         HttpResponseMessage response = await _client.GetAsync("/api/data/export?format=json&scope=all");

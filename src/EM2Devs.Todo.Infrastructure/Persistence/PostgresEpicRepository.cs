@@ -35,16 +35,53 @@ public sealed class PostgresEpicRepository : IEpicRepository
     public async Task<IReadOnlyList<Epic>> GetAllAsync(CancellationToken ct = default)
     {
         Guid userId = _currentUser.UserId;
-        // TODO(perf): two-level N+1 — 1 query for all epics, plus 1 per epic for quests, plus 1 per quest for tasks.
-        // For E epics with Q quests each, total is 1 + E + (E × Q) queries.
-        // Acceptable at current scale; see design spec docs/superpowers/specs/2026-05-03-postgres-persistence-design.md.
         List<Epic> epics = await _dbContext.Epics
             .Where(e => EF.Property<Guid>(e, "UserId") == userId)
             .ToListAsync(ct)
             .ConfigureAwait(false);
-        foreach (Epic e in epics)
+        if (epics.Count == 0)
         {
-            await HydrateQuestsAsync(e, ct).ConfigureAwait(false);
+            return epics;
+        }
+
+        // Batched hydration: 3 queries total regardless of fan-out.
+        // (was 1 + E + (E × Q) before the rewrite).
+        List<EpicId> epicIds = epics.ConvertAll(e => e.Id);
+        List<Quest> quests = await _dbContext.Quests
+            .Where(q => q.EpicId != null
+                && epicIds.Contains(q.EpicId)
+                && EF.Property<Guid>(q, "UserId") == userId)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        ILookup<QuestId, TodoTask> tasksByQuest;
+        if (quests.Count == 0)
+        {
+            tasksByQuest = Array.Empty<TodoTask>().ToLookup(t => t.AssignedQuestId!);
+        }
+        else
+        {
+            List<QuestId> questIds = quests.ConvertAll(q => q.Id);
+            List<TodoTask> tasks = await _dbContext.Tasks
+                .Where(t => t.UserId == userId
+                    && t.AssignedQuestId != null
+                    && questIds.Contains(t.AssignedQuestId))
+                .ToListAsync(ct)
+                .ConfigureAwait(false);
+            tasksByQuest = tasks.ToLookup(t => t.AssignedQuestId!);
+        }
+
+        ILookup<EpicId, Quest> questsByEpic = quests.ToLookup(q => q.EpicId!);
+        foreach (Epic epic in epics)
+        {
+            foreach (Quest quest in questsByEpic[epic.Id])
+            {
+                foreach (TodoTask task in tasksByQuest[quest.Id])
+                {
+                    quest.AddTask(task);
+                }
+                epic.AddQuest(quest);
+            }
         }
         return epics;
     }

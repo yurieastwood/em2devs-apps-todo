@@ -36,15 +36,32 @@ public sealed class PostgresQuestRepository : IQuestRepository
     public async Task<IReadOnlyList<Quest>> GetAllAsync(CancellationToken ct = default)
     {
         Guid userId = _currentUser.UserId;
-        // TODO(perf): batch task hydration — currently N+1 (one query per Quest).
-        // Acceptable at current scale; see design spec docs/superpowers/specs/2026-05-03-postgres-persistence-design.md.
         List<Quest> quests = await _dbContext.Quests
             .Where(q => EF.Property<Guid>(q, "UserId") == userId)
             .ToListAsync(ct)
             .ConfigureAwait(false);
+        if (quests.Count == 0)
+        {
+            return quests;
+        }
+
+        // Batched task hydration: a single query keyed by IN (questIds) replaces the
+        // prior per-quest fetch (1 + N queries → 2 total).
+        List<QuestId> questIds = quests.ConvertAll(q => q.Id);
+        List<TodoTask> tasks = await _dbContext.Tasks
+            .Where(t => t.UserId == userId
+                && t.AssignedQuestId != null
+                && questIds.Contains(t.AssignedQuestId))
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
+
+        ILookup<QuestId, TodoTask> tasksByQuest = tasks.ToLookup(t => t.AssignedQuestId!);
         foreach (Quest q in quests)
         {
-            await HydrateTasksAsync(q, ct).ConfigureAwait(false);
+            foreach (TodoTask t in tasksByQuest[q.Id])
+            {
+                q.AddTask(t);
+            }
         }
         return quests;
     }

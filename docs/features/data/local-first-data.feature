@@ -106,7 +106,7 @@ Feature: Local-First Data and Export
       And the CSV should include all fields: title, description, status, dates, tags, XP, difficulty, quest assignment
       And the file should be compatible with spreadsheet applications
 
-    @todo
+    @done
     Scenario: Export is always available regardless of subscription
       Given I have a free-tier account
       When I navigate to data export

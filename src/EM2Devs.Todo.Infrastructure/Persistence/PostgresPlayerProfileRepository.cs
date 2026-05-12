@@ -102,6 +102,17 @@ public sealed class PostgresPlayerProfileRepository : IPlayerProfileRepository
         await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
     }
 
+    public async Task ImportAsync(PlayerProfile profile, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        // The caller (import handler) has already purged any prior profile rows for
+        // this user via IUserDataPurger, so this insert is unconstrained.
+        _dbContext.PlayerProfiles.Add(profile);
+        _breakdownCache.SetCurrent(null);
+        await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
+
     private async Task<PlayerProfile> GetOrCreateForCurrentUserAsync(CancellationToken ct)
     {
         Guid userId = _currentUser.UserId;

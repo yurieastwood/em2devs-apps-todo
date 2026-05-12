@@ -67,6 +67,26 @@ public sealed class InsightCard
     }
 
     /// <summary>
+    /// Rebuilds an insight card from a persisted snapshot. Skips the IsValidated gate
+    /// since the snapshot is trusted user data being restored.
+    /// </summary>
+    public static InsightCard Reconstitute(
+        InsightCardId id,
+        InsightType type,
+        string message,
+        string supportingData,
+        InsightCardStatus status,
+        DateOnly generatedAt,
+        bool isValidated)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(message);
+        ArgumentNullException.ThrowIfNull(supportingData);
+
+        return new InsightCard(id, type, message, supportingData, status, generatedAt, isValidated);
+    }
+
+    /// <summary>
     /// Marks the insight card as read.
     /// </summary>
     public void MarkAsRead()

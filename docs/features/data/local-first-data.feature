@@ -113,7 +113,7 @@ Feature: Local-First Data and Export
       Then the full JSON and CSV export options should be available
       And no export functionality should be restricted by tier
 
-    @todo
+    @done
     Scenario: Import data from a previous export
       When I navigate to data import settings
       And I select a previously exported JSON file

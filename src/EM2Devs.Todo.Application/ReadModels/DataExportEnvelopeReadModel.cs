@@ -36,13 +36,15 @@ public sealed record DataExportLevelSection(
 /// <summary>
 /// Per-user settings. Each field is null until the corresponding feature is wired
 /// to persistence (the four settings value objects exist in Domain but no settings
-/// repository has been built yet).
+/// repository has been built yet). Typed as a string-keyed dictionary so JSON
+/// deserialization rejects non-object payloads (arrays, scalars) — required by the
+/// OpenAPI schema and enforced by Schemathesis property tests.
 /// </summary>
 public sealed record DataExportSettingsSection(
-    object? DataPrivacy,
-    object? Notifications,
-    object? Sync,
-    object? Leaderboard);
+    Dictionary<string, System.Text.Json.JsonElement>? DataPrivacy,
+    Dictionary<string, System.Text.Json.JsonElement>? Notifications,
+    Dictionary<string, System.Text.Json.JsonElement>? Sync,
+    Dictionary<string, System.Text.Json.JsonElement>? Leaderboard);
 
 public sealed record TaskExportSnapshot(
     Guid Id,
@@ -65,6 +67,7 @@ public sealed record QuestExportSnapshot(
     Guid Id,
     string Title,
     string Description,
+    DateOnly? DueDate,
     bool IsCompleted,
     int TotalXpEarned,
     Guid? AssignedEpicId,
@@ -74,5 +77,6 @@ public sealed record EpicExportSnapshot(
     Guid Id,
     string Title,
     string Description,
+    DateOnly? TargetDate,
     bool IsCompleted,
     Guid[] QuestIds);

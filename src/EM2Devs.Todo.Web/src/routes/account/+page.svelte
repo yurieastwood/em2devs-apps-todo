@@ -6,6 +6,43 @@
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let confirmationInput = $state('');
 	let dangerOpen = $state(false);
+	let importOpen = $state(false);
+	let importConfirmation = $state('');
+	let selectedFile = $state<File | null>(null);
+	let summary = $state<{
+		tasks: number;
+		quests: number;
+		epics: number;
+		weeklyReviews: number;
+		insightCards: number;
+		timelineEvents: number;
+	} | null>(null);
+
+	async function onFileChange(event: Event) {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0] ?? null;
+		selectedFile = file;
+		summary = null;
+		if (!file) return;
+		try {
+			const text = await file.text();
+			const parsed = JSON.parse(text) as Record<string, unknown>;
+			summary = {
+				tasks: Array.isArray(parsed.tasks) ? parsed.tasks.length : 0,
+				quests: Array.isArray(parsed.quests) ? parsed.quests.length : 0,
+				epics: Array.isArray(parsed.epics) ? parsed.epics.length : 0,
+				weeklyReviews: Array.isArray(parsed.weeklyReviews)
+					? parsed.weeklyReviews.length
+					: 0,
+				insightCards: Array.isArray(parsed.insightCards) ? parsed.insightCards.length : 0,
+				timelineEvents: Array.isArray(parsed.timelineEvents)
+					? parsed.timelineEvents.length
+					: 0
+			};
+		} catch {
+			summary = null;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -38,6 +75,97 @@
 		>
 			Download my data (JSON)
 		</a>
+	</section>
+
+	<section class="card">
+		<h2>Data Import</h2>
+		<button
+			type="button"
+			class="btn btn-toggle"
+			onclick={() => (importOpen = !importOpen)}
+			data-testid="import-toggle"
+		>
+			{importOpen ? 'Hide' : 'Show'} data import
+		</button>
+
+		{#if importOpen}
+			<div class="import-body">
+				<p class="warning warning-amber">
+					<strong>Warning:</strong> Importing will <em>overwrite</em> all your current data
+					— every task, quest, epic, weekly review, insight, timeline event, and progression
+					state — with the contents of the uploaded file. Export your current data first if
+					you want a fallback.
+				</p>
+
+				<form
+					method="POST"
+					action="?/import"
+					enctype="multipart/form-data"
+					use:enhance={() => {
+						return async ({ update }) => {
+							await update();
+						};
+					}}
+				>
+					<label for="file">Select a Waypoint JSON export file:</label>
+					<input
+						id="file"
+						name="file"
+						type="file"
+						accept="application/json,.json"
+						required
+						onchange={onFileChange}
+						data-testid="import-file"
+					/>
+
+					{#if summary}
+						<dl class="summary" data-testid="import-summary">
+							<dt>Tasks</dt>
+							<dd>{summary.tasks}</dd>
+							<dt>Quests</dt>
+							<dd>{summary.quests}</dd>
+							<dt>Epics</dt>
+							<dd>{summary.epics}</dd>
+							<dt>Weekly reviews</dt>
+							<dd>{summary.weeklyReviews}</dd>
+							<dt>Insight cards</dt>
+							<dd>{summary.insightCards}</dd>
+							<dt>Timeline events</dt>
+							<dd>{summary.timelineEvents}</dd>
+						</dl>
+					{/if}
+
+					<label for="importConfirmation">
+						Type <code>OVERWRITE MY DATA</code> to confirm:
+					</label>
+					<input
+						id="importConfirmation"
+						name="importConfirmation"
+						type="text"
+						autocomplete="off"
+						required
+						bind:value={importConfirmation}
+						data-testid="import-confirmation"
+					/>
+
+					{#if form?.importError}
+						<p class="error" data-testid="import-error">{form.importError}</p>
+					{/if}
+					{#if form?.importSuccess}
+						<p class="success" data-testid="import-success">{form.importSuccess}</p>
+					{/if}
+
+					<button
+						type="submit"
+						class="btn btn-primary"
+						disabled={!selectedFile || importConfirmation !== 'OVERWRITE MY DATA'}
+						data-testid="import-submit"
+					>
+						Import &amp; overwrite
+					</button>
+				</form>
+			</div>
+		{/if}
 	</section>
 
 	<section class="card danger">
@@ -170,6 +298,30 @@
 		border-left: 3px solid #b91c1c;
 		padding: 0.75rem;
 		margin-bottom: 1rem;
+	}
+
+	.warning-amber {
+		background: #fffbeb;
+		border-left-color: #d97706;
+		color: #78350f;
+	}
+
+	.import-body {
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px dashed #e5e7eb;
+	}
+
+	.summary {
+		margin: 0.75rem 0;
+		padding: 0.5rem 0.75rem;
+		background: #f9fafb;
+		border-radius: 4px;
+	}
+
+	.success {
+		color: #065f46;
+		margin-top: 0.5rem;
 	}
 
 	label {

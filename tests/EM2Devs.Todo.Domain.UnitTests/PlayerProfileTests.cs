@@ -160,6 +160,76 @@ public sealed class PlayerProfileTests
 
     [Fact]
     [Trait("Category", "Domain")]
+    public void Should_FullyReconstitute_When_NestedStateProvided()
+    {
+        var level = new Level(5, new ExperiencePoints(80));
+        var streak = new Streak(3, _yesterday, 1);
+        var titles = TitleInventory.Empty().AwardTitle(
+            new Title(TitleType.EarlyBird, new DateOnly(2026, 4, 1)));
+        var history = XpHistory.Empty().RecordXpEarning(
+            new DateOnly(2026, 4, 1), new ExperiencePoints(30), "TaskCompleted");
+        var trees = new[]
+        {
+            new SkillTree(SkillTreeType.Builder, new SkillTier(2), 5),
+        };
+
+        var profile = PlayerProfile.Reconstitute(
+            PlayerProfileId.New(), _userId, level, streak, longestStreak: 7,
+            titles, history, trees);
+
+        profile.UserId.ShouldBe(_userId);
+        profile.Level.Value.ShouldBe(5);
+        profile.LongestStreak.ShouldBe(7);
+        profile.TitleInventory.EarnedTitles.Count.ShouldBe(1);
+        profile.XpHistory.Entries.Count.ShouldBe(1);
+        profile.SkillTrees.Count.ShouldBe(1);
+        profile.SkillTrees[0].Type.ShouldBe(SkillTreeType.Builder);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_FullReconstituteCalledWithNullTitleInventory()
+    {
+        var level = new Level(1, new ExperiencePoints(0));
+        var streak = Streak.NewStreak();
+
+        Action act = () => PlayerProfile.Reconstitute(
+            PlayerProfileId.New(), _userId, level, streak, 0,
+            titleInventory: null!, XpHistory.Empty(), Array.Empty<SkillTree>());
+
+        act.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_FullReconstituteCalledWithNullXpHistory()
+    {
+        var level = new Level(1, new ExperiencePoints(0));
+        var streak = Streak.NewStreak();
+
+        Action act = () => PlayerProfile.Reconstitute(
+            PlayerProfileId.New(), _userId, level, streak, 0,
+            TitleInventory.Empty(), xpHistory: null!, Array.Empty<SkillTree>());
+
+        act.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_FullReconstituteCalledWithNullSkillTrees()
+    {
+        var level = new Level(1, new ExperiencePoints(0));
+        var streak = Streak.NewStreak();
+
+        Action act = () => PlayerProfile.Reconstitute(
+            PlayerProfileId.New(), _userId, level, streak, 0,
+            TitleInventory.Empty(), XpHistory.Empty(), skillTrees: null!);
+
+        act.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
     public void Should_ThrowArgumentNullException_When_AwardXpCalledWithNull()
     {
         // Given

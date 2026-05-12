@@ -54,6 +54,28 @@ public sealed class RecurringTask
         return new RecurringTask(RecurringTaskId.New(), userId, title, pattern, endDate);
     }
 
+    /// <summary>
+    /// Rebuilds a recurring task from a persisted snapshot. No validation of the end-date
+    /// past-check since the snapshot is trusted (existing user data being restored).
+    /// </summary>
+    public static RecurringTask Reconstitute(
+        RecurringTaskId id,
+        Guid userId,
+        TaskTitle title,
+        RecurrencePattern pattern,
+        bool isActive,
+        DateOnly? endDate)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(title);
+        if (userId == Guid.Empty)
+        {
+            throw new DomainException("UserId cannot be empty.");
+        }
+
+        return new RecurringTask(id, userId, title, pattern, isActive, endDate);
+    }
+
     public TodoTask GenerateNextInstance(DateOnly scheduledDate)
     {
         if (!IsActive)

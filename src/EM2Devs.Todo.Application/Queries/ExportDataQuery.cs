@@ -136,6 +136,7 @@ public sealed class ExportDataQueryHandler
         Id: quest.Id.Value,
         Title: quest.Title.Value,
         Description: quest.Description,
+        DueDate: quest.DueDate,
         IsCompleted: quest.IsCompleted,
         TotalXpEarned: quest.TotalXpEarned.Value,
         AssignedEpicId: quest.EpicId?.Value,
@@ -145,6 +146,7 @@ public sealed class ExportDataQueryHandler
         Id: epic.Id.Value,
         Title: epic.Title.Value,
         Description: epic.Description,
+        TargetDate: epic.TargetDate,
         IsCompleted: epic.IsCompleted,
         QuestIds: epic.Quests.Select(q => q.Id.Value).ToArray());
 

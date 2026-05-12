@@ -44,6 +44,25 @@ public sealed class EnergyCheckIn
     }
 
     /// <summary>
+    /// Rebuilds an energy check-in from a persisted snapshot.
+    /// </summary>
+    public static EnergyCheckIn Reconstitute(
+        EnergyCheckInId id,
+        EnergyLevel level,
+        DateTimeOffset recordedAt,
+        EnergyLevel? previousLevel,
+        bool hasFluctuated)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+
+        return new EnergyCheckIn(id, level, recordedAt)
+        {
+            PreviousLevel = previousLevel,
+            HasFluctuated = hasFluctuated,
+        };
+    }
+
+    /// <summary>
     /// Updates the energy level for a mid-day re-check-in.
     /// Records the previous level and marks the check-in as having fluctuated.
     /// </summary>

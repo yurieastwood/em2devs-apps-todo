@@ -95,6 +95,29 @@ public sealed class Notification
             DateTimeOffset.UtcNow, autoDismissAfterSeconds, channel, deepLink);
     }
 
+    /// <summary>
+    /// Rebuilds a notification from a persisted snapshot. Reads `auto-dismiss after` and
+    /// `deep link` are intentionally not carried over — they're delivery-time signals.
+    /// </summary>
+    public static Notification Reconstitute(
+        NotificationId id,
+        Guid userId,
+        NotificationType type,
+        string message,
+        NotificationStatus status,
+        DateTimeOffset createdAt,
+        DateTimeOffset? readAt)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(message);
+        if (userId == Guid.Empty)
+        {
+            throw new DomainException("UserId cannot be empty.");
+        }
+
+        return new Notification(id, userId, type, message, status, createdAt, readAt);
+    }
+
     public void MarkAsRead()
     {
         if (Status == NotificationStatus.Dismissed)

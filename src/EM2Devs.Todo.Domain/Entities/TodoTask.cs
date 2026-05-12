@@ -102,6 +102,54 @@ public sealed class TodoTask
             sourceRecurringTaskId: sourceId, scheduledDate: scheduledDate);
     }
 
+    /// <summary>
+    /// Rebuilds a task from a persisted snapshot (e.g. a data import). Telemetry-like state
+    /// such as reschedule/view counts, procrastination signals, waiting reason, and commitment
+    /// note is intentionally not carried over — those are derived behaviour, not user content.
+    /// </summary>
+    public static TodoTask Reconstitute(
+        TaskId id,
+        Guid userId,
+        TaskTitle title,
+        string? description,
+        TaskStatus status,
+        bool isBossTask,
+        TaskDifficulty difficulty,
+        TaskPriority priority,
+        TimeEstimate? estimatedTime,
+        DateTimeOffset? dueDate,
+        DateTimeOffset? completedAt,
+        DateTimeOffset createdAt,
+        RecurringTaskId? sourceRecurringTaskId,
+        DateOnly? scheduledDate,
+        QuestId? assignedQuestId,
+        EstimationRecord? actualTimeRecord,
+        IEnumerable<Tag>? tags)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(title);
+        // userId emptiness is validated by the constructor below; no need to duplicate here.
+
+        TodoTask task = new(id, userId, title, difficulty, dueDate, priority,
+            sourceRecurringTaskId: sourceRecurringTaskId, scheduledDate: scheduledDate,
+            createdAt: createdAt);
+        task.Description = description;
+        task.Status = status;
+        task.IsBossTask = isBossTask;
+        task.EstimatedTime = estimatedTime;
+        task.CompletedAt = completedAt;
+        task.AssignedQuestId = assignedQuestId;
+        task.ActualTimeRecord = actualTimeRecord;
+        if (tags is not null)
+        {
+            foreach (Tag tag in tags)
+            {
+                task.AddTag(tag);
+            }
+        }
+        return task;
+    }
+
     public void MoveToInProgress()
     {
         if (Status != TaskStatus.Todo)

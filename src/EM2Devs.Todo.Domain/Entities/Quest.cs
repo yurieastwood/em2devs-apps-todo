@@ -44,6 +44,32 @@ public sealed class Quest
         return new Quest(QuestId.New(), title, description, dueDate);
     }
 
+    /// <summary>
+    /// Rebuilds a quest from a persisted snapshot. Tasks are owned by the Task aggregate
+    /// and are not re-attached here — they're loaded by the repository via FK hydration.
+    /// </summary>
+    public static Quest Reconstitute(
+        QuestId id,
+        QuestTitle title,
+        string description,
+        DateOnly? dueDate,
+        bool isCompleted,
+        EpicId? epicId,
+        ExperiencePoints totalXpEarned)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(title);
+        ArgumentNullException.ThrowIfNull(description);
+        ArgumentNullException.ThrowIfNull(totalXpEarned);
+
+        return new Quest(id, title, description, dueDate)
+        {
+            IsCompleted = isCompleted,
+            EpicId = epicId,
+            TotalXpEarned = totalXpEarned,
+        };
+    }
+
     public void AddTask(TodoTask task)
     {
         ArgumentNullException.ThrowIfNull(task);

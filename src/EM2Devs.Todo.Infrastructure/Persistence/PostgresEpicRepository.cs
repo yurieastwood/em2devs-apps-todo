@@ -19,8 +19,9 @@ public sealed class PostgresEpicRepository : IEpicRepository
     public async Task<Epic?> GetByIdAsync(EpicId id, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(id);
+        Guid userId = _currentUser.UserId;
         Epic? epic = await _dbContext.Epics
-            .FirstOrDefaultAsync(e => e.Id == id, ct)
+            .FirstOrDefaultAsync(e => e.Id == id && EF.Property<Guid>(e, "UserId") == userId, ct)
             .ConfigureAwait(false);
         if (epic is null)
         {
@@ -33,10 +34,14 @@ public sealed class PostgresEpicRepository : IEpicRepository
 
     public async Task<IReadOnlyList<Epic>> GetAllAsync(CancellationToken ct = default)
     {
+        Guid userId = _currentUser.UserId;
         // TODO(perf): two-level N+1 — 1 query for all epics, plus 1 per epic for quests, plus 1 per quest for tasks.
         // For E epics with Q quests each, total is 1 + E + (E × Q) queries.
         // Acceptable at current scale; see design spec docs/superpowers/specs/2026-05-03-postgres-persistence-design.md.
-        List<Epic> epics = await _dbContext.Epics.ToListAsync(ct).ConfigureAwait(false);
+        List<Epic> epics = await _dbContext.Epics
+            .Where(e => EF.Property<Guid>(e, "UserId") == userId)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
         foreach (Epic e in epics)
         {
             await HydrateQuestsAsync(e, ct).ConfigureAwait(false);
@@ -47,10 +52,13 @@ public sealed class PostgresEpicRepository : IEpicRepository
     public async Task SaveAsync(Epic epic, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(epic);
-        if (_dbContext.Entry(epic).State == EntityState.Detached)
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry<Epic> entry = _dbContext.Entry(epic);
+        if (entry.State == EntityState.Detached)
         {
             _dbContext.Epics.Add(epic);
+            entry = _dbContext.Entry(epic);
         }
+        entry.Property("UserId").CurrentValue = _currentUser.UserId;
         // Note: child Quests are NOT persisted here — QuestRepository owns them.
         await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
     }
@@ -58,8 +66,9 @@ public sealed class PostgresEpicRepository : IEpicRepository
     public async Task<bool> DeleteAsync(EpicId id, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(id);
+        Guid userId = _currentUser.UserId;
         Epic? epic = await _dbContext.Epics
-            .FirstOrDefaultAsync(e => e.Id == id, ct)
+            .FirstOrDefaultAsync(e => e.Id == id && EF.Property<Guid>(e, "UserId") == userId, ct)
             .ConfigureAwait(false);
         if (epic is null)
         {
@@ -75,9 +84,8 @@ public sealed class PostgresEpicRepository : IEpicRepository
     {
         EpicId epicId = epic.Id;
         Guid userId = _currentUser.UserId;
-        // Quests have no user_id column (Quest/Epic multi-tenancy is a known gap); scoped only by epic.
         List<Quest> quests = await _dbContext.Quests
-            .Where(q => q.EpicId == epicId)
+            .Where(q => q.EpicId == epicId && EF.Property<Guid>(q, "UserId") == userId)
             .ToListAsync(ct)
             .ConfigureAwait(false);
 

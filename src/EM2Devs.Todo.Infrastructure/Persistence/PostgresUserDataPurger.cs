@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 namespace EM2Devs.Todo.Infrastructure.Persistence;
 
 /// <summary>
-/// Issues per-table DELETE statements scoped to the current user across the eight
-/// user-scoped DbSets. Quest, Epic, and StreakSnapshot are intentionally skipped —
-/// see <see cref="IUserDataPurger"/> for the data-model gap rationale.
+/// Issues per-table DELETE statements scoped to the current user across every
+/// user-scoped DbSet. StreakSnapshot is intentionally skipped — its entity has no
+/// UserId column (single-user demo mode); see <see cref="IUserDataPurger"/>.
 /// </summary>
 public sealed class PostgresUserDataPurger : IUserDataPurger
 {
@@ -34,7 +34,7 @@ public sealed class PostgresUserDataPurger : IUserDataPurger
         await _dbContext.WeeklyReflections
             .Where(w => w.UserId == userId).ExecuteDeleteAsync(ct).ConfigureAwait(false);
 
-        // Shadow-property UserId for InsightCard, EnergyCheckIn, TimelineEvent.
+        // Shadow-property UserId for InsightCard, EnergyCheckIn, TimelineEvent, Quest, Epic.
         await _dbContext.InsightCards
             .Where(c => EF.Property<Guid>(c, "UserId") == userId)
             .ExecuteDeleteAsync(ct).ConfigureAwait(false);
@@ -42,6 +42,12 @@ public sealed class PostgresUserDataPurger : IUserDataPurger
             .Where(c => EF.Property<Guid>(c, "UserId") == userId)
             .ExecuteDeleteAsync(ct).ConfigureAwait(false);
         await _dbContext.TimelineEvents
+            .Where(e => EF.Property<Guid>(e, "UserId") == userId)
+            .ExecuteDeleteAsync(ct).ConfigureAwait(false);
+        await _dbContext.Quests
+            .Where(q => EF.Property<Guid>(q, "UserId") == userId)
+            .ExecuteDeleteAsync(ct).ConfigureAwait(false);
+        await _dbContext.Epics
             .Where(e => EF.Property<Guid>(e, "UserId") == userId)
             .ExecuteDeleteAsync(ct).ConfigureAwait(false);
     }

@@ -3,9 +3,9 @@ using EM2Devs.Todo.Application.Ports;
 namespace EM2Devs.Todo.Infrastructure.Persistence;
 
 /// <summary>
-/// Clears every per-user entry from the in-memory stores. Quest and Epic stores are
-/// skipped because they are global-keyed today (no per-user partition); StreakSnapshot
-/// has the same gap. See <see cref="IUserDataPurger"/> for the rationale.
+/// Clears every per-user entry from the in-memory stores. StreakSnapshot is the only
+/// remaining unscoped store (single-user demo mode in the entity); see
+/// <see cref="IUserDataPurger"/> for the rationale.
 /// </summary>
 public sealed class InMemoryUserDataPurger : IUserDataPurger
 {
@@ -17,6 +17,8 @@ public sealed class InMemoryUserDataPurger : IUserDataPurger
     private readonly InMemoryInsightCardStore _insights;
     private readonly InMemoryEnergyCheckInStore _energy;
     private readonly InMemoryTimelineStore _timeline;
+    private readonly InMemoryQuestStore _quests;
+    private readonly InMemoryEpicStore _epics;
     private readonly ICurrentUser _currentUser;
 
     public InMemoryUserDataPurger(
@@ -28,6 +30,8 @@ public sealed class InMemoryUserDataPurger : IUserDataPurger
         InMemoryInsightCardStore insights,
         InMemoryEnergyCheckInStore energy,
         InMemoryTimelineStore timeline,
+        InMemoryQuestStore quests,
+        InMemoryEpicStore epics,
         ICurrentUser currentUser)
     {
         _tasks = tasks;
@@ -38,6 +42,8 @@ public sealed class InMemoryUserDataPurger : IUserDataPurger
         _insights = insights;
         _energy = energy;
         _timeline = timeline;
+        _quests = quests;
+        _epics = epics;
         _currentUser = currentUser;
     }
 
@@ -60,7 +66,7 @@ public sealed class InMemoryUserDataPurger : IUserDataPurger
 
         _profiles.Profiles.TryRemove(userId, out _);
 
-        foreach (var key in _reflections.Reflections.Keys.Where(k => k.UserId == userId).ToList())
+        foreach ((Guid UserId, DateOnly WeekOf) key in _reflections.Reflections.Keys.Where(k => k.UserId == userId).ToList())
         {
             _reflections.Reflections.TryRemove(key, out _);
         }
@@ -68,6 +74,15 @@ public sealed class InMemoryUserDataPurger : IUserDataPurger
         _insights.RemoveAllForUser(userId);
         _energy.RemoveAllForUser(userId);
         _timeline.RemoveAllForUser(userId);
+
+        foreach ((Guid UserId, Guid QuestId) key in _quests.Quests.Keys.Where(k => k.UserId == userId).ToList())
+        {
+            _quests.Quests.TryRemove(key, out _);
+        }
+        foreach ((Guid UserId, Guid EpicId) key in _epics.Epics.Keys.Where(k => k.UserId == userId).ToList())
+        {
+            _epics.Epics.TryRemove(key, out _);
+        }
 
         return Task.CompletedTask;
     }

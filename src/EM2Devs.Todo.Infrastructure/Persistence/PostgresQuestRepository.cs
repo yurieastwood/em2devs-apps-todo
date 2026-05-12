@@ -2,6 +2,7 @@ using EM2Devs.Todo.Application.Ports;
 using EM2Devs.Todo.Domain.Entities;
 using EM2Devs.Todo.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace EM2Devs.Todo.Infrastructure.Persistence;
 
@@ -19,8 +20,9 @@ public sealed class PostgresQuestRepository : IQuestRepository
     public async Task<Quest?> GetByIdAsync(QuestId id, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(id);
+        Guid userId = _currentUser.UserId;
         Quest? quest = await _dbContext.Quests
-            .FirstOrDefaultAsync(q => q.Id == id, ct)
+            .FirstOrDefaultAsync(q => q.Id == id && EF.Property<Guid>(q, "UserId") == userId, ct)
             .ConfigureAwait(false);
         if (quest is null)
         {
@@ -33,9 +35,13 @@ public sealed class PostgresQuestRepository : IQuestRepository
 
     public async Task<IReadOnlyList<Quest>> GetAllAsync(CancellationToken ct = default)
     {
+        Guid userId = _currentUser.UserId;
         // TODO(perf): batch task hydration — currently N+1 (one query per Quest).
         // Acceptable at current scale; see design spec docs/superpowers/specs/2026-05-03-postgres-persistence-design.md.
-        List<Quest> quests = await _dbContext.Quests.ToListAsync(ct).ConfigureAwait(false);
+        List<Quest> quests = await _dbContext.Quests
+            .Where(q => EF.Property<Guid>(q, "UserId") == userId)
+            .ToListAsync(ct)
+            .ConfigureAwait(false);
         foreach (Quest q in quests)
         {
             await HydrateTasksAsync(q, ct).ConfigureAwait(false);
@@ -58,7 +64,7 @@ public sealed class PostgresQuestRepository : IQuestRepository
         }
 
         List<Quest> quests = await _dbContext.Quests
-            .Where(q => questIds.Contains(q.Id))
+            .Where(q => questIds.Contains(q.Id) && EF.Property<Guid>(q, "UserId") == userId)
             .ToListAsync(ct)
             .ConfigureAwait(false);
         foreach (Quest q in quests)
@@ -71,10 +77,13 @@ public sealed class PostgresQuestRepository : IQuestRepository
     public async Task SaveAsync(Quest quest, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(quest);
-        if (_dbContext.Entry(quest).State == EntityState.Detached)
+        EntityEntry<Quest> entry = _dbContext.Entry(quest);
+        if (entry.State == EntityState.Detached)
         {
             _dbContext.Quests.Add(quest);
+            entry = _dbContext.Entry(quest);
         }
+        entry.Property("UserId").CurrentValue = _currentUser.UserId;
         // Note: child tasks are NOT persisted here — TaskRepository owns them.
         await _dbContext.SaveChangesAsync(ct).ConfigureAwait(false);
     }
@@ -82,8 +91,9 @@ public sealed class PostgresQuestRepository : IQuestRepository
     public async Task<bool> DeleteAsync(QuestId id, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(id);
+        Guid userId = _currentUser.UserId;
         Quest? quest = await _dbContext.Quests
-            .FirstOrDefaultAsync(q => q.Id == id, ct)
+            .FirstOrDefaultAsync(q => q.Id == id && EF.Property<Guid>(q, "UserId") == userId, ct)
             .ConfigureAwait(false);
         if (quest is null)
         {

@@ -599,4 +599,50 @@ public sealed class QuestTests
         ArgumentNullException ex = Should.Throw<ArgumentNullException>(() => quest.AddXpEarned(null!));
         ex.ParamName.ShouldBe("xp");
     }
+
+    // -- Reconstitute factory (data import) --
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReconstituteQuest_When_AllFieldsProvided()
+    {
+        QuestId id = new(new Guid("11111111-1111-1111-1111-111111111111"));
+        EpicId epicId = new(new Guid("22222222-2222-2222-2222-222222222222"));
+        Quest q = Quest.Reconstitute(
+            id, new QuestTitle("Imported"), "desc",
+            new DateOnly(2026, 5, 1), isCompleted: true, epicId,
+            new ExperiencePoints(120));
+
+        q.Id.ShouldBe(id);
+        q.Title.Value.ShouldBe("Imported");
+        q.Description.ShouldBe("desc");
+        q.DueDate.ShouldBe(new DateOnly(2026, 5, 1));
+        q.IsCompleted.ShouldBeTrue();
+        q.EpicId.ShouldBe(epicId);
+        q.TotalXpEarned.Value.ShouldBe(120);
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_ReconstituteQuestWithNullId() =>
+        Should.Throw<ArgumentNullException>(() =>
+            Quest.Reconstitute(null!, new QuestTitle("X"), "d", null, false, null, new ExperiencePoints(0)));
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_ReconstituteQuestWithNullTitle() =>
+        Should.Throw<ArgumentNullException>(() =>
+            Quest.Reconstitute(QuestId.New(), null!, "d", null, false, null, new ExperiencePoints(0)));
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_ReconstituteQuestWithNullDescription() =>
+        Should.Throw<ArgumentNullException>(() =>
+            Quest.Reconstitute(QuestId.New(), new QuestTitle("X"), null!, null, false, null, new ExperiencePoints(0)));
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_ReconstituteQuestWithNullTotalXp() =>
+        Should.Throw<ArgumentNullException>(() =>
+            Quest.Reconstitute(QuestId.New(), new QuestTitle("X"), "d", null, false, null, null!));
 }

@@ -120,6 +120,69 @@ public sealed class DataController : ControllerBase
             ToErrorResponse);
     }
 
+    [HttpPost("import")]
+    public async Task<IActionResult> Import(
+        [FromBody] DataExportEnvelopeReadModel? envelope,
+        CancellationToken ct)
+    {
+        if (envelope is null)
+        {
+            ModelState.AddModelError("body", "Import envelope is required.");
+            return ValidationProblem(ModelState);
+        }
+
+        // Per the OpenAPI schema, list items are non-nullable. Reject envelopes that
+        // contain null entries (caught by Schemathesis property-based testing).
+        if (HasNullItems(envelope.Tasks)
+            || HasNullItems(envelope.Quests)
+            || HasNullItems(envelope.Epics)
+            || HasNullItems(envelope.WeeklyReviews)
+            || HasNullItems(envelope.InsightCards)
+            || HasNullItems(envelope.TimelineEvents)
+            || HasNullItems(envelope.XpHistory)
+            || HasNullItems(envelope.SkillTreeProgress)
+            || HasNullItems(envelope.TitlesEarned))
+        {
+            ModelState.AddModelError("body", "List items in the import envelope must not be null.");
+            return ValidationProblem(ModelState);
+        }
+
+        // Per the OpenAPI schema, level fields have non-negative bounds.
+        if (envelope.Level is null
+            || envelope.Level.Current < 1
+            || envelope.Level.Xp < 0
+            || envelope.Level.LongestStreak < 0)
+        {
+            ModelState.AddModelError("level",
+                "level.current must be >= 1; level.xp and level.longestStreak must be >= 0.");
+            return ValidationProblem(ModelState);
+        }
+
+        Result<ImportResult> result = await _mediator
+            .Send(new ImportDataCommand(envelope), ct)
+            .ConfigureAwait(false);
+
+        return result.Match<IActionResult>(
+            r => Ok(new ImportResponse(r.RecordsImported)),
+            ToErrorResponse);
+    }
+
+    private static bool HasNullItems<T>(IReadOnlyList<T>? items) where T : class
+    {
+        if (items is null)
+        {
+            return false;
+        }
+        foreach (T item in items)
+        {
+            if (item is null)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private IActionResult ToErrorResponse(ResultError error)
     {
         int status = error is ValidationError
@@ -146,3 +209,4 @@ public sealed class DataController : ControllerBase
 }
 
 public sealed record DeleteAllDataRequest(string? Confirmation);
+public sealed record ImportResponse(int RecordsImported);

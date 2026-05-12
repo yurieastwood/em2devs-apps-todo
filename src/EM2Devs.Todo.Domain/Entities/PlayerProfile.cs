@@ -75,6 +75,37 @@ public sealed class PlayerProfile
         PlayerProfileId id, Guid userId, Level level, Streak streak, int longestStreak) =>
         new(id, userId, level, streak, longestStreak);
 
+    /// <summary>
+    /// Reconstructs a full profile including XP history, earned titles, and discovered
+    /// skill trees. Used by data import to fully restore a user's progression state
+    /// from a snapshot.
+    /// </summary>
+    public static PlayerProfile Reconstitute(
+        PlayerProfileId id,
+        Guid userId,
+        Level level,
+        Streak streak,
+        int longestStreak,
+        TitleInventory titleInventory,
+        XpHistory xpHistory,
+        IEnumerable<SkillTree> skillTrees)
+    {
+        ArgumentNullException.ThrowIfNull(titleInventory);
+        ArgumentNullException.ThrowIfNull(xpHistory);
+        ArgumentNullException.ThrowIfNull(skillTrees);
+
+        PlayerProfile profile = new(id, userId, level, streak, longestStreak)
+        {
+            TitleInventory = titleInventory,
+            XpHistory = xpHistory,
+        };
+        foreach (SkillTree tree in skillTrees)
+        {
+            profile._skillTrees.Add(tree);
+        }
+        return profile;
+    }
+
     public void AwardXp(ExperiencePoints xp)
     {
         ArgumentNullException.ThrowIfNull(xp);

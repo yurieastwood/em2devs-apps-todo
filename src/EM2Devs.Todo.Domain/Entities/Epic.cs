@@ -42,6 +42,29 @@ public sealed class Epic
         return new Epic(EpicId.New(), title, description, targetDate);
     }
 
+    /// <summary>
+    /// Rebuilds an epic from a persisted snapshot. Quests are owned by the Quest aggregate
+    /// and are not re-attached here.
+    /// </summary>
+    public static Epic Reconstitute(
+        EpicId id,
+        EpicTitle title,
+        string description,
+        DateOnly? targetDate,
+        bool isCompleted,
+        SagaId? sagaId)
+    {
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentNullException.ThrowIfNull(title);
+        ArgumentNullException.ThrowIfNull(description);
+
+        return new Epic(id, title, description, targetDate)
+        {
+            IsCompleted = isCompleted,
+            SagaId = sagaId,
+        };
+    }
+
     public void AddQuest(Quest quest)
     {
         ArgumentNullException.ThrowIfNull(quest);

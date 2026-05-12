@@ -35,6 +35,25 @@ public sealed class TimelineEvent
         return new TimelineEvent(TimelineEventId.New(), eventType, occurredAt, details);
     }
 
+    /// <summary>
+    /// Rebuilds a timeline event from a persisted snapshot. Details validation is preserved
+    /// (empty details is never a valid snapshot, so let the constructor's check catch it).
+    /// </summary>
+    public static TimelineEvent Reconstitute(
+        TimelineEventId id,
+        TimelineEventType eventType,
+        DateTimeOffset occurredAt,
+        string details,
+        PersonalNote? note)
+    {
+        TimelineEvent ev = new(id, eventType, occurredAt, details);
+        if (note is not null)
+        {
+            ev.Note = note;
+        }
+        return ev;
+    }
+
     public void AddNote(PersonalNote note)
     {
         ArgumentNullException.ThrowIfNull(note);

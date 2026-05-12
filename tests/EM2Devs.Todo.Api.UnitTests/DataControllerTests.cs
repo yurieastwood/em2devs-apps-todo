@@ -200,6 +200,66 @@ public sealed class DataControllerTests : IDisposable
     private sealed record TaskIdResponse(Guid Id);
 
     [Fact]
+    public async Task Should_RestoreData_When_ExportIsRoundTripped()
+    {
+        await _client.PostAsJsonAsync("/api/tasks", new { title = "Round-trip me" });
+
+        HttpResponseMessage exportResp = await _client.GetAsync("/api/data/export?format=json&scope=all");
+        exportResp.StatusCode.ShouldBe(HttpStatusCode.OK);
+        JsonElement envelope = await exportResp.Content.ReadFromJsonAsync<JsonElement>();
+        envelope.GetProperty("tasks").GetArrayLength().ShouldBeGreaterThan(0);
+
+        // Wipe state via the delete endpoint
+        HttpResponseMessage del = await _client.PostAsJsonAsync(
+            "/api/data/delete", new { confirmation = "DELETE MY DATA" });
+        del.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        // Confirm tasks are gone
+        HttpResponseMessage after = await _client.GetAsync("/api/tasks");
+        JsonElement listAfter = await after.Content.ReadFromJsonAsync<JsonElement>();
+        listAfter.GetArrayLength().ShouldBe(0);
+
+        // Import the envelope back
+        using var content = new StringContent(envelope.GetRawText(), System.Text.Encoding.UTF8, "application/json");
+        HttpResponseMessage imp = await _client.PostAsync("/api/data/import", content);
+        imp.StatusCode.ShouldBe(HttpStatusCode.OK);
+        JsonElement importResp = await imp.Content.ReadFromJsonAsync<JsonElement>();
+        importResp.GetProperty("recordsImported").GetInt32().ShouldBeGreaterThan(0);
+
+        // Tasks should be back
+        HttpResponseMessage restored = await _client.GetAsync("/api/tasks");
+        JsonElement listRestored = await restored.Content.ReadFromJsonAsync<JsonElement>();
+        listRestored.GetArrayLength().ShouldBeGreaterThan(0);
+        bool foundTitle = false;
+        foreach (JsonElement t in listRestored.EnumerateArray())
+        {
+            if (t.TryGetProperty("title", out JsonElement title) && title.GetString() == "Round-trip me")
+            {
+                foundTitle = true;
+                break;
+            }
+        }
+        foundTitle.ShouldBeTrue("Imported task should reappear in the task list");
+    }
+
+    [Fact]
+    public async Task Should_Return400_When_ImportBodyMissing()
+    {
+        using var emptyContent = new StringContent("", System.Text.Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await _client.PostAsync("/api/data/import", emptyContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Should_Return401_When_ImportUnauthenticated()
+    {
+        using HttpClient unauth = _factory.CreateClient();
+        using var content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await unauth.PostAsync("/api/data/import", content);
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task Should_Return204_When_DeleteAllDataConfirmed()
     {
         await _client.PostAsJsonAsync("/api/tasks", new { title = "soon to be deleted" });

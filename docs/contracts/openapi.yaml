@@ -2022,6 +2022,41 @@ paths:
                 $ref: '#/components/schemas/ProblemDetails'
         '400':
           $ref: '#/components/responses/BadRequest'
+  /api/data/import:
+    post:
+      operationId: importData
+      summary: Restore the authenticated user's data from a previous export
+      description: |
+        Accepts an envelope in the same shape as `GET /api/data/export?format=json&scope=all`
+        and restores the user's tasks, quests, epics, weekly reviews, insight cards, timeline
+        events, and player progression (level, XP history, earned titles, skill tree progress).
+
+        **Overwrite semantics**: this endpoint purges all existing per-user data before
+        applying the import. Clients should warn the user and offer a fresh export first.
+
+        Some fields are intentionally not round-tripped:
+        * Streak detail (current days, freeze) — only `longestStreak` is restored.
+        * Recurring tasks, notifications, energy check-ins — not part of the export envelope.
+        * Task telemetry (reschedule count, view count, procrastination signals, commitment notes).
+      tags:
+      - Data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataExportResponse'
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '200':
+          description: Import successful. Body reports how many records were restored.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
   /api/data/delete:
     post:
       operationId: deleteAllUserData
@@ -3429,6 +3464,16 @@ components:
           type: string
           minLength: 8
           example: hunter2hunter2
+    ImportResponse:
+      type: object
+      additionalProperties: false
+      required:
+      - recordsImported
+      properties:
+        recordsImported:
+          type: integer
+          minimum: 0
+          description: Number of records (tasks + quests + epics + weekly reviews + insights + timeline events + 1 player profile) restored from the import envelope.
     DeleteAccountRequest:
       type: object
       additionalProperties: false
@@ -3480,12 +3525,8 @@ components:
           description: Total number of records across all populated arrays.
     DataExportLevel:
       type: object
-      description: The user's current level snapshot.
+      description: The user's current level snapshot. All fields are optional on the wire — absence is treated the same as the starting-state defaults (1, 0, 0).
       additionalProperties: false
-      required:
-      - current
-      - xp
-      - longestStreak
       properties:
         current:
           type: integer
@@ -3498,13 +3539,8 @@ components:
           minimum: 0
     DataExportSettings:
       type: object
-      description: Per-user settings. Each field is null until the corresponding settings feature is wired to persistence.
+      description: Per-user settings. Each field is null until the corresponding settings feature is wired to persistence. All fields are optional on the wire — absence and explicit null are semantically equivalent.
       additionalProperties: false
-      required:
-      - dataPrivacy
-      - notifications
-      - sync
-      - leaderboard
       properties:
         dataPrivacy:
           type: object

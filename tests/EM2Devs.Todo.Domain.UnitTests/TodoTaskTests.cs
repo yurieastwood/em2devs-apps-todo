@@ -658,4 +658,115 @@ public sealed class TodoTaskTests
                 DateOnly.FromDateTime(DateTime.UtcNow)));
         ex.Message.ShouldBe("UserId cannot be empty.");
     }
+
+    // -- Reconstitute factory (used by data import) -----------------------
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReconstituteAllFields_When_FullSnapshotProvided()
+    {
+        var id = new TaskId(new Guid("11111111-1111-1111-1111-111111111111"));
+        var createdAt = new DateTimeOffset(2026, 5, 1, 10, 0, 0, TimeSpan.Zero);
+        var completedAt = createdAt.AddHours(2);
+
+        TodoTask task = TodoTask.Reconstitute(
+            id,
+            TestData.TestUserId,
+            new TaskTitle("Imported"),
+            description: "from snapshot",
+            TaskStatus.Done,
+            isBossTask: true,
+            TaskDifficulty.Hard,
+            TaskPriority.High,
+            TimeEstimate.FromMinutes(60),
+            dueDate: createdAt.AddDays(1),
+            completedAt: completedAt,
+            createdAt: createdAt,
+            sourceRecurringTaskId: null,
+            scheduledDate: DateOnly.FromDateTime(createdAt.UtcDateTime),
+            assignedQuestId: null,
+            actualTimeRecord: null,
+            tags: new[] { Tag.From("imported"), Tag.From("work") });
+
+        task.Id.ShouldBe(id);
+        task.UserId.ShouldBe(TestData.TestUserId);
+        task.Title.Value.ShouldBe("Imported");
+        task.Description.ShouldBe("from snapshot");
+        task.Status.ShouldBe(TaskStatus.Done);
+        task.IsBossTask.ShouldBeTrue();
+        task.Difficulty.ShouldBe(TaskDifficulty.Hard);
+        task.Priority.ShouldBe(TaskPriority.High);
+        task.EstimatedTime!.Minutes.ShouldBe(60);
+        task.CompletedAt.ShouldBe(completedAt);
+        task.Tags.Count.ShouldBe(2);
+        task.Tags[0].Value.ShouldBe("imported");
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_ReconstituteWithoutTags_When_TagsArgumentIsNull()
+    {
+        TodoTask task = TodoTask.Reconstitute(
+            TaskId.New(),
+            TestData.TestUserId,
+            new TaskTitle("No tags"),
+            description: null,
+            TaskStatus.Todo,
+            isBossTask: false,
+            TaskDifficulty.Normal,
+            TaskPriority.Medium,
+            estimatedTime: null,
+            dueDate: null,
+            completedAt: null,
+            createdAt: DateTimeOffset.UtcNow,
+            sourceRecurringTaskId: null,
+            scheduledDate: null,
+            assignedQuestId: null,
+            actualTimeRecord: null,
+            tags: null);
+
+        task.Tags.ShouldBeEmpty();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_ReconstituteCalledWithNullId()
+    {
+        Action act = () => TodoTask.Reconstitute(
+            id: null!,
+            TestData.TestUserId,
+            new TaskTitle("X"),
+            null, TaskStatus.Todo, false, TaskDifficulty.Normal, TaskPriority.Medium,
+            null, null, null, DateTimeOffset.UtcNow, null, null, null, null, null);
+
+        act.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_ReconstituteCalledWithNullTitle()
+    {
+        Action act = () => TodoTask.Reconstitute(
+            TaskId.New(),
+            TestData.TestUserId,
+            title: null!,
+            null, TaskStatus.Todo, false, TaskDifficulty.Normal, TaskPriority.Medium,
+            null, null, null, DateTimeOffset.UtcNow, null, null, null, null, null);
+
+        act.ShouldThrow<ArgumentNullException>();
+    }
+
+    [Fact]
+    [Trait("Category", "Domain")]
+    public void Should_Throw_When_ReconstituteCalledWithEmptyUserId()
+    {
+        Action act = () => TodoTask.Reconstitute(
+            TaskId.New(),
+            Guid.Empty,
+            new TaskTitle("X"),
+            null, TaskStatus.Todo, false, TaskDifficulty.Normal, TaskPriority.Medium,
+            null, null, null, DateTimeOffset.UtcNow, null, null, null, null, null);
+
+        act.ShouldThrow<DomainException>();
+    }
 }

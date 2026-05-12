@@ -50,3 +50,21 @@ export async function recoverAccount(
 	});
 	return readJsonOrThrow<AuthResponse>(response);
 }
+
+export interface ImportResponse {
+	recordsImported: number;
+}
+
+export async function importData(
+	fetch: typeof globalThis.fetch,
+	baseUrl: string,
+	envelopeJson: string
+): Promise<ImportResponse> {
+	const url = new URL('/api/data/import', baseUrl);
+	const response = await fetch(url, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: envelopeJson
+	});
+	return readJsonOrThrow<ImportResponse>(response);
+}

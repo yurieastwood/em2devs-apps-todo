@@ -20,4 +20,10 @@ public interface IPlayerProfileRepository
     Task<FocusMode> EndFocusModeAsync(DateTimeOffset endedAt, CancellationToken ct = default);
     Task DiscoverSkillTreeAsync(SkillTreeType type, CancellationToken ct = default);
     Task AwardTitleAsync(Title title, CancellationToken ct = default);
+
+    /// <summary>
+    /// Wholesale-replaces the current user's profile with the supplied reconstructed
+    /// aggregate. Used by data import to restore progression state from a snapshot.
+    /// </summary>
+    Task ImportAsync(PlayerProfile profile, CancellationToken ct = default);
 }

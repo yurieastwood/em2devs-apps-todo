@@ -54,7 +54,11 @@ for i in $(seq 1 30); do
   curl -s "http://localhost:${API_PORT}/api/tasks" &>/dev/null && { API_READY=true; break; } || sleep 1
 done
 [[ "${API_READY}" == "true" ]] || fail "API did not start within 30 seconds — check port ${API_PORT}"
-schemathesis run docs/contracts/openapi.yaml --url "http://localhost:${API_PORT}" --checks all --phases examples,coverage,stateful \
+# --generation-allow-x00=false: prevent NULL bytes in generated strings.
+# Kestrel rejects NULL bytes in request paths at the HTTP parser layer (HTTP 400, empty body)
+# before ASP.NET middleware runs, so UseStatusCodePages/AddProblemDetails cannot wrap them
+# in application/problem+json — they violate the contract through no fault of the application.
+schemathesis run docs/contracts/openapi.yaml --url "http://localhost:${API_PORT}" --checks all --phases examples,coverage,stateful --generation-allow-x00=false \
   && pass "Implementation matches contract (Schemathesis)" \
   || fail "Contract drift — implementation doesn't match spec (ADR-0004)"
 kill "${API_PID}" 2>/dev/null; wait "${API_PID}" 2>/dev/null

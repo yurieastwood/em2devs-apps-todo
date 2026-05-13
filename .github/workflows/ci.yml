@@ -209,7 +209,11 @@ jobs:
       - name: Dynamic validation (Schemathesis)
         # --generation-allow-x00=false: Kestrel rejects NULL bytes in request paths at
         # the HTTP parser, before middleware can wrap them as application/problem+json.
-        run: schemathesis run docs/contracts/openapi.yaml --url http://localhost:5001 --checks all --phases examples,coverage,stateful --generation-allow-x00=false
+        # --exclude-checks use_after_free,ensure_resource_availability: these checks
+        # assume one long-lived auth identity across the run; we mint fresh ephemeral
+        # users per case (so /api/account/delete cannot poison subsequent operations),
+        # which makes cross-case lifecycle inferences false positives.
+        run: schemathesis run docs/contracts/openapi.yaml --url http://localhost:5001 --checks all --exclude-checks use_after_free,ensure_resource_availability --phases examples,coverage,stateful --generation-allow-x00=false
       - name: Stop API
         if: always()
         run: kill $(cat /tmp/api.pid) 2>/dev/null || true

@@ -12,7 +12,7 @@ public sealed record DataExportEnvelopeReadModel(
     IReadOnlyList<TaskExportSnapshot> Tasks,
     IReadOnlyList<QuestExportSnapshot> Quests,
     IReadOnlyList<EpicExportSnapshot> Epics,
-    IReadOnlyList<object> Sagas,
+    IReadOnlyList<System.Text.Json.JsonElement> Sagas,
     IReadOnlyList<XpHistoryEntryReadModel> XpHistory,
     DataExportLevelSection Level,
     IReadOnlyList<SkillTreeReadModel> SkillTreeProgress,
@@ -28,10 +28,16 @@ public sealed record DataExportMetaSection(
     string Scope,
     int RecordCount);
 
+/// <summary>
+/// Per the OpenAPI contract (DataExportLevel), each field is optional on the wire —
+/// absence is treated as the starting-state defaults (current=1, xp=0, longestStreak=0).
+/// Nullable fields preserve that distinction: <c>null</c> = absent (default applied),
+/// non-null = explicit value (validated against schema bounds).
+/// </summary>
 public sealed record DataExportLevelSection(
-    int Current,
-    int Xp,
-    int LongestStreak);
+    int? Current,
+    int? Xp,
+    int? LongestStreak);
 
 /// <summary>
 /// Per-user settings. Each field is null until the corresponding feature is wired

@@ -412,4 +412,86 @@ public sealed class DataControllerTests : IDisposable
             }
         }
     }
+
+    [Fact]
+    public async Task Should_AcceptImport_When_LevelFieldsAreAbsent()
+    {
+        // The OpenAPI contract documents level fields as optional: absence is treated as
+        // the starting-state defaults (1, 0, 0). An envelope with `level: {}` is therefore
+        // schema-compliant and must be accepted.
+        string envelope = """
+            {
+              "meta": {"exportedAt": "2026-05-13T00:00:00Z", "format": "json", "scope": "all", "recordCount": 0},
+              "tasks": [], "quests": [], "epics": [], "sagas": [],
+              "xpHistory": [], "level": {}, "skillTreeProgress": [], "titlesEarned": [],
+              "weeklyReviews": [], "timelineEvents": [], "insightCards": [],
+              "settings": {"dataPrivacy": null, "notifications": null, "sync": null, "leaderboard": null}
+            }
+            """;
+        using var content = new StringContent(envelope, System.Text.Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await _client.PostAsync("/api/data/import", content);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task Should_Return400_When_ImportLevelCurrentIsBelowOne()
+    {
+        // Explicit out-of-range values stay rejected; only absence is forgiven.
+        string envelope = """
+            {
+              "meta": {"exportedAt": "2026-05-13T00:00:00Z", "format": "json", "scope": "all", "recordCount": 0},
+              "tasks": [], "quests": [], "epics": [], "sagas": [],
+              "xpHistory": [], "level": {"current": 0}, "skillTreeProgress": [], "titlesEarned": [],
+              "weeklyReviews": [], "timelineEvents": [], "insightCards": [],
+              "settings": {"dataPrivacy": null, "notifications": null, "sync": null, "leaderboard": null}
+            }
+            """;
+        using var content = new StringContent(envelope, System.Text.Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await _client.PostAsync("/api/data/import", content);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Should_Return400_When_ImportLevelLongestStreakIsNegative()
+    {
+        string envelope = """
+            {
+              "meta": {"exportedAt": "2026-05-13T00:00:00Z", "format": "json", "scope": "all", "recordCount": 0},
+              "tasks": [], "quests": [], "epics": [], "sagas": [],
+              "xpHistory": [], "level": {"longestStreak": -1}, "skillTreeProgress": [], "titlesEarned": [],
+              "weeklyReviews": [], "timelineEvents": [], "insightCards": [],
+              "settings": {"dataPrivacy": null, "notifications": null, "sync": null, "leaderboard": null}
+            }
+            """;
+        using var content = new StringContent(envelope, System.Text.Encoding.UTF8, "application/json");
+        HttpResponseMessage response = await _client.PostAsync("/api/data/import", content);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Should_ApplyDefaultLevelOnRoundTrip_When_LevelFieldsAreAbsent()
+    {
+        // Round-trip: import envelope with `level: {}`, then export — the export must report
+        // current=1, xp=0, longestStreak=0 (the documented starting-state defaults).
+        string envelope = """
+            {
+              "meta": {"exportedAt": "2026-05-13T00:00:00Z", "format": "json", "scope": "all", "recordCount": 0},
+              "tasks": [], "quests": [], "epics": [], "sagas": [],
+              "xpHistory": [], "level": {}, "skillTreeProgress": [], "titlesEarned": [],
+              "weeklyReviews": [], "timelineEvents": [], "insightCards": [],
+              "settings": {"dataPrivacy": null, "notifications": null, "sync": null, "leaderboard": null}
+            }
+            """;
+        using var content = new StringContent(envelope, System.Text.Encoding.UTF8, "application/json");
+        HttpResponseMessage imp = await _client.PostAsync("/api/data/import", content);
+        imp.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        HttpResponseMessage exp = await _client.GetAsync("/api/data/export?format=json&scope=all");
+        exp.StatusCode.ShouldBe(HttpStatusCode.OK);
+        JsonElement root = await exp.Content.ReadFromJsonAsync<JsonElement>();
+        JsonElement level = root.GetProperty("level");
+        level.GetProperty("current").GetInt32().ShouldBe(1);
+        level.GetProperty("xp").GetInt32().ShouldBe(0);
+        level.GetProperty("longestStreak").GetInt32().ShouldBe(0);
+    }
 }

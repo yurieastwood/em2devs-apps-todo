@@ -164,7 +164,12 @@ public sealed class ImportDataCommandHandler
 
     private static PlayerProfile BuildProfile(DataExportEnvelopeReadModel env, Guid userId)
     {
-        Level level = new(env.Level.Current, new ExperiencePoints(env.Level.Xp));
+        // DataExportLevel fields are optional per the OpenAPI contract; apply documented
+        // starting-state defaults (1, 0, 0) when absent.
+        int currentLevel = env.Level?.Current ?? 1;
+        int currentXp = env.Level?.Xp ?? 0;
+        int longestStreak = env.Level?.LongestStreak ?? 0;
+        Level level = new(currentLevel, new ExperiencePoints(currentXp));
         Streak streak = Streak.NewStreak();
 
         TitleInventory inventory = TitleInventory.Empty();
@@ -198,7 +203,7 @@ public sealed class ImportDataCommandHandler
             userId,
             level,
             streak,
-            env.Level.LongestStreak,
+            longestStreak,
             inventory,
             history,
             skillTrees);

@@ -71,7 +71,7 @@ public sealed class ExportDataQueryHandler
         IReadOnlyList<XpHistoryEntryReadModel> xpHistory = profile.XpHistory ?? [];
         IReadOnlyList<SkillTreeReadModel> skillTrees = profile.SkillTrees ?? [];
         IReadOnlyList<TitleReadModel> titlesEarned = profile.Titles?.Earned ?? [];
-        IReadOnlyList<object> sagas = [];
+        IReadOnlyList<System.Text.Json.JsonElement> sagas = [];
 
         DataExportLevelSection level = new(profile.Level, profile.TotalXp, profile.LongestStreak);
         DataExportSettingsSection settings = new(

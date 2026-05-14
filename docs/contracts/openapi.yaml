@@ -3525,18 +3525,21 @@ components:
           description: Total number of records across all populated arrays.
     DataExportLevel:
       type: object
-      description: The user's current level snapshot. All fields are optional on the wire — absence is treated the same as the starting-state defaults (1, 0, 0).
+      description: The user's current level snapshot. All fields are optional on the wire — absence (or explicit `null`) is treated the same as the starting-state defaults (1, 0, 0).
       additionalProperties: false
       properties:
         current:
           type: integer
           minimum: 1
+          nullable: true
         xp:
           type: integer
           minimum: 0
+          nullable: true
         longestStreak:
           type: integer
           minimum: 0
+          nullable: true
     DataExportSettings:
       type: object
       description: Per-user settings. Each field is null until the corresponding settings feature is wired to persistence. All fields are optional on the wire — absence and explicit null are semantically equivalent.

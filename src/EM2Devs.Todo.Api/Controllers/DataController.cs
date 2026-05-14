@@ -147,14 +147,33 @@ public sealed class DataController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        // Per the OpenAPI schema, level fields have non-negative bounds.
-        if (envelope.Level is null
-            || envelope.Level.Current < 1
-            || envelope.Level.Xp < 0
-            || envelope.Level.LongestStreak < 0)
+        // Per the OpenAPI schema, `sagas` items are objects. The C# binding accepts any
+        // JSON shape into JsonElement, so verify each item explicitly.
+        foreach (System.Text.Json.JsonElement saga in envelope.Sagas)
+        {
+            if (saga.ValueKind != System.Text.Json.JsonValueKind.Object)
+            {
+                ModelState.AddModelError("sagas", "sagas items must be JSON objects.");
+                return ValidationProblem(ModelState);
+            }
+        }
+
+        // Per the OpenAPI schema, level fields are optional — absence falls back to
+        // the starting-state defaults (1, 0, 0). Only reject when an *explicit* value
+        // violates its declared schema bounds.
+        if (envelope.Level is { Current: < 1 }
+            || envelope.Level is { Xp: < 0 }
+            || envelope.Level is { LongestStreak: < 0 })
         {
             ModelState.AddModelError("level",
                 "level.current must be >= 1; level.xp and level.longestStreak must be >= 0.");
+            return ValidationProblem(ModelState);
+        }
+
+        // Per the OpenAPI schema, meta.recordCount has minimum: 0.
+        if (envelope.Meta is { RecordCount: < 0 })
+        {
+            ModelState.AddModelError("meta.recordCount", "meta.recordCount must be >= 0.");
             return ValidationProblem(ModelState);
         }
 

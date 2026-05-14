@@ -342,12 +342,31 @@ builder.Services.AddControllers(options =>
     {
         options.ModelBinderProviders.Insert(0, new DateOnlyModelBinderProvider());
         options.Filters.Add<EM2Devs.Todo.Api.Middleware.RejectUnknownQueryParametersFilter>();
+        // ADR-030: enforce OpenAPI request-body schema at the wire boundary so the
+        // C# layer can't drift from the contract on primitive constraints
+        // (minimum, maxLength, enum, item-type, ...).
+        options.Filters.Add<EM2Devs.Todo.Api.Validation.OpenApiRequestBodyValidationFilter>();
     })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
     });
 builder.Services.AddOpenApi();
+
+// Load the OpenAPI contract once at startup; the filter above reads from this cache.
+string openApiYamlPath = Path.Combine(builder.Environment.ContentRootPath, "..", "..", "docs", "contracts", "openapi.yaml");
+if (!File.Exists(openApiYamlPath))
+{
+    // When the API is run from the published output, the contract lives next to the binary.
+    string alt = Path.Combine(AppContext.BaseDirectory, "openapi.yaml");
+    if (File.Exists(alt))
+    {
+        openApiYamlPath = alt;
+    }
+}
+builder.Services.AddSingleton(_ =>
+    EM2Devs.Todo.Api.Validation.OpenApiSchemaCatalog.LoadAsync(openApiYamlPath).GetAwaiter().GetResult());
+builder.Services.AddScoped<EM2Devs.Todo.Api.Validation.OpenApiRequestBodyValidationFilter>();
 
 // Real-time notification push over SignalR (feat/signalr-notifications).
 builder.Services.AddSignalR();

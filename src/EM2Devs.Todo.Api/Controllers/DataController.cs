@@ -131,51 +131,11 @@ public sealed class DataController : ControllerBase
             return ValidationProblem(ModelState);
         }
 
-        // Per the OpenAPI schema, list items are non-nullable. Reject envelopes that
-        // contain null entries (caught by Schemathesis property-based testing).
-        if (HasNullItems(envelope.Tasks)
-            || HasNullItems(envelope.Quests)
-            || HasNullItems(envelope.Epics)
-            || HasNullItems(envelope.WeeklyReviews)
-            || HasNullItems(envelope.InsightCards)
-            || HasNullItems(envelope.TimelineEvents)
-            || HasNullItems(envelope.XpHistory)
-            || HasNullItems(envelope.SkillTreeProgress)
-            || HasNullItems(envelope.TitlesEarned))
-        {
-            ModelState.AddModelError("body", "List items in the import envelope must not be null.");
-            return ValidationProblem(ModelState);
-        }
-
-        // Per the OpenAPI schema, `sagas` items are objects. The C# binding accepts any
-        // JSON shape into JsonElement, so verify each item explicitly.
-        foreach (System.Text.Json.JsonElement saga in envelope.Sagas)
-        {
-            if (saga.ValueKind != System.Text.Json.JsonValueKind.Object)
-            {
-                ModelState.AddModelError("sagas", "sagas items must be JSON objects.");
-                return ValidationProblem(ModelState);
-            }
-        }
-
-        // Per the OpenAPI schema, level fields are optional — absence falls back to
-        // the starting-state defaults (1, 0, 0). Only reject when an *explicit* value
-        // violates its declared schema bounds.
-        if (envelope.Level is { Current: < 1 }
-            || envelope.Level is { Xp: < 0 }
-            || envelope.Level is { LongestStreak: < 0 })
-        {
-            ModelState.AddModelError("level",
-                "level.current must be >= 1; level.xp and level.longestStreak must be >= 0.");
-            return ValidationProblem(ModelState);
-        }
-
-        // Per the OpenAPI schema, meta.recordCount has minimum: 0.
-        if (envelope.Meta is { RecordCount: < 0 })
-        {
-            ModelState.AddModelError("meta.recordCount", "meta.recordCount must be >= 0.");
-            return ValidationProblem(ModelState);
-        }
+        // ADR-030: schema-level constraints (null items, list-item shape, level bounds,
+        // meta.recordCount bound, scope/format enums, ...) are enforced by the global
+        // OpenApiRequestBodyValidationFilter before this action runs. Anything that
+        // reaches this point is already schema-compliant; controller-only invariants
+        // (e.g., domain rules not expressible in JSON Schema) belong below.
 
         Result<ImportResult> result = await _mediator
             .Send(new ImportDataCommand(envelope), ct)
@@ -184,22 +144,6 @@ public sealed class DataController : ControllerBase
         return result.Match<IActionResult>(
             r => Ok(new ImportResponse(r.RecordsImported)),
             ToErrorResponse);
-    }
-
-    private static bool HasNullItems<T>(IReadOnlyList<T>? items) where T : class
-    {
-        if (items is null)
-        {
-            return false;
-        }
-        foreach (T item in items)
-        {
-            if (item is null)
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     private IActionResult ToErrorResponse(ResultError error)
